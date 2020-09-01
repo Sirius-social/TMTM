@@ -1,2 +1,2 @@
 # TMTM
-Sirius SDK wrapper. Maintaining Indy agent via web-service
+Sirius SDK wrapper. Maintaining Sirius agent via web-service
