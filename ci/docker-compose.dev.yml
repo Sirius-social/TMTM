@@ -7,7 +7,6 @@ services:
 
   application:
     environment:
-      - SECRET_KEY=secret-key
       - DJANGO_SETTINGS_MODULE=settings.develop
     volumes:
       - ./app:/app
