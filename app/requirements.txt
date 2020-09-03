@@ -1,0 +1,9 @@
+Django==2.2
+django-downloadview==1.9
+djangorestframework==3.11.0
+drf-extensions==0.6.0
+drf-yasg==1.17.1
+gunicorn==20.0.4
+psycopg2-binary==2.8.5
+sentry-asgi==0.2.0
+sentry-sdk==0.14.4
