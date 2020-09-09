@@ -25,7 +25,8 @@
     <!--[if lt IE 9]>
     <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
     <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-<![endif]-->
+    <![endif]-->
+    <script src="/static/js/vue.js"></script>
 </head>
 
 <body class="fix-header fix-sidebar card-no-border">
@@ -54,14 +55,15 @@
                         <b>
                             <!--You can put here icon as well // <i class="wi wi-sunset"></i> //-->
                             <!-- Dark Logo icon -->
-                            <img src="/static/assets/images/logo-icon.png" alt="homepage" class="dark-logo" />
+                            <img src="/static/assets/images/logo-icon.png" height="32px" width="32px" alt="homepage" class="dark-logo" />
 
                         </b>
                         <!--End Logo icon -->
                         <!-- Logo text -->
                         <span>
                             <!-- dark Logo text -->
-                            <img src="/static/assets/images/logo-text.png" alt="homepage" class="dark-logo" />
+                            <!--<img src="/static/assets/images/logo-text.png" alt="homepage" class="dark-logo" /> -->
+                            Sirius blockchain
                         </span>
                     </a>
                 </div>
@@ -76,9 +78,11 @@
                         <!-- This is  -->
                         <li class="nav-item"> <a class="nav-link nav-toggler hidden-md-up text-muted waves-effect waves-dark" href="javascript:void(0)"><i class="ti-menu"></i></a> </li>
                         <li class="nav-item hidden-sm-down">
+                            <!--
                             <form class="app-search p-l-20">
-                                <input type="text" class="form-control" placeholder="Search for..."> <a class="srh-btn"><i class="ti-search"></i></a>
+                                <input style="width: 400px;" type="text" class="form-control" placeholder="Поиск по контейнерам и морским документам ..."> <a class="srh-btn"><i class="ti-search"></i></a>
                             </form>
+                            -->
                         </li>
                     </ul>
                     <!-- ============================================================== -->
@@ -105,30 +109,25 @@
                 <nav class="sidebar-nav">
                     <ul id="sidebarnav">
                         <li>
-                            <a href="index.html" class="waves-effect"><i class="fa fa-clock-o m-r-10" aria-hidden="true"></i>Dashboard</a>
+                            <a href="index.html" class="waves-effect"><i class="fa fa-columns m-r-10" aria-hidden="true"></i>Транзакции</a>
                         </li>
                         <li>
-                            <a href="pages-profile.html" class="waves-effect"><i class="fa fa-user m-r-10" aria-hidden="true"></i>Profile</a>
+                            <a href="index.html" class="waves-effect"><i class="fa fa-table m-r-10" aria-hidden="true"></i>ГУ-11</a>
                         </li>
                         <li>
-                            <a href="table-basic.html" class="waves-effect"><i class="fa fa-table m-r-10" aria-hidden="true"></i>Basic Table</a>
+                            <a href="pages-profile.html" class="waves-effect"><i class="fa fa-table m-r-10" aria-hidden="true"></i>ГУ-12</a>
                         </li>
                         <li>
-                            <a href="icon-fontawesome.html" class="waves-effect"><i class="fa fa-font m-r-10" aria-hidden="true"></i>Icons</a>
+                            <a href="table-basic.html" class="waves-effect"><i class="fa fa-globe m-r-10" aria-hidden="true"></i>Грузоперевозки</a>
                         </li>
                         <li>
-                            <a href="map-google.html" class="waves-effect"><i class="fa fa-globe m-r-10" aria-hidden="true"></i>Google Map</a>
+                            <a href="icon-fontawesome.html" class="waves-effect"><i class="fa fa-globe m-r-10" aria-hidden="true"></i>Морские документы</a>
                         </li>
                         <li>
-                            <a href="pages-blank.html" class="waves-effect"><i class="fa fa-columns m-r-10" aria-hidden="true"></i>Blank Page</a>
-                        </li>
-                        <li>
-                            <a href="pages-error-404.html" class="waves-effect"><i class="fa fa-info-circle m-r-10" aria-hidden="true"></i>Error 404</a>
+                            <a href="icon-fontawesome.html" class="waves-effect"><i class="fa fa-info-circle m-r-10" aria-hidden="true"></i>Отладка</a>
                         </li>
                     </ul>
-                    <div class="text-center m-t-30">
-                        <a href="https://wrappixel.com/templates/monsteradmin/" class="btn btn-danger"> Upgrade to Pro</a>
-                    </div>
+
                 </nav>
                 <!-- End Sidebar navigation -->
             </div>
@@ -145,20 +144,21 @@
             <!-- Container fluid  -->
             <!-- ============================================================== -->
             <div class="container-fluid">
+                <div class="row page-titles">
+                    <img src="{{ logo }}" style="max-height: 50px;margin-right: 30px;"/>
+                    <h1>{{ label }}</h1>
+                </div>
                 <!-- ============================================================== -->
                 <!-- Bread crumb and right sidebar toggle -->
                 <!-- ============================================================== -->
                 <div class="row page-titles">
                     <div class="col-md-6 col-8 align-self-center">
-                        <h3 class="text-themecolor m-b-0 m-t-0">Dashboard</h3>
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="javascript:void(0)">Home</a></li>
                             <li class="breadcrumb-item active">Dashboard</li>
                         </ol>
                     </div>
-                    <div class="col-md-6 col-4 align-self-center">
-                        <a href="https://wrappixel.com/templates/monsteradmin/" class="btn pull-right hidden-sm-down btn-success"> Upgrade to Pro</a>
-                    </div>
+
                 </div>
                 <!-- ============================================================== -->
                 <!-- End Bread crumb and right sidebar toggle -->
@@ -166,180 +166,42 @@
                 <!-- ============================================================== -->
                 <!-- Start Page Content -->
                 <!-- ============================================================== -->
-                <!-- Row -->
                 <div class="row">
+                    <!-- Column -->
+                    <div class="col-sm-5">
+                        <div class="card">
+                            <div class="card-block">
+                                <form class="app-search p-l-20">
+                                    <input v-model="search_ledger" style="width: 400px;" type="text" class="form-control" placeholder="Ledgers ..."> <a class="srh-btn"><i class="ti-search"></i></a>
+                                </form>
+                                <div id="tagsContainer">
+                                 <canvas width="500" height="300" id="tagsCanvas">
+                                  <p>Anything in here will be replaced on browsers that support the canvas element</p>
+                                  <ul>
+                                   <li v-for="ledger in filtered_ledgers">
+                                       <a @click.prevent="ledger_selected(ledger)" href="">[[ledger]]</a>
+                                   </li>
+
+                                  </ul>
+                                 </canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Column -->
                     <!-- Column -->
                     <div class="col-sm-6">
                         <div class="card">
                             <div class="card-block">
-                                <h4 class="card-title">Daily Sales</h4>
-                                <div class="text-right">
-                                    <h2 class="font-light m-b-0"><i class="ti-arrow-up text-success"></i> $120</h2>
-                                    <span class="text-muted">Todays Income</span>
-                                </div>
-                                <span class="text-success">80%</span>
-                                <div class="progress">
-                                    <div class="progress-bar bg-success" role="progressbar" style="width: 80%; height: 6px;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Column -->
-                    <!-- Column -->
-                    <div class="col-sm-6">
-                        <div class="card">
-                            <div class="card-block">
-                                <h4 class="card-title">Weekly Sales</h4>
-                                <div class="text-right">
-                                    <h2 class="font-light m-b-0"><i class="ti-arrow-up text-info"></i> $5,000</h2>
-                                    <span class="text-muted">Todays Income</span>
-                                </div>
-                                <span class="text-info">30%</span>
-                                <div class="progress">
-                                    <div class="progress-bar bg-info" role="progressbar" style="width: 30%; height: 6px;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
+                                <h4 class="card-title">[[selected_ledger]]</h4>
+
                             </div>
                         </div>
                     </div>
                     <!-- Column -->
                 </div>
-                <!-- Row -->
-                <!-- Row -->
-                <div class="row">
-                    <!-- column -->
-                    <div class="col-sm-12">
-                        <div class="card">
-                            <div class="card-block">
-                                <h4 class="card-title">Revenue Statistics</h4>
-                                <div class="flot-chart">
-                                    <div class="flot-chart-content" id="flot-line-chart"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- column -->
-                </div>
-                <!-- Row -->
-                <!-- Row -->
-                <div class="row">
-                    <div class="col-sm-12">
-                        <div class="card">
-                            <div class="card-block">
-                                <select class="custom-select pull-right">
-                                    <option selected>January</option>
-                                    <option value="1">February</option>
-                                    <option value="2">March</option>
-                                    <option value="3">April</option>
-                                </select>
-                                <h4 class="card-title">Projects of the Month</h4>
-                                <div class="table-responsive m-t-40">
-                                    <table class="table stylish-table">
-                                        <thead>
-                                            <tr>
-                                                <th colspan="2">Assigned</th>
-                                                <th>Name</th>
-                                                <th>Budget</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td style="width:50px;"><span class="round">S</span></td>
-                                                <td>
-                                                    <h6>Sunil Joshi</h6><small class="text-muted">Web Designer</small></td>
-                                                <td>Elite Admin</td>
-                                                <td>$3.9K</td>
-                                            </tr>
-                                            <tr class="active">
-                                                <td><span class="round"><img src="/static/assets/images/users/2.jpg" alt="user" width="50" /></span></td>
-                                                <td>
-                                                    <h6>Andrew</h6><small class="text-muted">Project Manager</small></td>
-                                                <td>Real Homes</td>
-                                                <td>$23.9K</td>
-                                            </tr>
-                                            <tr>
-                                                <td><span class="round round-success">B</span></td>
-                                                <td>
-                                                    <h6>Bhavesh patel</h6><small class="text-muted">Developer</small></td>
-                                                <td>MedicalPro Theme</td>
-                                                <td>$12.9K</td>
-                                            </tr>
-                                            <tr>
-                                                <td><span class="round round-primary">N</span></td>
-                                                <td>
-                                                    <h6>Nirav Joshi</h6><small class="text-muted">Frontend Eng</small></td>
-                                                <td>Elite Admin</td>
-                                                <td>$10.9K</td>
-                                            </tr>
-                                            <tr>
-                                                <td><span class="round round-warning">M</span></td>
-                                                <td>
-                                                    <h6>Micheal Doe</h6><small class="text-muted">Content Writer</small></td>
-                                                <td>Helping Hands</td>
-                                                <td>$12.9K</td>
-                                            </tr>
-                                            <tr>
-                                                <td><span class="round round-danger">N</span></td>
-                                                <td>
-                                                    <h6>Johnathan</h6><small class="text-muted">Graphic</small></td>
-                                                <td>Digital Agency</td>
-                                                <td>$2.6K</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Row -->
-                <!-- Row -->
-                <div class="row">
-                    <!-- Column -->
-                    <div class="col-lg-4">
-                        <div class="card">
-                            <img class="card-img-top img-responsive" src="/static/assets/images/big/img1.jpg" alt="Card">
-                            <div class="card-block">
-                                <ul class="list-inline font-14">
-                                    <li class="p-l-0">20 May 2016</li>
-                                    <li><a href="javascript:void(0)" class="link">3 Comment</a></li>
-                                </ul>
-                                <h3 class="font-normal">Featured Hydroflora Pots Garden &amp; Outdoors</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Column -->
-                    <!-- Column -->
-                    <div class="col-lg-4">
-                        <div class="card">
-                            <img class="card-img-top img-responsive" src="/static/assets/images/big/img2.jpg" alt="Card">
-                            <div class="card-block">
-                                <ul class="list-inline font-14">
-                                    <li class="p-l-0">20 May 2016</li>
-                                    <li><a href="javascript:void(0)" class="link">3 Comment</a></li>
-                                </ul>
-                                <h3 class="font-normal">Featured Hydroflora Pots Garden &amp; Outdoors</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Column -->
-                    <!-- Column -->
-                    <div class="col-lg-4">
-                        <div class="card">
-                            <img class="card-img-top img-responsive" src="/static/assets/images/big/img4.jpg" alt="Card">
-                            <div class="card-block">
-                                <ul class="list-inline font-14">
-                                    <li class="p-l-0">20 May 2016</li>
-                                    <li><a href="javascript:void(0)" class="link">3 Comment</a></li>
-                                </ul>
-                                <h3 class="font-normal">Featured Hydroflora Pots Garden &amp; Outdoors</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Column -->
-                </div>
-                <!-- Row -->
                 <!-- ============================================================== -->
-                <!-- End PAge Content -->
+                <!-- End Page Content -->
                 <!-- ============================================================== -->
             </div>
             <!-- ============================================================== -->
@@ -390,6 +252,63 @@
     <!-- Style switcher -->
     <!-- ============================================================== -->
     <script src="/static/assets/plugins/styleswitcher/jQuery.style.switcher.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.tagcanvas.min.js"></script>
+    {{ ledgers|json_script:"ledgers-data" }}
+    <script>
+        var ledgers_data = JSON.parse(document.getElementById('ledgers-data').textContent);
+        var app = new Vue({
+            el: '#main-wrapper',
+            delimiters: ['[[', ']]'],
+            data: {
+                scanning: false,
+                ledgers: ledgers_data,
+                search_ledger: null,
+                selected_ledger: null
+            },
+            computed: {
+                filtered_ledgers: function(){
+                    if (this.search_ledger) {
+                        var ret = [];
+                        for (var i = 0; i < ledgers_data.length; i++) {
+                          if (ledgers_data[i].includes(this.search_ledger)) {
+                              ret.push(ledgers_data[i]);
+                          }
+                        }
+                        return ret;
+                    }
+                    else {
+                        return ledgers_data;
+                    }
+                }
+            },
+            watch: {
+                search_ledger: function (new_value, old_value) {
+                    setTimeout(function() {
+                        $("#tagsCanvas").tagcanvas("update");
+                    }, 100);
+                }
+            },
+            methods: {
+                ledger_selected: function(name){
+                    this.selected_ledger = name;
+                }
+            }
+        });
+
+        $(function(){
+            if( ! $('#tagsCanvas').tagcanvas({
+                 textColour : 'black',
+                 outlineThickness : 1,
+                 maxSpeed : 0.03,
+                 depth : 0.75,
+                 shape: "hcylinder",
+                 lock: 'x'
+               })) {
+                 // failed to load
+                 $('#tagsContainer').hide();
+               }
+        });
+    </script>
 </body>
 
 </html>

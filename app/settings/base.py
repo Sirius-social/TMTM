@@ -137,3 +137,31 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 SENTRY_DSN = os.getenv('SENTRY_DSN')
 
 CREDENTIALS = os.getenv('CREDENTIALS')
+
+
+PARTICIPANTS_META = {
+    '4vEF4eHwQ1GB5s766rAYAe': {
+        'label': 'ADY Container',
+        'logo': 'ady_container.png'
+    },
+    'U9A6U7LZQe4dCh84t3fpTK': {
+        'label': 'KTZ Express',
+        'logo': 'ktz_express.svg'
+    },
+    '6jzbnVE5S6j15afcpC9yhF': {
+        'label': 'GR Logistics & Terminals',
+        'logo': 'gr_logistics.png'
+    },
+    'D96GgE1PVtWeSfuAQZ9neY': {
+        'label': 'KAZMORTRANSFLOT',
+        'logo': 'kazmortransflot.jpg'
+    },
+    'Ch4eVSWf7KXRubk5to6WFC': {
+        'label': 'PORT OF BAKU',
+        'logo': 'port_of_baku.jpg'
+    },
+    'VU7c9jvBqLee9NkChXU1Kn': {
+        'label': 'PORT AKTAU',
+        'logo': 'port_aktau.png'
+    }
+}
