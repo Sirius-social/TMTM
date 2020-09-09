@@ -85,3 +85,12 @@ class TransactionsView(APIView):
             print('======== AGENT PING OK ========')
         finally:
             await agent.close()
+
+
+class IndexView(APIView):
+    template_name = 'index.html'
+    renderer_classes = [TemplateHTMLRenderer]
+    authentication_classes = []
+
+    def get(self, request, *args, **kwargs):
+        return Response(data={})
