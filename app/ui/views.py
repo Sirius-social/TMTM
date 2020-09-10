@@ -94,3 +94,12 @@ class IndexView(APIView):
 
     def get(self, request, *args, **kwargs):
         return Response(data={})
+
+
+class TestView(APIView):
+    template_name = 'test.html'
+    renderer_classes = [TemplateHTMLRenderer]
+    authentication_classes = []
+
+    def get(self, request, *args, **kwargs):
+        return Response(data={})

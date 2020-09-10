@@ -136,7 +136,14 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 SENTRY_DSN = os.getenv('SENTRY_DSN')
 
-CREDENTIALS = os.getenv('CREDENTIALS')
+AGENT = {
+    'credentials': os.getenv('CREDENTIALS'),
+    'server_address': os.getenv('SERVER_ADDRESS'),
+    'entity': os.getenv('ENTITY'),
+    'my_verkey': os.getenv('MY_VERKEY'),
+    'my_secret_key': os.getenv('MY_SECRET_KEY'),
+    'agent_verkey': os.getenv('AGENT_VERKEY')
+}
 
 
 PARTICIPANTS_META = {
