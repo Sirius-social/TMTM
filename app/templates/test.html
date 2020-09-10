@@ -27,6 +27,7 @@
         chart.projection = new am4maps.projections.Mercator();
         // Zoom control
         chart.zoomControl = new am4maps.ZoomControl();
+        var interfaceColors = new am4core.InterfaceColorSet();
         var homeButton = new am4core.Button();
         homeButton.events.on("hit", function() {
           chart.goHome();
@@ -156,6 +157,176 @@
         chart.legend.contentAlign = "left";
         // Legend items
         chart.legend.itemContainers.template.interactionsEnabled = false;
+
+        // Cities
+        var targetSVG = "M9,0C4.029,0,0,4.029,0,9s4.029,9,9,9s9-4.029,9-9S13.971,0,9,0z M9,15.93 c-3.83,0-6.93-3.1-6.93-6.93S5.17,2.07,9,2.07s6.93,3.1,6.93,6.93S12.83,15.93,9,15.93 M12.5,9c0,1.933-1.567,3.5-3.5,3.5S5.5,10.933,5.5,9S7.067,5.5,9,5.5 S12.5,7.067,12.5,9z";
+
+        // Texts
+        var labelsContainer = chart.createChild(am4core.Container);
+        labelsContainer.isMeasured = false;
+        labelsContainer.x = 80;
+        labelsContainer.y = 35;
+        labelsContainer.layout = "horizontal";
+        labelsContainer.zIndex = 10;
+
+        //var plane = labelsContainer.createChild(am4core.Sprite);
+        //plane.scale = 0.15;
+        //plane.path = planeSVG;
+        //plane.fill = am4core.color("#cc0000");
+
+        var title = labelsContainer.createChild(am4core.TextLink);
+        title.text = "TMTM";
+        title.fill = am4core.color("#cc0000");
+        title.fontSize = 30;
+        title.valign = "middle";
+        title.dy = 2;
+        title.marginLeft = 15;
+
+        var changeLink = chart.createChild(am4core.TextLink);
+        changeLink.text = "Click to select IT provider";
+        changeLink.fill = am4core.color("blue");
+
+        title.events.on("hit", function(){
+            console.log(currentOrigin.dataContext.did);
+        });
+        changeLink.events.on("hit", function() {
+            if (currentOrigin == originImageSeries.dataItems.getIndex(0)) {
+                showLines(originImageSeries.dataItems.getIndex(1));
+            }
+            else if (currentOrigin == originImageSeries.dataItems.getIndex(1)) {
+                showLines(originImageSeries.dataItems.getIndex(2));
+            }
+            else if (currentOrigin == originImageSeries.dataItems.getIndex(2)) {
+                showLines(originImageSeries.dataItems.getIndex(3));
+            }
+            else if (currentOrigin == originImageSeries.dataItems.getIndex(3)) {
+                showLines(originImageSeries.dataItems.getIndex(4));
+            }
+            else {
+                showLines(originImageSeries.dataItems.getIndex(0));
+            }
+        })
+
+        changeLink.x = 100;
+        changeLink.y = 15;
+        changeLink.fontSize = 15;
+
+        var originImageSeries = chart.series.push(new am4maps.MapImageSeries());
+        originImageSeries.useGeodata = false;
+        var originImageTemplate = originImageSeries.mapImages.template;
+
+        originImageTemplate.propertyFields.latitude = "latitude";
+        originImageTemplate.propertyFields.longitude = "longitude";
+        originImageTemplate.propertyFields.id = "id";
+
+        originImageTemplate.cursorOverStyle = am4core.MouseCursorStyle.pointer;
+        originImageTemplate.nonScaling = true;
+        originImageTemplate.tooltipText = "{title}";
+
+        originImageTemplate.setStateOnChildren = true;
+        originImageTemplate.states.create("hover");
+
+        originImageTemplate.horizontalCenter = "middle";
+        originImageTemplate.verticalCenter = "middle";
+
+        var originHitCircle = originImageTemplate.createChild(am4core.Circle);
+        originHitCircle.radius = 15;
+        originHitCircle.fill = interfaceColors.getFor("background");
+
+        var originTargetIcon = originImageTemplate.createChild(am4core.Sprite);
+        originTargetIcon.fill = interfaceColors.getFor("alternativeBackground");
+        originTargetIcon.strokeWidth = 0;
+        originTargetIcon.scale = 1.3;
+        originTargetIcon.horizontalCenter = "middle";
+        originTargetIcon.verticalCenter = "middle";
+        originTargetIcon.path = targetSVG;
+
+        var originHoverState = originTargetIcon.states.create("hover");
+        originHoverState.properties.fill = chart.colors.getIndex(1);
+        // when hit on city, change lines
+        originImageTemplate.events.on("hit", function(event) {
+            showLines(event.target.dataItem);
+        });
+        originImageTemplate.events.on("doublehit", function(event) {
+            currentOrigin = event.target.dataItem;
+            console.log(currentOrigin.dataContext.did);
+        })
+        // Data for general and map use
+        var originCities = [
+            {
+                "id": "karagandy",
+                "title": "ASU DKR",
+                "latitude": 49.49,
+                "longitude": 73.9,
+                "destinations": ["aktau"],
+                'did': "U9A6U7LZQe4dCh84t3fpTK"
+            },{
+                "id": "aktau",
+                "title": "Solvo.tos\nPORT AKTAU",
+                "latitude": 43.693695,
+                "longitude": 51.260834,
+                "destinations": ["baku", 'karagandy'],
+                "did": "VU7c9jvBqLee9NkChXU1Kn"
+            },{
+                "id": "baku",
+                "title": "PORT BAKU",
+                "latitude": 40.409264,
+                "longitude": 49.867092,
+                "destinations": ["baku2", 'aktau'],
+                "did": "Ch4eVSWf7KXRubk5to6WFC"
+            },{
+                "id": "baku2",
+                "title": "ADY Container",
+                "latitude": 40.4050703,
+                "longitude": 48.0619633,
+                "destinations": ["poti", 'baku'],
+                "did": "4vEF4eHwQ1GB5s766rAYAe"
+            },{
+                "id": "poti",
+                "title": "GR Logistics & Terminals",
+                "latitude": 42.281373,
+                "longitude": 41.618996,
+                "destinations": ["baku2"],
+                "did": "6jzbnVE5S6j15afcpC9yhF"
+            }
+        ];
+        originImageSeries.data = originCities;
+        // Line series
+        var lineSeries = chart.series.push(new am4maps.MapLineSeries());
+        lineSeries.mapLines.template.line.strokeOpacity = 1;
+        lineSeries.mapLines.template.line.width = 5;
+
+        chart.events.on("ready", function() {
+            showLines(originImageSeries.dataItems.getIndex(0));
+        })
+
+        var currentOrigin;
+
+        function showLines(origin) {
+
+            var dataContext = origin.dataContext;
+            var destinations = dataContext.destinations;
+            // clear old
+            lineSeries.mapLines.clear();
+            lineSeries.toBack();
+            worldSeries.toBack();
+
+            currentOrigin = origin;
+
+            if (destinations) {
+                for (var i = 0; i < destinations.length; i++) {
+                    var line = lineSeries.mapLines.create();
+                    line.imagesToConnect = [origin.mapImage.id, destinations[i]];
+                }
+            }
+
+            title.text = "TMTM Logistic: " + dataContext.title.replace('\n', ' - ').toUpperCase();
+
+            chart.zoomToGeoPoint({ latitude: dataContext.zoomLatitude, longitude: dataContext.zoomLongitude }, dataContext.zoomLevel, true);
+        }
+
+        var graticuleSeries = chart.series.push(new am4maps.GraticuleSeries());
+        graticuleSeries.mapLines.template.line.strokeOpacity = 0.05;
 
         }); // end am4core.ready()
     </script>

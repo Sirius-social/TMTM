@@ -19,7 +19,6 @@ from ui.views import TransactionsView, IndexView, TestView
 
 urlpatterns = [
     path('transactions/', TransactionsView.as_view(), name='transactions'),
-    path('test/', TestView.as_view(), name='test'),
     path('', IndexView.as_view(), name='index'),
     # path('admin/', admin.site.urls),
 ]
