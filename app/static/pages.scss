@@ -3128,8 +3128,6 @@ $color_vivid_tangerine_approx: $themecolor;
 $color_cerulean_approx: #00aeef;
 
 //urls
-$url_0: url(../../assets/images/tooltip/tooltip1.svg);
-$url_1: url(../../assets/images/tooltip/shape1.svg);
 
 //@extend-elements
 //original selectors
@@ -3339,12 +3337,10 @@ $url_1: url(../../assets/images/tooltip/shape1.svg);
 	margin: -7px 0 0 -15px;
 	width: 30px;
 	height: 20px;
-	background: $url_0 no-repeat center center;
 	background-size: 100%;
 }
 .tooltip-content3 {
 	position: absolute;
-	background: $url_1 no-repeat center bottom;
 	background-size: 100% 100%;
 	z-index: 9999;
 	width: 200px;

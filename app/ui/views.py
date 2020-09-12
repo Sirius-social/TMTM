@@ -78,9 +78,7 @@ class TransactionsView(APIView):
                 their_verkey=credentials['agent_verkey']
             )
         )
-        print('1')
         await agent.open()
-        print('2')
         try:
             ok = await agent.ping()
             assert ok is True
