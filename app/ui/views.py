@@ -38,11 +38,11 @@ class TransactionsView(APIView):
             try:
                 credentials = ser.create(ser.validated_data)
                 run_async(self.check_agent_credentials(credentials))
-            except:
+            except Exception as e:
                 raise serializers.ValidationError('Invalid agent connection credentials or keys')
         except serializers.ValidationError as e:
             print(str(e))
-            raise
+            return Response(status=400, data=str(e).encode())
         else:
             ledgers = [
                 '20-001-0000002',
@@ -78,7 +78,9 @@ class TransactionsView(APIView):
                 their_verkey=credentials['agent_verkey']
             )
         )
+        print('1')
         await agent.open()
+        print('2')
         try:
             ok = await agent.ping()
             assert ok is True

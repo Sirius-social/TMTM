@@ -23,6 +23,6 @@ async def test():
 
 
 if __name__ == '__main__':
-    asyncio.get_event_loop().run_until_complete(test())
+    # asyncio.get_event_loop().run_until_complete(test())
     print('------')
     sleep(1000)

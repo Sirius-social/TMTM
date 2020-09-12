@@ -1,3 +1,6 @@
+channels==2.4.0
+channels-redis==2.4.2
+daphne==2.5.0
 Django==2.2
 django-downloadview==1.9
 djangorestframework==3.11.0
