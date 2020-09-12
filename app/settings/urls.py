@@ -21,10 +21,10 @@ from wrapper.views import MaintenanceRouter
 
 
 urlpatterns = [
-    # Maintenance
-    url(r'^', include(MaintenanceRouter.urls)),
     # Others
     path('transactions/', TransactionsView.as_view(), name='transactions'),
     path('', IndexView.as_view(), name='index'),
+    # Maintenance
+    url(r'^', include(MaintenanceRouter.urls)),
     # path('admin/', admin.site.urls),
 ]
