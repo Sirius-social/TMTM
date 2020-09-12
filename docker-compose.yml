@@ -18,6 +18,8 @@ services:
       - DATABASE_PASSWORD=postgres
       - DATABASE_NAME=postgres
       - DATABASE_HOST=db
+      - ADMIN_USERNAME=test
+      - ADMIN_PASSWORD=test
     depends_on:
       - db
       - redis

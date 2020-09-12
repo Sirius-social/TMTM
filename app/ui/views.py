@@ -1,10 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.authentication import BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework import serializers
 from django.conf import settings
 from sirius_sdk import Agent, P2PConnection
 
+from wrapper.models import Ledger
 from .utils import run_async
 
 
@@ -29,7 +32,8 @@ class AgentCredentials(serializers.Serializer):
 class TransactionsView(APIView):
     template_name = 'transactions.html'
     renderer_classes = [TemplateHTMLRenderer]
-    authentication_classes = []
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         ser = AgentCredentials(data=request.query_params)
@@ -44,26 +48,9 @@ class TransactionsView(APIView):
             print(str(e))
             return Response(status=400, data=str(e).encode())
         else:
-            ledgers = [
-                '20-001-0000002',
-                '20-001-0000001',
-                '20-001-1000000',
-                '20-001-1010012',
-                '20-001-1102212',
-                '20-001-1234453',
-                '20-001-0922333',
-                '43-201-1000000',
-                '43-201-1010012',
-                '30-331-0003302',
-                '30-011-0000002',
-                '30-021-0000001',
-                '30-031-1000000',
-                '30-041-1010012',
-                '30-051-0000002',
-            ]
             entity = credentials['entity']
             return Response(data={
-                'ledgers': ledgers,
+                'ledgers': [ledger.name for ledger in Ledger.objects.filter(entity=entity).all()[:200]],
                 'logo': '/static/logos/%s' % settings.PARTICIPANTS_META[entity]['logo'],
                 'label': settings.PARTICIPANTS_META[entity]['label']
             })

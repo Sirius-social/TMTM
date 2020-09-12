@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'scripts',
     'wrapper',
     'ui'
 ]
@@ -174,3 +175,7 @@ PARTICIPANTS_META = {
         'logo': 'port_aktau.png'
     }
 }
+
+
+ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', None)
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', None)

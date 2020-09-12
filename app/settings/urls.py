@@ -15,9 +15,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from ui.views import TransactionsView, IndexView, TestView
+from django.conf.urls import url, include
+from ui.views import TransactionsView, IndexView
+from wrapper.views import MaintenanceRouter
+
 
 urlpatterns = [
+    # Maintenance
+    url(r'^', include(MaintenanceRouter.urls)),
+    # Others
     path('transactions/', TransactionsView.as_view(), name='transactions'),
     path('', IndexView.as_view(), name='index'),
     # path('admin/', admin.site.urls),
