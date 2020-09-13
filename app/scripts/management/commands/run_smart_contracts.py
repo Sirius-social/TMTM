@@ -56,6 +56,9 @@ class Command(BaseCommand):
             logging.error(f'* ok: {ok}')
             assert ok is True, 'problem with agent p2p'
             logging.error('* agent connection is OK!')
+            logging.error('* find entity in wallet')
+            _ = await agent.wallet.did.get_my_did_with_meta(settings.AGENT['entity'])
+            logging.error('* entity was found')
         finally:
             logging.error('* agent.close()')
             await agent.close()
