@@ -184,11 +184,11 @@
         title.marginLeft = 15;
 
         var changeLink = chart.createChild(am4core.TextLink);
-        changeLink.text = "Click to select IT provider";
+        changeLink.text = "Click to change IT service";
         changeLink.fill = am4core.color("blue");
 
         title.events.on("hit", function(){
-            console.log(currentOrigin.dataContext.did);
+            window.open(currentOrigin.dataContext.url,'_blank');
         });
         changeLink.events.on("hit", function() {
             if (currentOrigin == originImageSeries.dataItems.getIndex(0)) {
@@ -250,7 +250,7 @@
         });
         originImageTemplate.events.on("doublehit", function(event) {
             currentOrigin = event.target.dataItem;
-            console.log(currentOrigin.dataContext.did);
+            window.open(currentOrigin.dataContext.url,'_blank');
         })
         // Data for general and map use
         var originCities = [
@@ -260,35 +260,40 @@
                 "latitude": 49.49,
                 "longitude": 73.9,
                 "destinations": ["aktau"],
-                'did': "U9A6U7LZQe4dCh84t3fpTK"
+                'did': "U9A6U7LZQe4dCh84t3fpTK",
+                "url": "https://dkr.socialsirius.com"
             },{
                 "id": "aktau",
                 "title": "Solvo.tos\nPORT AKTAU",
                 "latitude": 43.693695,
                 "longitude": 51.260834,
                 "destinations": ["baku", 'karagandy'],
-                "did": "VU7c9jvBqLee9NkChXU1Kn"
+                "did": "VU7c9jvBqLee9NkChXU1Kn",
+                "url": "https://solvotos.socialsirius.com"
             },{
                 "id": "baku",
                 "title": "PMIS\nPORT BAKU",
                 "latitude": 40.409264,
                 "longitude": 49.867092,
                 "destinations": ["baku2", 'aktau'],
-                "did": "Ch4eVSWf7KXRubk5to6WFC"
+                "did": "Ch4eVSWf7KXRubk5to6WFC",
+                "url": "https://pmis.socialsirius.com"
             },{
                 "id": "baku2",
                 "title": "ADY-Smart\nAzerbaijan railways",
                 "latitude": 40.4050703,
                 "longitude": 48.0619633,
                 "destinations": ["poti", 'baku'],
-                "did": "4vEF4eHwQ1GB5s766rAYAe"
+                "did": "4vEF4eHwQ1GB5s766rAYAe",
+                "url": "https://ady.socialsirius.com"
             },{
                 "id": "poti",
                 "title": "cargo.railways.ge\nPOTI",
                 "latitude": 42.281373,
                 "longitude": 41.618996,
                 "destinations": ["baku2"],
-                "did": "6jzbnVE5S6j15afcpC9yhF"
+                "did": "6jzbnVE5S6j15afcpC9yhF",
+                "url": "https://gr.socialsirius.com"
             }
         ];
         originImageSeries.data = originCities;

@@ -140,42 +140,49 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 SENTRY_DSN = os.getenv('SENTRY_DSN')
 
 AGENT = {
-    'credentials': os.getenv('CREDENTIALS'),
-    'server_address': os.getenv('SERVER_ADDRESS'),
-    'entity': os.getenv('ENTITY'),
-    'my_verkey': os.getenv('MY_VERKEY'),
-    'my_secret_key': os.getenv('MY_SECRET_KEY'),
+    'credentials': os.getenv('AGENT_CREDENTIALS'),
+    'server_address': os.getenv('AGENT_SERVER_ADDRESS'),
+    'entity': os.getenv('AGENT_ENTITY'),
+    'my_verkey': os.getenv('AGENT_MY_VERKEY'),
+    'my_secret_key': os.getenv('AGENT_MY_SECRET_KEY'),
     'agent_verkey': os.getenv('AGENT_VERKEY')
 }
 
 
 PARTICIPANTS_META = {
     '4vEF4eHwQ1GB5s766rAYAe': {
-        'label': 'ADY Container',
-        'logo': 'ady_container.png'
+        'label': 'ADY-Smart',
+        'logo': 'ady_container.png',
+        'url': 'https://ady.socialsirius.com'
     },
     'U9A6U7LZQe4dCh84t3fpTK': {
-        'label': 'KTZ Express',
-        'logo': 'ktz_express.svg'
+        'label': 'DKR',
+        'logo': 'ktz_express.svg',
+        'url': 'https://dkr.socialsirius.com'
     },
     '6jzbnVE5S6j15afcpC9yhF': {
         'label': 'GR Logistics & Terminals',
-        'logo': 'gr_logistics.png'
+        'logo': 'gr_logistics.png',
+        'url': 'https://gr.socialsirius.com'
     },
     'D96GgE1PVtWeSfuAQZ9neY': {
         'label': 'KAZMORTRANSFLOT',
-        'logo': 'kazmortransflot.jpg'
+        'logo': 'kazmortransflot.jpg',
+        'url': 'https://kazmortransflot.socialsirius.com'
     },
     'Ch4eVSWf7KXRubk5to6WFC': {
-        'label': 'PORT OF BAKU',
-        'logo': 'port_of_baku.jpg'
+        'label': 'PMIS - PORT OF BAKU',
+        'logo': 'port_of_baku.jpg',
+        'url': 'https://pmis.socialsirius.com'
     },
     'VU7c9jvBqLee9NkChXU1Kn': {
-        'label': 'PORT AKTAU',
-        'logo': 'port_aktau.png'
+        'label': 'Solvo.tos - PORT AKTAU',
+        'logo': 'port_aktau.png',
+        'url': 'https://solvotos.socialsirius.com'
     }
 }
 
 
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', None)
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', None)
+REDIS = os.getenv('REDIS', None)
