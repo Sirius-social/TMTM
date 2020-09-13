@@ -20,6 +20,7 @@ services:
       - DATABASE_HOST=db
       - ADMIN_USERNAME=test
       - ADMIN_PASSWORD=test
+      - REDIS=redis
     depends_on:
       - db
       - redis

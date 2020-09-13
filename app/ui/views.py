@@ -5,6 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework import serializers
 from django.conf import settings
+from django.urls import reverse
+from django.http.response import HttpResponseRedirect
 from sirius_sdk import Agent, P2PConnection
 
 from wrapper.models import Ledger
@@ -80,7 +82,10 @@ class IndexView(APIView):
     authentication_classes = []
 
     def get(self, request, *args, **kwargs):
-        return Response(data={})
+        if settings.AGENT['entity']:
+            return HttpResponseRedirect(redirect_to=reverse('transactions'))
+        else:
+            return Response(data={})
 
 
 class TestView(APIView):
