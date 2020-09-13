@@ -1,4 +1,5 @@
 import json
+import logging
 import asyncio
 from time import sleep
 
@@ -14,25 +15,25 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if settings.AGENT['entity']:
-            print('****** Entity was set, try start Smart-Contracts ******')
+            logging.error('****** Entity was set, try start Smart-Contracts ******')
             try:
-                print('* check agent connection')
+                logging.error('* check agent connection')
                 asyncio.get_event_loop().run_until_complete(self.check_agent_connection())
             except Exception as e:
-                print('EXCEPTION: check was terminated with exception:')
-                print(repr(e))
+                logging.error('EXCEPTION: check was terminated with exception:')
+                logging.error(repr(e))
 
-            print('****** Run listener event-loop ******')
+            logging.error('****** Run listener event-loop ******')
             while True:
                 try:
                     asyncio.get_event_loop().run_until_complete(self.run_listener())
                 except Exception as e:
-                    print('EXCEPTION: exception was raised while process listener event loop. '
+                    logging.error('EXCEPTION: exception was raised while process listener event loop. '
                           'Loop will be restarted after %d secs' % self.loop_timeout)
-                    print(repr(e))
+                    logging.error(repr(e))
                     sleep(self.loop_timeout)
         else:
-            print('****** Entity is empty, terminate ***********')
+            logging.error('****** Entity is empty, terminate ***********')
 
     @staticmethod
     async def check_agent_connection():
@@ -47,16 +48,16 @@ class Command(BaseCommand):
                 their_verkey=settings.AGENT['agent_verkey']
             )
         )
-        print('* agent.open()')
+        logging.error('* agent.open()')
         await agent.open()
         try:
-            print('* agent.ping()')
+            logging.error('* agent.ping()')
             ok = await agent.ping()
-            print(f'* ok: {ok}')
+            logging.error(f'* ok: {ok}')
             assert ok is True, 'problem with agent p2p'
-            print('* agent connection is OK!')
+            logging.error('* agent connection is OK!')
         finally:
-            print('* agent.close()')
+            logging.error('* agent.close()')
             await agent.close()
 
     @staticmethod
@@ -74,12 +75,12 @@ class Command(BaseCommand):
         )
         await agent.open()
         try:
-            print('* agent.subscribe()')
+            logging.error('* agent.subscribe()')
             listener = await agent.subscribe()
             async for event in listener:
-                print('* received event: ')
-                print('JSON>')
-                print(json.dumps(event, indent=4, sort_keys=True))
-                print('<')
+                logging.error('* received event: ')
+                logging.error('JSON>')
+                logging.error(json.dumps(event, indent=4, sort_keys=True))
+                logging.error('<')
         finally:
             await agent.close()
