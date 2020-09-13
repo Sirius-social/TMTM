@@ -24,4 +24,4 @@ CMD echo "Wait database is ready" && /app/wait-for-it.sh ${DATABASE_HOST}:${DATA
   cd /app && \
   echo "Database migration" && python manage.py migrate && \
   echo "Setup admin" && python manage.py setup_admin && \
-  echo "Run server" && (daphne -p $ASGI_PORT -b 0.0.0.0 settings.asgi:application)
+  echo "Run server" && (python manage.py run_smart_contracts & daphne -p $ASGI_PORT -b 0.0.0.0 settings.asgi:application)
