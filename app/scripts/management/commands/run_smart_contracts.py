@@ -25,7 +25,7 @@ class Command(BaseCommand):
             print('****** Run listener event-loop ******')
             while True:
                 try:
-                    asyncio.get_event_loop().run_until_complete(self.check_agent_connection())
+                    asyncio.get_event_loop().run_until_complete(self.run_listener())
                 except Exception as e:
                     print('EXCEPTION: exception was raised while process listener event loop. '
                           'Loop will be restarted after %d secs' % self.loop_timeout)
@@ -72,10 +72,14 @@ class Command(BaseCommand):
                 their_verkey=settings.AGENT['agent_verkey']
             )
         )
-        print('* agent.subscribe()')
-        listener = await agent.subscribe()
-        async for event in listener:
-            print('* received event: ')
-            print('JSON>')
-            print(json.dumps(event, indent=4, sort_keys=True))
-            print('<')
+        await agent.open()
+        try:
+            print('* agent.subscribe()')
+            listener = await agent.subscribe()
+            async for event in listener:
+                print('* received event: ')
+                print('JSON>')
+                print(json.dumps(event, indent=4, sort_keys=True))
+                print('<')
+        finally:
+            await agent.close()
