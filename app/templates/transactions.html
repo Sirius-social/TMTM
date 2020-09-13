@@ -134,7 +134,7 @@
                 <nav class="sidebar-nav">
                     <ul id="sidebarnav">
                         <li v-for="(menu, index) in left_menu" v-bind:class="{ active: active_menu == index }">
-                           <a @click.prevent="active_menu = index" href="#" class="waves-effect"><i v-bind:class="menu.class" aria-hidden="true"></i>[[menu.caption]]</a>
+                           <a v-if="menu.enabled" @click.prevent="active_menu = index" href="#" class="waves-effect"><i v-bind:class="menu.class" aria-hidden="true"></i>[[menu.caption]]</a>
                         </li>
 
                     </ul>
@@ -289,11 +289,11 @@
                 search_ledger: null,
                 selected_ledger: null,
                 left_menu: [
-                    {'caption': 'Транзакции', 'class': 'fa fa-columns m-r-10'},
-                    {'caption': 'ГУ-11', 'class': 'fa fa-table m-r-10'},
-                    {'caption': 'ГУ-12', 'class': 'fa fa-table m-r-10'},
-                    {'caption': 'Грузоперевозки', 'class': 'fa fa-globe m-r-10'},
-                    {'caption': 'Морские документы', 'class': 'fa fa-globe m-r-10'}
+                    {'caption': 'Транзакции', 'class': 'fa fa-columns m-r-10', 'enabled': true},
+                    {'caption': 'ГУ-11', 'class': 'fa fa-table m-r-10', 'enabled': false},
+                    {'caption': 'ГУ-12', 'class': 'fa fa-table m-r-10', 'enabled': false},
+                    {'caption': 'Грузоперевозки', 'class': 'fa fa-globe m-r-10', 'enabled': false},
+                    {'caption': 'Морские документы', 'class': 'fa fa-globe m-r-10', 'enabled': false}
                 ],
                 active_menu: 0
             },

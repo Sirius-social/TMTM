@@ -13,7 +13,7 @@ from wrapper.models import Ledger
 from .utils import run_async
 
 
-class AgentCredentials(serializers.Serializer):
+class AgentCredentialsSerializer(serializers.Serializer):
 
     server_address = serializers.CharField(required=True, max_length=1024)
     credentials = serializers.CharField(required=True, max_length=1024)
@@ -38,7 +38,18 @@ class TransactionsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        ser = AgentCredentials(data=request.query_params)
+        params = {k: v for k, v in request.query_params.items()}
+        params_from_settings = dict(
+            credentials=settings.AGENT['credentials'],
+            server_address=settings.AGENT['server_address'],
+            entity=settings.AGENT['entity'],
+            my_verkey=settings.AGENT['my_verkey'],
+            my_secret_key=settings.AGENT['my_secret_key'],
+            agent_verkey=settings.AGENT['agent_verkey']
+        )
+        for k, v in params_from_settings.items():
+            params[k] = params.get(k, None) or v
+        ser = AgentCredentialsSerializer(data=params)
         try:
             ser.is_valid(raise_exception=True)
             try:
