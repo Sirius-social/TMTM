@@ -6,6 +6,19 @@ def run_async(coro, timeout=15):
     return Scheduler.run_async(coro, timeout)
 
 
+async def run_coroutines(*args, timeout: int = 15):
+    results = []
+    items = [i for i in args]
+    done, pending = await asyncio.wait(items, timeout=timeout, return_when=asyncio.FIRST_EXCEPTION)
+    for f in done:
+        if f.exception():
+            raise f.exception()
+        results.append(f.result())
+    for f in pending:
+        f.cancel()
+    return results
+
+
 class Scheduler:
 
     __instance = None
