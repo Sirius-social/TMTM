@@ -6,6 +6,7 @@ from time import sleep
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from sirius_sdk import Agent, P2PConnection
+from sirius_sdk.errors.exceptions import SiriusConnectionClosed
 
 
 class Command(BaseCommand):
@@ -28,10 +29,16 @@ class Command(BaseCommand):
                 try:
                     asyncio.get_event_loop().run_until_complete(self.run_listener())
                 except Exception as e:
-                    logging.error('EXCEPTION: exception was raised while process listener event loop. '
-                          'Loop will be restarted after %d secs' % self.loop_timeout)
-                    logging.error(repr(e))
-                    sleep(self.loop_timeout)
+                    if isinstance(e, SiriusConnectionClosed):
+                        logging.error('Agent connection is finished, re-enter loop')
+                        sleep(1)
+                    else:
+                        logging.error(
+                            'EXCEPTION: exception was raised while process listener event loop. '
+                            'Loop will be restarted after %d secs' % self.loop_timeout
+                        )
+                        logging.error(repr(e))
+                        sleep(self.loop_timeout)
         else:
             logging.error('****** Entity is empty, terminate ***********')
 
