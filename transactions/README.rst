@@ -7,29 +7,81 @@ Simple consensus procedure
 
 Summary
 ===============
-TODO: Описать контекст происходящего, как мы решаем проблематику BFT
+As described at `Simple consensus <https://github.com/Sirius-social/sirius-sdk-python/tree/master/sirius_sdk/agent/consensus/simple>`_ docs,
+participants may to approve self formats of transactions that will be encapsulated to BFT messages.
+This document covers types of transactions that are used in TMTM pilot.
 
 Motivation
 ===============
-TODO: Motivation (see example: https://github.com/Sirius-social/sirius-sdk-python/tree/master/sirius_sdk/agent/consensus/simple)
-Написать про необходимость определить форматы транзакций для каждой из форм докумнтов
+We should describe message formats for use-cases that developers will meet in TMTM project:
 
+  - use-case 1: create ledger and handle new ledger construction
+  - use-case 2: issue transaction and handle new transactions issuing
+  - use-case 3: txn formats should cover all types of documents: SMGS(СМГС), Invoice, etc.
+  - use-case 4: sign transaction by self keys to identify committer that is core element of any supply-chain approaches.
+  - use-case 5: cover necessity to attach documents (.pdf, .doc, etc.)
+
+Notice that all this messages are not part of consensus procedures. All this messages formats are implemented
+to wrap SDK calls by intermediate web service at intermediate period. In production all this formats will be removed
+and replaced to native SDK calls in native IT environment and program language.
 
 Tutorial
 ===============
-TODO: Tutorial (see example: https://github.com/Sirius-social/sirius-sdk-python/tree/master/sirius_sdk/agent/consensus/simple)
-Написать про типы транзакций, расписать суть и роль каждого типа
+Transactions examples and attribute descriptions are presented below.
 
-Пример JSON транзакции:
+
+***************************************************
+[create-ledger] - create ledger, handle new ledgers
+***************************************************
+Example of service message for ledger creations. It is make sense every **Cargo Container** is serving in personal Ledger.
 
 .. code-block:: python
 
   {
-      "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/simple-consensus/1.0/problem_report",
+      "@type": "https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/create-ledger",
       "@id": "1129fbc9-b9cf-4191-b5c1-ee9c68945f42",
-      "problem-code": "request_not_accepted",
-      "explain": "Transaction has not metadata",
-      "~thread": {
-        "thid": "simple-consensus-txn-98fd8d72-80f6-4419-abc2-c65ea39d0f38"
+      "name": "Ledger-name-0001112222",
+      "genesis" : [
+            ...
+      ]
+      "msg~sig": {
+          "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/signature/1.0/ed25519Sha512_single",
+          "sig_data": "AAAAAF9RXJd...",
+          "signature": "_Oh48kK9I_QNiBRJfU-_HPAUxyIcrn3Ba8QwspSqiy8AMLMN4h8vbozImSr2dnVS2RaOfimWDgWVtZCTvbdjBQ==",
+          "signer": "FEvX3nsJ8VjW4qQv4Dh9E3NDEx1bUPDtc9vkaaoKVyz1"
       }
   }
+
+
+Every time actor needs to initialize new transaction log, it should initialize transactions ledger by genesis block,
+then notify all dealers in **Microledger** context and make sure all of them initialized self copy of transactions log.
+
+- **@id**: (required) - unique id of the message
+- **name**: (required) - unique name of the ledger
+- **genesis**: (required) - array of transactions that initialize new ledger - genesis block. Notice that **txnMetadata** is reserved attribute that contains ledger-specific data
+- **msg~sig**: (required) - signature of the message according to `Aries RFC 0234 <https://github.com/hyperledger/aries-rfcs/tree/master/features/0234-signature-decorator>`_
+
+***************************************************
+[issue-transaction] - issue transaction
+***************************************************
+Example of the service message to issue transaction.
+It is make sense every **Cargo Container** is serving in personal Ledger. After Cargo container ledger was initialized by
+genesis block, any participant (ADY, DKT, GR, etc) may issue self-signed transaction.
+
+.. code-block:: python
+
+  {
+      "@type": "https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/issue-transaction",
+      "@id": "1129fbc9-b9cf-4191-b5c1-ee9c68945f42",
+      "name": "Ledger-name-0001112222",
+      "genesis" : [
+            ...
+      ]
+      "msg~sig": {
+          "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/signature/1.0/ed25519Sha512_single",
+          "sig_data": "AAAAAF9RXJd...",
+          "signature": "_Oh48kK9I_QNiBRJfU-_HPAUxyIcrn3Ba8QwspSqiy8AMLMN4h8vbozImSr2dnVS2RaOfimWDgWVtZCTvbdjBQ==",
+          "signer": "FEvX3nsJ8VjW4qQv4Dh9E3NDEx1bUPDtc9vkaaoKVyz1"
+      }
+  }
+
