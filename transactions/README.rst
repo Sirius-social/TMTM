@@ -1,5 +1,5 @@
 ==================================
-Simple consensus procedure
+Wrapper Transactions
 ==================================
 
 - Authors: `Emin <emin@uniser.az>`_, `Elshad <elshad_947@mail.ru>`_, `Pavel Minenkov <https://github.com/Purik>`_, `Talgat Umarbaev <https://github.com/umarbaev>`_
