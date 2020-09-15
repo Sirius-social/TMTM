@@ -4,9 +4,7 @@ import asyncio
 from time import sleep
 from functools import wraps
 from datetime import datetime
-from typing import Optional
 
-import aioredis
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from sentry_sdk import capture_exception
@@ -16,6 +14,7 @@ from sirius_sdk.errors.exceptions import SiriusConnectionClosed
 from sirius_sdk.agent.consensus import simple as simple_consensus
 
 from scripts.management.commands import orm
+from scripts.management.commands.logger import StreamLogger
 
 
 def sentry_capture_exceptions(f):
@@ -29,33 +28,6 @@ def sentry_capture_exceptions(f):
             print('========================================')
             capture_exception(e)
     return wrapped
-
-
-class StreamLogger:
-
-    def __init__(self, stream: str):
-        self.__redis = None
-        self.__stream = stream
-        self.__channel_name = settings.AGENT['entity']
-
-    @staticmethod
-    async def create(stream: str):
-        inst = StreamLogger(stream)
-        if settings.REDIS:
-            inst.__redis = await aioredis.create_redis('redis://%s' % settings.REDIS, timeout=3)
-        return inst
-
-    async def __call__(self, *args, **kwargs):
-        event = dict(
-            stream=self.__stream,
-            payload=dict(**kwargs)
-        )
-        event_str = json.dumps(event, sort_keys=True, indent=4)
-        logging.error('============== LOG =============')
-        logging.error(event_str)
-        logging.error('================================')
-        if self.__redis:
-            await self.__redis.publish(event_str)
 
 
 class Command(BaseCommand):
