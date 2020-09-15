@@ -163,10 +163,10 @@ class Command(BaseCommand):
                             'label': p2p.their.label,
                             'did': p2p.their.did
                         },
-                        'local_timestamp_utc': str(datetime.utcnow())
+                        'local_timestamp_utc': str(datetime.utcnow()),
+                        'participants': propose.participants
                     },
-                    genesis=genesis,
-                    participants=propose.participants
+                    genesis=genesis
                 )
             else:
                 if state_machine.problem_report:

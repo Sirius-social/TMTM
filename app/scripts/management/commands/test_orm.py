@@ -35,10 +35,10 @@ class Command(BaseCommand):
                         'label': 'Test',
                         'did': 'Fake-DID'
                     },
-                    'local_timestamp_utc': str(datetime.utcnow())
+                    'local_timestamp_utc': str(datetime.utcnow()),
+                    'participants': ['P1', 'P2']
                 },
-                genesis=txns,
-                participants=['P1', 'P2']
+                genesis=txns
             )
             print('$')
         finally:
