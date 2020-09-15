@@ -2,32 +2,18 @@ import json
 import logging
 import asyncio
 from time import sleep
-from functools import wraps
 from datetime import datetime
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from sentry_sdk import capture_exception
 from sirius_sdk import Agent, P2PConnection, Pairwise
 from sirius_sdk.agent.listener import Event
 from sirius_sdk.errors.exceptions import SiriusConnectionClosed
 from sirius_sdk.agent.consensus import simple as simple_consensus
 
 from scripts.management.commands import orm
+from scripts.management.commands.decorators import sentry_capture_exceptions
 from scripts.management.commands.logger import StreamLogger
-
-
-def sentry_capture_exceptions(f):
-    @wraps(f)
-    async def wrapped(*args, **kwargs):
-        try:
-            return await f(*args, **kwargs)
-        except Exception as e:
-            print('============== EXCEPTION ===============')
-            print(repr(e))
-            print('========================================')
-            capture_exception(e)
-    return wrapped
 
 
 class Command(BaseCommand):
