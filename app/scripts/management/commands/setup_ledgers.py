@@ -8,7 +8,7 @@ class Command(BaseCommand):
 
     help = 'Setup Ledgers'
     LEDGERS_COUNT = 20
-    TXN_COUNT = 5
+    TXN_COUNT = 50
 
     def add_arguments(self, parser):
         parser.add_argument('entity', type=str)
