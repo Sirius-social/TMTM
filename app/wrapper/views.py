@@ -64,7 +64,7 @@ class LedgerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ledger
-        fields = ('id', 'name', 'metadata')
+        fields = ('id', 'name', 'metadata', 'participants')
         read_only_fields = fields
 
 
