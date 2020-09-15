@@ -2,17 +2,33 @@ import json
 import logging
 import asyncio
 from time import sleep
+from functools import wraps
 from datetime import datetime
+from typing import Optional
 
 import aioredis
 from django.core.management.base import BaseCommand
 from django.conf import settings
+from sentry_sdk import capture_exception
 from sirius_sdk import Agent, P2PConnection, Pairwise
 from sirius_sdk.agent.listener import Event
 from sirius_sdk.errors.exceptions import SiriusConnectionClosed
 from sirius_sdk.agent.consensus import simple as simple_consensus
 
 from scripts.management.commands import orm
+
+
+def sentry_capture_exceptions(f):
+    @wraps(f)
+    async def wrapped(*args, **kwargs):
+        try:
+            return await f(*args, **kwargs)
+        except Exception as e:
+            print('============== EXCEPTION ===============')
+            print(repr(e))
+            print('========================================')
+            capture_exception(e)
+    return wrapped
 
 
 class StreamLogger:
@@ -23,8 +39,8 @@ class StreamLogger:
         self.__channel_name = settings.AGENT['entity']
 
     @staticmethod
-    async def create():
-        inst = StreamLogger()
+    async def create(stream: str):
+        inst = StreamLogger(stream)
         if settings.REDIS:
             inst.__redis = await aioredis.create_redis('redis://%s' % settings.REDIS, timeout=3)
         return inst
@@ -121,11 +137,26 @@ class Command(BaseCommand):
 
                 assert isinstance(event, Event)
 
-                if isinstance(event.message, simple_consensus.messages.InitRequestLedgerMessage) and event.pairwise:
-                    logging.error('')
+                if event.pairwise:
+                    logging.error('* event.pairwise is filled')
+                    if isinstance(event.message, simple_consensus.messages.InitRequestLedgerMessage):
+                        logging.error('* init_ledger_accepting')
+                        fut = self.init_ledger_accepting(
+                            propose=event.message,
+                            p2p=event.pairwise
+                        )
+                        asyncio.ensure_future(fut)
+                    elif isinstance(event.message, simple_consensus.messages.ProposeTransactionsMessage):
+                        logging.error('* accept_transactions')
+                        fut = self.accept_transactions(
+                            propose=event.message,
+                            p2p=event.pairwise
+                        )
+                        asyncio.ensure_future(fut)
         finally:
             await agent.close()
 
+    @sentry_capture_exceptions
     async def init_ledger_accepting(self, propose: simple_consensus.messages.InitRequestLedgerMessage, p2p: Pairwise):
         """Smart-Contract that implements logic of new ledger accepting.
 
@@ -138,7 +169,7 @@ class Command(BaseCommand):
         await agent.open()
         try:
             # initialize state-machine
-            logger = await StreamLogger.create()
+            logger = await StreamLogger.create('ledgers')
             state_machine = simple_consensus.state_machines.MicroLedgerSimpleConsensus(
                 crypto=agent.wallet.crypto,
                 me=p2p.me,
@@ -177,3 +208,44 @@ class Command(BaseCommand):
         finally:
             await agent.close()
 
+    @sentry_capture_exceptions
+    async def accept_transactions(self, propose: simple_consensus.messages.ProposeTransactionsMessage, p2p: Pairwise):
+        """Smart-Contract that implements logic of accepting for new transactions batches.
+
+        :param propose: propose message,
+            see details here https://github.com/Sirius-social/sirius-sdk-python/tree/master/sirius_sdk/agent/consensus/simple#stage-1-propose-transactions-block-stage-propose
+        :param p2p: pairwise that was established earlier statically or via Aries 0160 protocol https://github.com/hyperledger/aries-rfcs/tree/master/features/0160-connection-protocol
+        """
+        # allocate connection to Agent services
+        agent = self.alloc_agent_connection()
+        await agent.open()
+        try:
+            # initialize state-machine
+            logger = await StreamLogger.create('transactions')
+            state_machine = simple_consensus.state_machines.MicroLedgerSimpleConsensus(
+                crypto=agent.wallet.crypto,
+                me=p2p.me,
+                pairwise_list=agent.pairwise_list,
+                microledgers=agent.microledgers,
+                transports=agent,
+                logger=logger
+            )
+            # Run state-machine. State progress is described here:
+            # https://github.com/Sirius-social/sirius-sdk-python/tree/master/sirius_sdk/agent/consensus/simple#use-case-2-accept-transaction-to-existing-ledger-by-all-dealers-in-microledger-space
+            success = await state_machine.accept_commit(
+                actor=p2p,
+                propose=propose
+            )
+            if success:
+                await orm.store_transactions(
+                    ledger=propose.state.name,
+                    transactions=propose.transactions
+                )
+            else:
+                if state_machine.problem_report:
+                    explain = state_machine.problem_report.explain
+                else:
+                    explain = ''
+                raise RuntimeError(f'Accepting of new transactions was terminated with error: \n"{explain}"')
+        finally:
+            await agent.close()

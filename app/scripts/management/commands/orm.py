@@ -27,3 +27,28 @@ async def create_ledger(name: str, metadata: dict, genesis: List[dict]):
                     )
 
     await database_sync_to_async(sync)(name, metadata, genesis)
+
+
+async def reset_ledger(name: str):
+
+    def sync(name_: str):
+        Ledger.objects.filter(name=name_, entity=settings.AGENT['entity']).all().delete()
+
+    await database_sync_to_async(sync)(name)
+
+
+async def store_transactions(ledger: str, transactions: List[dict]):
+
+    def sync(ledger_: str, transactions_: List[dict]):
+        ledger_model = Ledger.objects.get(name=ledger_, entity=settings.AGENT['entity'])
+        with atomic():
+            for txn in transactions_:
+                m = txn.pop('txnMetadata')
+                t = Transaction.objects.create(
+                    ledger=ledger_model,
+                    txn=txn,
+                    seq_no=m.get('seqNo'),
+                    metadata=m
+                )
+
+    await database_sync_to_async(sync)(ledger, transactions)
