@@ -16,7 +16,7 @@ EXPOSE $WSGI_PORT
 EXPOSE $ASGI_PORT
 
 
-HEALTHCHECK --interval=1800s --timeout=15s --start-period=30s --retries=1 \
+HEALTHCHECK --interval=300s --timeout=15s --start-period=30s --retries=1 \
   CMD curl -f http://localhost:$WSGI_PORT/maintenance/check_health/ || exit 1
 
 # FIRE!!!
