@@ -29,4 +29,4 @@ class StreamLogger:
         logging.error(event_str)
         logging.error('================================')
         if self.__redis:
-            await self.__redis.publish(event_str)
+            await self.__redis.publish(self.__channel_name, event_str)
