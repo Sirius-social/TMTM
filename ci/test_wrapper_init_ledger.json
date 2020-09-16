@@ -1,0 +1,18 @@
+{
+    "@id": "1129fbc9-b9cf-4191-b5c1-ee9c68945f42",
+    "@type": "https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/create-ledger",
+    "genesis": [
+        {
+            "op": "Op1",
+            "reqID": "qwewerqwrqw"
+        },
+        {
+            "op": "Op2",
+            "reqID": "23433254232"
+        }
+    ],
+    "name": "test_xxx",
+    "participants": [
+        "4vEF4eHwQ1GB5s766rAYAe"
+    ]
+}
