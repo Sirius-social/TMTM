@@ -43,7 +43,8 @@ Example of service message for ledger creations. It is make sense every **Cargo 
       "name": "Ledger-name-0001112222",
       "genesis" : [
             ...
-      ]
+      ],
+      "time_to_live": 15,
       "msg~sig": {
           "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/signature/1.0/ed25519Sha512_single",
           "sig_data": "AAAAAF9RXJd...",
@@ -59,6 +60,7 @@ then notify all dealers in **Microledger** context and make sure all of them ini
 - **@id**: (required) - unique id of the message
 - **name**: (required) - unique name of the ledger
 - **genesis**: (required) - array of transactions that initialize new ledger - genesis block. Notice that **txnMetadata** is reserved attribute that contains ledger-specific data
+- **time_to_live**: (optional) - time to live of the state machines
 - **msg~sig**: (required) - signature of the message according to `Aries RFC 0234 <https://github.com/hyperledger/aries-rfcs/tree/master/features/0234-signature-decorator>`_
 
 ***************************************************
@@ -107,6 +109,7 @@ genesis block, any participant (ADY, DKT, GR, etc) may issue self-signed transac
             }
          }
       ],
+      "time_to_live": 15,
       "msg~sig": {
           "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/signature/1.0/ed25519Sha512_single",
           "sig_data": "AAAAAF9RXJd...",
@@ -132,5 +135,6 @@ genesis block, any participant (ADY, DKT, GR, etc) may issue self-signed transac
    - WayBillRelease
 
 - **waybill**: (optional) - if filled when doc_type = "WayBill"
+- **time_to_live**: (optional) - time to live of the state machines
 - **~attach**: (optional) - list of attached documents. Document should be uploaded and published via URL. See detail at `Aries RFC <https://github.com/hyperledger/aries-rfcs/tree/master/concepts/0017-attachments>`_
 - **msg~sig**: (required) - signature of the message according to `Aries RFC 0234 <https://github.com/hyperledger/aries-rfcs/tree/master/features/0234-signature-decorator>`_
