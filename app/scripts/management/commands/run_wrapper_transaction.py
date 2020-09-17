@@ -35,13 +35,15 @@ class Command(BaseCommand):
                 genesis = txn.get('genesis')
                 participants = txn.get('participants')
                 stream = txn.get('@id')
+                time_to_live = txn.get('time_to_live', 30)
                 asyncio.get_event_loop().run_until_complete(
                     self.create_new_ledger(
                         name=ledger,
                         genesis=genesis,
                         my_did=settings.AGENT['entity'],
                         participants=participants,
-                        stream=stream
+                        stream=stream,
+                        time_to_live=time_to_live
                     )
                 )
             elif typ.endswith('issue-transaction'):
@@ -67,7 +69,10 @@ class Command(BaseCommand):
         return agent
 
     @sentry_capture_exceptions
-    async def create_new_ledger(self, name: str, genesis: List[dict], my_did: str, participants: List[str], stream: str):
+    async def create_new_ledger(
+            self, name: str, genesis: List[dict], my_did: str,
+            participants: List[str], stream: str, time_to_live: int = 30
+    ):
         """Smart-Contract that implements logic of creating new ledger and replicate new state among
         participants via consensus.
 
@@ -78,6 +83,7 @@ class Command(BaseCommand):
         :param participants: list of participants who is deal transactions in microledger context
         :param stream: stream id for logger
         :param my_did: DID of self side
+        :param time_to_live: ttl of state machine to detect error by timeout
         """
         agent = self.alloc_agent_connection()
         await agent.open()
@@ -85,7 +91,6 @@ class Command(BaseCommand):
             my_verkey = await agent.wallet.did.key_for_local_did(my_did)
             # initialize state-machine
             logger = await StreamLogger.create(stream)
-            print('#')
             state_machine = simple_consensus.state_machines.MicroLedgerSimpleConsensus(
                 crypto=agent.wallet.crypto,
                 me=Pairwise.Me(did=my_did, verkey=my_verkey),
@@ -93,20 +98,21 @@ class Command(BaseCommand):
                 microledgers=agent.microledgers,
                 transports=agent,
                 logger=logger,
-                time_to_live=10
+                time_to_live=time_to_live
             )
             genesis = [Transaction.create(txn) for txn in genesis]
-            print('@')
+            tm_start = datetime.utcnow()
             success, new_ledger = await state_machine.init_microledger(
                 ledger_name=name,
                 participants=participants,
                 genesis=genesis
             )
-            print('@')
+            tm_end = datetime.utcnow()
+            delta = (tm_end - tm_start).seconds
+            print('operation took %d secs' % delta)
             if success:
                 genesis = await new_ledger.get_all_transactions()
                 # Store ledger metadata and service info for post-processing and visualize in monitoring service
-                print('$')
                 await orm.create_ledger(
                     name=new_ledger.name,
                     metadata={
@@ -124,6 +130,8 @@ class Command(BaseCommand):
                     explain = state_machine.problem_report.explain
                 else:
                     explain = ''
+                if await agent.microledgers.is_exists(name):
+                    await agent.microledgers.reset(name)
                 raise RuntimeError(f'Creation of new ledger was terminated with error: \n"{explain}"')
         finally:
             await agent.close()
