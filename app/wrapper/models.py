@@ -43,7 +43,6 @@ class Content(models.Model):
 
     id = models.CharField(max_length=128, db_index=True)
     uid = models.CharField(max_length=128, primary_key=True)
-    private_uid = models.CharField(max_length=128, db_index=True, unique=True)
     owner = models.CharField(max_length=1024, null=True, db_index=True)
     name = models.CharField(max_length=512, db_index=True)
     content_type = models.CharField(max_length=64, null=True, db_index=True)
@@ -71,14 +70,12 @@ class Content(models.Model):
         _, ext = os.path.splitext(file.name.lower())
         self.id = secrets.token_hex(16)
         self.uid = self.id + ext
-        size_ext = ''
-        self.private_uid = secrets.token_hex(32) + size_ext + ext
-        self.get_storage_instance().save(self.private_uid, file)
+        self.get_storage_instance().save(self.uid, file)
         pass
 
     def delete(self, using=None, keep_parents=False):
         try:
-            self.get_storage_instance().delete(self.private_uid)
+            self.get_storage_instance().delete(self.uid)
         except NotImplementedError:
             pass
         super().delete(using, keep_parents)
