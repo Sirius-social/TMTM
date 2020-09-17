@@ -1,5 +1,17 @@
+import os
+import secrets
+
 from django.db import models
+from django.conf import settings
 from django.contrib.postgres.fields import JSONField, ArrayField
+
+
+def import_class(name):
+    components = name.split('.')
+    mod = __import__(components[0])
+    for comp in components[1:]:
+        mod = getattr(mod, comp)
+    return mod
 
 
 class Ledger(models.Model):
@@ -20,3 +32,53 @@ class Transaction(models.Model):
 
     class Meta:
         unique_together = ('seq_no', 'ledger')
+
+
+class Content(models.Model):
+
+    STORAGE_FILE_SYSTEM = 'django.core.files.storage.FileSystemStorage'
+    SUPPORTED_STORAGE = [
+        (STORAGE_FILE_SYSTEM, 'FileSystemStorage'),
+    ]
+
+    id = models.CharField(max_length=128, db_index=True)
+    uid = models.CharField(max_length=128, primary_key=True)
+    private_uid = models.CharField(max_length=128, db_index=True, unique=True)
+    owner = models.CharField(max_length=1024, null=True, db_index=True)
+    name = models.CharField(max_length=512, db_index=True)
+    content_type = models.CharField(max_length=64, null=True, db_index=True)
+    storage = models.CharField(max_length=256, db_index=True, choices=SUPPORTED_STORAGE, default=STORAGE_FILE_SYSTEM)
+    created = models.DateTimeField(null=True, auto_now_add=True)
+    updated = models.DateTimeField(null=True, auto_now=True)
+    is_avatar = models.BooleanField(default=False)
+    size_width = models.IntegerField(null=True)
+    size_height = models.IntegerField(null=True)
+    delete_after_download = models.BooleanField(default=False, db_index=True)
+    encoded = models.BooleanField(default=False, db_index=True)
+    download_counter = models.IntegerField(default=0, db_index=True)
+
+    @property
+    def url(self):
+        return settings.MEDIA_URL + self.uid
+
+    def get_storage_instance(self):
+        cls = import_class(self.storage)
+        return cls()
+
+    def set_file(self, file):
+        self.name = file.name
+        self.content_type = file.content_type
+        _, ext = os.path.splitext(file.name.lower())
+        self.id = secrets.token_hex(16)
+        self.uid = self.id + ext
+        size_ext = ''
+        self.private_uid = secrets.token_hex(32) + size_ext + ext
+        self.get_storage_instance().save(self.private_uid, file)
+        pass
+
+    def delete(self, using=None, keep_parents=False):
+        try:
+            self.get_storage_instance().delete(self.private_uid)
+        except NotImplementedError:
+            pass
+        super().delete(using, keep_parents)
