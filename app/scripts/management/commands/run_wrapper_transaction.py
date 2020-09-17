@@ -9,7 +9,9 @@ from django.conf import settings
 from sirius_sdk import Agent, Pairwise, P2PConnection
 from sirius_sdk.agent.consensus import simple as simple_consensus
 from sirius_sdk.agent.microledgers import Transaction
+from sirius_sdk.agent.aries_rfc.utils import sign
 
+from wrapper.models import Ledger
 from .logger import StreamLogger
 from .decorators import sentry_capture_exceptions
 from scripts.management.commands import orm
@@ -47,7 +49,15 @@ class Command(BaseCommand):
                     )
                 )
             elif typ.endswith('issue-transaction'):
-                pass
+                model = Ledger.objects.get(entity=settings.AGENT['entity'], name=txn['ledger']['name'])
+                participants = model.metadata['participants']
+                asyncio.get_event_loop().run_until_complete(
+                    self.issue_transaction(
+                        txn=txn,
+                        my_did=settings.AGENT['entity'],
+                        participants=participants
+                    )
+                )
             else:
                 raise RuntimeError(f'Unexpected @type = {typ}')
         else:
@@ -76,7 +86,7 @@ class Command(BaseCommand):
         """Smart-Contract that implements logic of creating new ledger and replicate new state among
         participants via consensus.
 
-        see details here https://github.com/Sirius-social/sirius-sdk-python/tree/master/sirius_sdk/agent/consensus/simple#step-1-transactions-log-initialization-actor-notify-all-participants-send-propose
+        see details here https://github.com/Sirius-social/sirius-sdk-python/tree/master/sirius_sdk/agent/consensus/simple#use-case-1-creating-new-ledger
 
         :param name: ledger name
         :param genesis: genesis block with transactions
@@ -132,6 +142,68 @@ class Command(BaseCommand):
                     explain = ''
                 if await agent.microledgers.is_exists(name):
                     await agent.microledgers.reset(name)
+                raise RuntimeError(f'Creation of new ledger was terminated with error: \n"{explain}"')
+        finally:
+            await agent.close()
+
+    @sentry_capture_exceptions
+    async def issue_transaction(self, txn: dict, my_did: str, participants: List[str]):
+        """Smart-Contract that implements logic of issuing transactions and replicate new ledger states among
+        participants via consensus.
+
+        see details here https://github.com/Sirius-social/sirius-sdk-python/tree/master/sirius_sdk/agent/consensus/simple#use-case-2-accept-transaction-to-existing-ledger-by-all-dealers-in-microledger-space
+
+        :param txn: transaction, see details: https://github.com/Sirius-social/TMTM/blob/master/transactions/README.rst#issue-transaction---issue-transaction
+        :param my_did: DID of self side
+        :param participants: list of participants
+        """
+        agent = self.alloc_agent_connection()
+        await agent.open()
+        try:
+            my_verkey = await agent.wallet.did.key_for_local_did(my_did)
+            txn = dict(**txn)
+            time_to_live = txn.get('time_to_live', 30)
+            ledger_name = txn['ledger']['name']
+            txn['msg~sig'] = await sign(
+                agent.wallet.crypto, txn, my_verkey
+            )
+            del txn['msg~sig']['sig_data']
+            # initialize state-machine
+            logger = await StreamLogger.create(stream=txn['@id'])
+            is_exists = await agent.microledgers.is_exists(ledger_name)
+            if not is_exists:
+                raise RuntimeError('LEdger [%s] does not exists' % ledger_name)
+            ledger = await agent.microledgers.ledger(ledger_name)
+            state_machine = simple_consensus.state_machines.MicroLedgerSimpleConsensus(
+                crypto=agent.wallet.crypto,
+                me=Pairwise.Me(did=my_did, verkey=my_verkey),
+                pairwise_list=agent.pairwise_list,
+                microledgers=agent.microledgers,
+                transports=agent,
+                logger=logger,
+                time_to_live=time_to_live
+            )
+            transactions = [Transaction.create(txn)]
+            tm_start = datetime.utcnow()
+            success, committed_transactions = await state_machine.commit(
+                ledger=ledger,
+                participants=participants,
+                transactions=transactions
+            )
+            tm_end = datetime.utcnow()
+            delta = (tm_end - tm_start).seconds
+            print('operation took %d secs' % delta)
+            if success:
+                # Store committed transactions for post-processing and visualize in monitoring service
+                await orm.store_transactions(
+                    ledger=ledger_name,
+                    transactions=committed_transactions
+                )
+            else:
+                if state_machine.problem_report:
+                    explain = state_machine.problem_report.explain
+                else:
+                    explain = ''
                 raise RuntimeError(f'Creation of new ledger was terminated with error: \n"{explain}"')
         finally:
             await agent.close()

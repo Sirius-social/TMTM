@@ -1,0 +1,37 @@
+{
+    "@id": "1129fbc9-b9cf-4191-b5c1-ee9c68945f43",
+    "@type": "https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/issue-transaction",
+	"no": "20-001-0000002",
+	"date": "14.09.20",
+    "cargo": "Kids toys",
+    "departure_station": "Караганда",
+    "arrival_station": "Актау",
+    "doc_type": "WayBill",
+    "ledger": {
+       "name": "test_1"
+    },
+    "waybill": {
+       "no": "xxx-yyy",
+       "wagon_no": "WSG-XXX-YYY"
+    },
+	"time_to_live": 30,
+    "~attach": [
+       {
+          "@id": "document-1",
+          "mime_type": "application/pdf",
+          "filename": "WayBill_xxx_yyy_zzz.pdf",
+          "data": {
+            "json": {
+              "url": "https://yadi.sk/d/yXRFlL9hQpX",
+              "md5": "a8040ea1cfbc95973a86d4bc20c0f964"
+            }
+          }
+       }
+    ],
+	"msg~sig": {
+        "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/signature/1.0/ed25519Sha512_single",
+        "sig_data": "AAAAAF9RXJd...",
+        "signature": "_Oh48kK9I_QNiBRJfU-_HPAUxyIcrn3Ba8QwspSqiy8AMLMN4h8vbozImSr2dnVS2RaOfimWDgWVtZCTvbdjBQ==",
+        "signer": "FEvX3nsJ8VjW4qQv4Dh9E3NDEx1bUPDtc9vkaaoKVyz1"
+    }
+}
