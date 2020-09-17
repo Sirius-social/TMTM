@@ -81,8 +81,12 @@ class Command(BaseCommand):
             test_ledgers = [ledger for ledger in ledgers if ledger['name'].startswith(self.test_ledger_prefix)]
             logging.error('* test ledgers count: %d' % len(test_ledgers))
             for name in [ledger['name'] for ledger in test_ledgers]:
-                await agent.microledgers.reset(name)
-                await orm.reset_ledger(name)
+                try:
+                    await agent.microledgers.reset(name)
+                    await orm.reset_ledger(name)
+                except Exception as e:
+                    logging.error('* exception raised while reset ledger [%s]' % name)
+                    logging.error(repr(e))
             ledgers = await agent.microledgers.list()
             logging.error('* after cleaning ledgers count: %d' % len(ledgers))
         finally:
