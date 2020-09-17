@@ -20,6 +20,7 @@ class Command(BaseCommand):
 
     help = 'Run Smart-Contracts'
     loop_timeout = 30
+    test_ledger_prefix = 'test_'
 
     def handle(self, *args, **options):
         if settings.AGENT['entity']:
@@ -27,6 +28,13 @@ class Command(BaseCommand):
             try:
                 logging.error('* check agent connection')
                 asyncio.get_event_loop().run_until_complete(self.check_agent_connection())
+            except Exception as e:
+                logging.error('EXCEPTION: check was terminated with exception:')
+                logging.error(repr(e))
+
+            try:
+                logging.error('* clean test ledgers')
+                asyncio.get_event_loop().run_until_complete(self.clean_test_ledgers())
             except Exception as e:
                 logging.error('EXCEPTION: check was terminated with exception:')
                 logging.error(repr(e))
@@ -63,6 +71,22 @@ class Command(BaseCommand):
             )
         )
         return agent
+
+    async def clean_test_ledgers(self):
+        agent = self.alloc_agent_connection()
+        await agent.open()
+        try:
+            ledgers = await agent.microledgers.list()
+            logging.error('* ledgers count: %d' % len(ledgers))
+            test_ledgers = [ledger for ledger in ledgers if ledger['name'].startswith(self.test_ledger_prefix)]
+            logging.error('* test ledgers count: %d' % len(test_ledgers))
+            for name in [ledger['name'] for ledger in test_ledgers]:
+                await agent.microledgers.reset(name)
+                await orm.reset_ledger(name)
+            ledgers = await agent.microledgers.list()
+            logging.error('* after cleaning ledgers count: %d' % len(ledgers))
+        finally:
+            await agent.close()
 
     async def check_agent_connection(self):
         agent = self.alloc_agent_connection()
