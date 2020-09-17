@@ -44,13 +44,7 @@ Example of service message for ledger creations. It is make sense every **Cargo 
       "genesis" : [
             ...
       ],
-      "time_to_live": 15,
-      "msg~sig": {
-          "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/signature/1.0/ed25519Sha512_single",
-          "sig_data": "AAAAAF9RXJd...",
-          "signature": "_Oh48kK9I_QNiBRJfU-_HPAUxyIcrn3Ba8QwspSqiy8AMLMN4h8vbozImSr2dnVS2RaOfimWDgWVtZCTvbdjBQ==",
-          "signer": "FEvX3nsJ8VjW4qQv4Dh9E3NDEx1bUPDtc9vkaaoKVyz1"
-      }
+      "time_to_live": 15
   }
 
 
@@ -61,7 +55,6 @@ then notify all dealers in **Microledger** context and make sure all of them ini
 - **name**: (required) - unique name of the ledger
 - **genesis**: (required) - array of transactions that initialize new ledger - genesis block. Notice that **txnMetadata** is reserved attribute that contains ledger-specific data
 - **time_to_live**: (optional) - time to live of the state machines
-- **msg~sig**: (required) - signature of the message according to `Aries RFC 0234 <https://github.com/hyperledger/aries-rfcs/tree/master/features/0234-signature-decorator>`_
 
 ***************************************************
 [issue-transaction] - issue transaction
