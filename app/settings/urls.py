@@ -15,14 +15,23 @@ Including another URLconf
 """
 from django.urls import path
 from django.conf.urls import url, include
+from django.conf import settings
 from ui.views import TransactionsView, IndexView
-from wrapper.views import MaintenanceRouter, LedgersRouter
+from wrapper.views import MaintenanceRouter, LedgersRouter, UploadView, ContentView
+
+
+CONTENT_URL = settings.MEDIA_URL
+if CONTENT_URL.startswith('/'):
+    CONTENT_URL = CONTENT_URL[1:]
 
 
 urlpatterns = [
     # Others
     path('transactions/', TransactionsView.as_view(), name='transactions'),
     path('', IndexView.as_view(), name='index'),
+    # Uploads
+    url(r'^upload', UploadView.as_view(), name='upload'),
+    path(CONTENT_URL + '<uid>', ContentView.as_view(), name='content'),
     # Maintenance
     url(r'^', include(MaintenanceRouter.urls)),
     url(r'^', include(LedgersRouter.urls)),
