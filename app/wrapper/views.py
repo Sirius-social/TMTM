@@ -89,7 +89,7 @@ class LedgerViewSet(
     authentication_classes = [BasicAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = LedgerSerializer
-    queryset = Ledger.objects.filter(entity=settings.AGENT['entity']).all()
+    queryset = Ledger.objects.filter(entity=settings.AGENT['entity']).order_by('-id').all()
 
 
 class TransactionViewSet(
