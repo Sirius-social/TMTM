@@ -1,4 +1,4 @@
-import uuid
+from datetime import datetime
 from typing import Optional
 
 from rest_framework import viewsets
@@ -25,14 +25,15 @@ class MaintenanceViewSet(viewsets.GenericViewSet):
 
     @action(methods=["GET", "POST"], detail=False)
     def check_health(self, request):
+        ping_id = str(datetime.utcnow())
         run_async(
-            self.participants_trust_ping(),
+            self.participants_trust_ping(ping_id),
             timeout=15
         )
-        return Response(dict(success=True, message='OK'))
+        return Response(dict(success=True, ping_id=ping_id, message='OK'))
 
     @staticmethod
-    async def participants_trust_ping():
+    async def participants_trust_ping(ping_id: str):
         if settings.AGENT['entity']:
             # extract neighbours
             neighbours = {did: meta for did, meta in settings.PARTICIPANTS_META.items() if did != settings.AGENT['entity']}
@@ -47,13 +48,15 @@ class MaintenanceViewSet(viewsets.GenericViewSet):
                     their_verkey=settings.AGENT['agent_verkey']
                 )
             )
+            print('agent.open()')
             await agent.open()
+            print('start ping to all')
             try:
-                ping_id = uuid.uuid4().hex
                 for their_did, meta in neighbours.items():
                     to = await agent.pairwise_list.load_for_did(their_did)
+                    print('ping to: ' + their_did)
                     await agent.send_to(
-                        message=Ping(comment='ping-id: %s' % ping_id),
+                        message=Ping(comment=ping_id),
                         to=to
                     )
             finally:
