@@ -108,7 +108,6 @@ genesis block, any participant (ADY, DKT, GR, etc) may issue self-signed transac
       "time_to_live": 15,
       "msg~sig": {
           "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/signature/1.0/ed25519Sha512_single",
-          "sig_data": "AAAAAF9RXJd...",
           "signature": "_Oh48kK9I_QNiBRJfU-_HPAUxyIcrn3Ba8QwspSqiy8AMLMN4h8vbozImSr2dnVS2RaOfimWDgWVtZCTvbdjBQ==",
           "signer": "FEvX3nsJ8VjW4qQv4Dh9E3NDEx1bUPDtc9vkaaoKVyz1"
       }
