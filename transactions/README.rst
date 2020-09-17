@@ -81,6 +81,9 @@ genesis block, any participant (ADY, DKT, GR, etc) may issue self-signed transac
       "departure_station": "Караганда",
       "arrival_station": "Актау",
       "doc_type": "WayBill",
+      "ledger": {
+         "name": "some-ledger"
+      },
       "waybill": {
          "no": "xxx-yyy",
          "wagon_no": "WSG-XXX-YYY"
@@ -134,6 +137,10 @@ genesis block, any participant (ADY, DKT, GR, etc) may issue self-signed transac
    - GoodsDeclaration
    - WayBillRelease
 
+- **ledger**: (required) - operation ledger
+
+  - **ledger.name**: (required) - name of the ledger
+  
 - **waybill**: (optional) - if filled when doc_type = "WayBill"
 - **time_to_live**: (optional) - time to live of the state machines
 - **~attach**: (optional) - list of attached documents. Document should be uploaded and published via URL. See detail at `Aries RFC <https://github.com/hyperledger/aries-rfcs/tree/master/concepts/0017-attachments>`_
