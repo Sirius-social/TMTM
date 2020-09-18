@@ -145,7 +145,7 @@ class ContentView(ExtendViewSetMixin, APIView):
 
     @cross_domain
     def get(self, request, uid, *args, **kwargs):
-        content = Content.objects.filter(uid=uid).first()
+        content = Content.objects.filter(uid=uid, entity=settings.AGENT['entity']).first()
         if content:
             return sendfile(request, filename=os.path.join(settings.MEDIA_ROOT, content.uid))
         else:
