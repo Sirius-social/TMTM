@@ -162,7 +162,7 @@ AGENT = {
 
 PARTICIPANTS_META = {
     '4vEF4eHwQ1GB5s766rAYAe': {
-        'label': 'ADY-Smart',
+        'label': 'ADI Smart',
         'logo': 'ady_container.png',
         'url': 'https://ady.socialsirius.com'
     },
