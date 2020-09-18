@@ -9,7 +9,7 @@ class Command(BaseCommand):
 
     help = 'Setup Ledgers'
     LEDGERS_COUNT = 20
-    TXN_COUNT = 50
+    TXN_COUNT = 30
 
     def add_arguments(self, parser):
         parser.add_argument('entity', type=str)
@@ -22,7 +22,7 @@ class Command(BaseCommand):
         Ledger.objects.filter(entity=entity).all().delete()
         for ledger_cnt in range(self.LEDGERS_COUNT):
             ledger = Ledger.objects.create(
-                entity=entity, name='20-001-1000500' + str(ledger_cnt), metadata={'debug': True}
+                entity=entity, name='Container-' + str(ledger_cnt), metadata={'debug': True}
             )
             for txn_cnt in range(self.TXN_COUNT):
                 seq_no = txn_cnt + 1
@@ -52,19 +52,19 @@ class Command(BaseCommand):
                               "filename": "WayBill_xxx_yyy_zzz.pdf",
                               "data": {
                                 "json": {
-                                  "url": "...",
-                                  "md5": "..."
+                                  "url": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+                                  "md5": "eaa13b3aa037b874d7835514b2a02514"
                                 }
                               }
                            },
                            {
                               "@id": "document-2",
-                              "mime_type": "image/png",
-                              "filename": "WayBill_xxx_yyy_zzz_attaches.png",
+                              "mime_type": "application/doc",
+                              "filename": "WayBill_xxx_yyy_zzz_attaches.doc",
                               "data": {
                                 "json": {
-                                  "url": "...",
-                                  "md5": "..."
+                                  "url": "https://www.sample-videos.com/doc/Sample-doc-file-200kb.doc",
+                                  "md5": "eaa13b3aa037b874d7835514b2a02514"
                                 }
                               }
                            }

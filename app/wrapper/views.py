@@ -79,9 +79,15 @@ class LedgerSerializer(serializers.ModelSerializer):
 
 class TransactionSerializer(serializers.ModelSerializer):
 
+    attachments = serializers.SerializerMethodField('get_attachments')
+
+    def get_attachments(self, obj):
+        collection = obj.txn['~attach']
+        return collection
+
     class Meta:
         model = Transaction
-        fields = ('txn', 'seq_no', 'metadata')
+        fields = ('txn', 'seq_no', 'metadata', 'attachments')
         read_only_fields = fields
 
 

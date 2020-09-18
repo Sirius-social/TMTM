@@ -29,6 +29,11 @@
     <script src="/static/js/vue.js"></script>
     <script src="https://unpkg.com/vue-scroll-loader"></script>
     {% include "libraries.html" %}
+    <style>
+        .modal-lg {
+            max-width:70%;
+        }
+    </style>
 </head>
 
 <body class="fix-header fix-sidebar card-no-border">
@@ -43,7 +48,9 @@
     <!-- Main wrapper - style you can find in pages.scss -->
     <!-- ============================================================== -->
     <div id="main-wrapper">
-        <!--  Modal  -->
+        <!-- ============================================================== -->
+        <!-- Modal Txn details -->
+        <!-- ============================================================== -->
         <div id="modal-txn-detail" class="modal" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.2);overflow-y: auto;">
           <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
@@ -55,6 +62,28 @@
               </div>
               <div class="modal-body">
                   <div id="dev-txn-detail" style="white-space: pre-wrap;border:lightgray dotted 1px;padding:5px;width: 100%; height: 100%;font-size: 75%;">
+                  </div>
+              </div>
+              <div class="modal-footer">
+                <button @click.prevent="close_modal_forms" type="button" class="btn btn-primary" >Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- ============================================================== -->
+        <!-- Modal Docs Viewer -->
+        <!-- ============================================================== -->
+        <div id="modal-doc-viewer" class="modal" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.2);overflow-y: auto;">
+          <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 id="title-doc-viewer" class="modal-title"></h5>
+                <button @click.prevent="close_modal_forms" type="button" class="close" data-dismiss="modal" aria-label="Close" id="btn-modal-close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                  <div id="div-doc-viewer" style="white-space: pre-wrap;border:lightgray dotted 1px;padding:5px;width: 100%; height: 100%;min-height:500px;">
                   </div>
               </div>
               <div class="modal-footer">
@@ -209,14 +238,17 @@
                                 <scroll-loader :loader-method="get_loader_list" :loader-disable="!loader_enable" :loader-size="300">
                                 </scroll-loader>
 
+                                <!--
+                                <iframe src="http://docs.google.com/gview?url=https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf&embedded=true"></iframe>
+                                -->
+
                                 <table v-if="!loader_enable" class="table">
                                   <thead>
                                     <tr>
                                       <th scope="col"># seq_no</th>
                                       <th scope="col">No</th>
                                       <th scope="col">Metadata</th>
-                                      <th scope="col">Stations</th>
-                                      <th scope="col">Cargo</th>
+                                      <th scope="col">Attachments</th>
                                       <th scope="col">Details...</th>
                                     </tr>
                                   </thead>
@@ -225,8 +257,17 @@
                                       <th scope="row">[[txn.seq_no]]</th>
                                       <td>[[txn.txn.no]]</td>
                                       <td>[[txn.metadata]]</td>
-                                      <td>[[txn.txn.departure_station]] -> [[txn.txn.arrival_station]]</td>
-                                      <td>[[txn.txn.cargo]]</td>
+                                      <td>
+                                          <ul>
+                                              <li v-for="attachment in txn.attachments">
+                                                  <a @click.prevent="show_doc_viewer(attachment.data.json.url, attachment.filename, attachment.data.json.md5)" href="">[[ attachment.filename ]]</a>
+                                                  <svg @click.prevent="open_link_in_tab(attachment.data.json.url)" style="cursor: pointer; margin-left: 10px;" title="Download" width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-download" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                      <path fill-rule="evenodd" d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                                                      <path fill-rule="evenodd" d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                                                  </svg>
+                                              </li>
+                                          </ul>
+                                      </td>
                                       <td><button @click.prevent="show_txn_details(txn.txn);" style="cursor: pointer;" class="btn-primary">Details</button></td>
                                     </tr>
                                   </tbody>
@@ -369,10 +410,23 @@
                 },
                 close_modal_forms: function(){
                     $("#modal-txn-detail").hide();
+                    $('#modal-doc-viewer').hide();
                 },
                 show_txn_details: function(txn) {
                     $("#dev-txn-detail").html(library.json.prettyPrint(txn));
                     $("#modal-txn-detail").show();
+                },
+                show_doc_viewer: function (url, filename, md5) {''
+                    var html = '<iframe style="width:100%;height:600px;" src="http://docs.google.com/gview?url='+url+'&embedded=true"></iframe>';
+                    var div$ = $("#div-doc-viewer");
+                    div$.children().remove();
+                    div$.html(html);
+                    $("#title-doc-viewer").html(filename + '  (md5: ' + md5 + ')');
+                    $("#modal-doc-viewer").show();
+                },
+                open_link_in_tab: function(link) {
+                    console.log(link);
+                    window.open(link, '_blank');
                 }
             }
         });
