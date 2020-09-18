@@ -146,6 +146,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATIC_URL = '/static/'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/content/'
+MEDIA_ROOT = '/tmp'
 
 SENTRY_DSN = os.getenv('SENTRY_DSN')
 

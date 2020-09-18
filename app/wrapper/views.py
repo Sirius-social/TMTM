@@ -122,6 +122,7 @@ class UploadView(ExtendViewSetMixin, APIView):
 
     renderer_classes = [JSONRenderer]
     permission_classes = [IsAuthenticated]
+    authentication_classes = [BasicAuthentication]
 
     @cross_domain
     def post(self, request, *args, **kwargs):
@@ -134,6 +135,7 @@ class UploadView(ExtendViewSetMixin, APIView):
             content.set_file(file)
             content.save()
             data['url'] = self.make_full_url(content.url)
+            data['md5'] = content.md5
         return Response(data, status=200)
 
 

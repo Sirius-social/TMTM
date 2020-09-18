@@ -1,4 +1,5 @@
 import os
+import hashlib
 import secrets
 
 from django.db import models
@@ -72,6 +73,9 @@ class Content(models.Model):
         self.id = secrets.token_hex(16)
         self.uid = self.id + ext
         self.get_storage_instance().save(self.uid, file)
+        file.seek(0)
+        content = file.read()
+        self.md5 = hashlib.md5(content).hexdigest()
         pass
 
     def delete(self, using=None, keep_parents=False):
