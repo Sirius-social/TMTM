@@ -55,6 +55,7 @@ class Content(models.Model):
     delete_after_download = models.BooleanField(default=False, db_index=True)
     encoded = models.BooleanField(default=False, db_index=True)
     download_counter = models.IntegerField(default=0, db_index=True)
+    md5 = models.CharField(max_length=128, null=True)
 
     @property
     def url(self):
