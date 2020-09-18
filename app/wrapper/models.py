@@ -44,7 +44,7 @@ class Content(models.Model):
 
     id = models.CharField(max_length=128, db_index=True)
     uid = models.CharField(max_length=128, primary_key=True)
-    owner = models.CharField(max_length=1024, null=True, db_index=True)
+    entity = models.CharField(max_length=1024, null=True, db_index=True)
     name = models.CharField(max_length=512, db_index=True)
     content_type = models.CharField(max_length=64, null=True, db_index=True)
     storage = models.CharField(max_length=256, db_index=True, choices=SUPPORTED_STORAGE, default=STORAGE_FILE_SYSTEM)
@@ -76,6 +76,7 @@ class Content(models.Model):
         file.seek(0)
         content = file.read()
         self.md5 = hashlib.md5(content).hexdigest()
+        self.entity = settings.AGENT['entity']
         pass
 
     def delete(self, using=None, keep_parents=False):
