@@ -63,7 +63,7 @@ class TransactionsView(APIView):
         else:
             entity = credentials['entity']
             return Response(data={
-                'ledgers': [ledger.name for ledger in Ledger.objects.filter(entity=entity).all()[:200]],
+                'ledgers': [{'name': ledger.name, 'id': ledger.id} for ledger in Ledger.objects.filter(entity=entity).all()[:200]],
                 'logo': '/static/logos/%s' % settings.PARTICIPANTS_META[entity]['logo'],
                 'label': settings.PARTICIPANTS_META[entity]['label']
             })

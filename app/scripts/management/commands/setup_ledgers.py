@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 from django.core.management.base import BaseCommand
 
@@ -30,7 +31,7 @@ class Command(BaseCommand):
                     ledger=ledger, seq_no=seq_no,
                     txn={
                         "@type": "https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/issue-transaction",
-                        "@id": "1129fbc9-b9cf-4191-b5c1-ee9c68945f42",
+                        "@id": uuid.uuid4().hex,
                         "no": "20-001-0000002-" + str(seq_no),
                         "date": "14.09.20",
                         "cargo": "Kids toys",

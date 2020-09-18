@@ -27,7 +27,8 @@
     <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
     <script src="/static/js/vue.js"></script>
-
+    <script src="https://unpkg.com/vue-scroll-loader"></script>
+    {% include "libraries.html" %}
 </head>
 
 <body class="fix-header fix-sidebar card-no-border">
@@ -43,25 +44,21 @@
     <!-- ============================================================== -->
     <div id="main-wrapper">
         <!--  Modal  -->
-        <div id="modal-test" class="modal" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.2);">
+        <div id="modal-txn-detail" class="modal" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.2);overflow-y: auto;">
           <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title">details</h5>
-                <button  type="button" class="close" data-dismiss="modal" aria-label="Close" id="btn-modal-close">
+                <h5 class="modal-title">Transaction details</h5>
+                <button @click.prevent="close_modal_forms" type="button" class="close" data-dismiss="modal" aria-label="Close" id="btn-modal-close">
                   <span aria-hidden="true">&times;</span>
                 </button>
               </div>
               <div class="modal-body">
-
-                  <div style="width: 100%; height: 100%;">
-
+                  <div id="dev-txn-detail" style="white-space: pre-wrap;border:lightgray dotted 1px;padding:5px;width: 100%; height: 100%;font-size: 75%;">
                   </div>
-                  cc
-
               </div>
               <div class="modal-footer">
-                <button id="btn-cancel-modal" type="button" class="btn btn-secondary" >Close</button>
+                <button @click.prevent="close_modal_forms" type="button" class="btn btn-primary" >Close</button>
               </div>
             </div>
           </div>
@@ -179,7 +176,7 @@
                 <!-- ============================================================== -->
                 <div class="row">
                     <!-- Column -->
-                    <div class="col-sm-5">
+                    <div class="col-sm-4">
                         <div class="card">
                             <div class="card-block">
                                 <form class="app-search p-l-20">
@@ -188,11 +185,11 @@
                                     <a class="srh-btn" title="Добавить новый Ledger" style="margin-left: 20px;cursor:pointer;"><i class="ti-plus"></i></a>
                                 </form>
                                 <div id="tagsContainer">
-                                 <canvas width="600" height="500" id="tagsCanvas">
+                                 <canvas width="400" height="400" id="tagsCanvas">
                                   <p>Anything in here will be replaced on browsers that support the canvas element</p>
                                   <ul>
                                    <li v-for="ledger in filtered_ledgers">
-                                       <a @click.prevent="ledger_selected(ledger)" href="">[[ledger]]</a>
+                                       <a @click.prevent="ledger_selected(ledger)" href="" >[[ledger.name]]</a>
                                    </li>
 
                                   </ul>
@@ -203,22 +200,37 @@
                     </div>
                     <!-- Column -->
                     <!-- Column -->
-                    <div class="col-sm-6">
+                    <div class="col-sm-8">
                         <div class="card">
                             <div class="card-block">
                                 <h4 v-if="!selected_ledger" class="text-danger">Выберите Ledger для работы с транзакциями</h4>
-                                <h4 v-if="selected_ledger" class="card-title text-primary">Ledger: [[selected_ledger]]</h4>
-                                <div id="chartdiv" style="height: 600px; width: 100%;">
+                                <h4 v-if="selected_ledger" class="card-title text-primary">Ledger: [[selected_ledger.name]]</h4>
 
-                                </div>
-                                <!-- ============================================================== -->
-                                <!-- START TIMELINE-->
-                                <!-- ============================================================== -->
+                                <scroll-loader :loader-method="get_loader_list" :loader-disable="!loader_enable" :loader-size="300">
+                                </scroll-loader>
 
-                                <!-- ============================================================== -->
-                                <!-- STOP TIMELINE-->
-                                <!-- ============================================================== -->
-
+                                <table v-if="!loader_enable" class="table">
+                                  <thead>
+                                    <tr>
+                                      <th scope="col"># seq_no</th>
+                                      <th scope="col">No</th>
+                                      <th scope="col">Metadata</th>
+                                      <th scope="col">Stations</th>
+                                      <th scope="col">Cargo</th>
+                                      <th scope="col">Details...</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody style="font-size: 75%;">
+                                    <tr v-for="txn in transactions">
+                                      <th scope="row">[[txn.seq_no]]</th>
+                                      <td>[[txn.txn.no]]</td>
+                                      <td>[[txn.metadata]]</td>
+                                      <td>[[txn.txn.departure_station]] -> [[txn.txn.arrival_station]]</td>
+                                      <td>[[txn.txn.cargo]]</td>
+                                      <td><button @click.prevent="show_txn_details(txn.txn);" style="cursor: pointer;" class="btn-primary">Details</button></td>
+                                    </tr>
+                                  </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -295,14 +307,16 @@
                     {'caption': 'Грузоперевозки', 'class': 'fa fa-globe m-r-10', 'enabled': false},
                     {'caption': 'Морские документы', 'class': 'fa fa-globe m-r-10', 'enabled': false}
                 ],
-                active_menu: 0
+                active_menu: 0,
+                loader_enable: false,
+                transactions: [],
             },
             computed: {
                 filtered_ledgers: function(){
                     if (this.search_ledger) {
                         var ret = [];
                         for (var i = 0; i < ledgers_data.length; i++) {
-                          if (ledgers_data[i].includes(this.search_ledger)) {
+                          if (ledgers_data[i].name.includes(this.search_ledger)) {
                               ret.push(ledgers_data[i]);
                           }
                         }
@@ -320,6 +334,9 @@
                 search_ledger: function (new_value, old_value) {
                     setTimeout(function() {
                         $("#tagsCanvas").tagcanvas("update");
+                        if (new_value.length > 0) {
+                            $("#tagsCanvas").tagcanvas("tagtofront", {id: new_value[0].name});
+                        }
                     }, 100);
                 },
                 selected_ledger: function(new_value, old_value){
@@ -329,8 +346,33 @@
                 }
             },
             methods: {
-                ledger_selected: function(name){
-                    this.selected_ledger = name;
+                ledger_selected: function(ledger){
+                    this.selected_ledger = ledger;
+                    this.load_transactions(ledger.id);
+                },
+                get_loader_list: function(){
+                    return [];
+                },
+                load_transactions: function(ledger_id){
+                    this.loader_enable = true;
+                    this.transactions = [];
+                    var url = "/ledgers/" + ledger_id + "/transactions"
+                    var self = this;
+                    $.get(
+                        url,
+                        function(resp){
+                            //console.log(resp);
+                            self.transactions = resp.results;
+                            self.loader_enable = false;
+                        }
+                    );
+                },
+                close_modal_forms: function(){
+                    $("#modal-txn-detail").hide();
+                },
+                show_txn_details: function(txn) {
+                    $("#dev-txn-detail").html(library.json.prettyPrint(txn));
+                    $("#modal-txn-detail").show();
                 }
             }
         });
