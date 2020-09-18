@@ -29,7 +29,51 @@ class Command(BaseCommand):
                 txn = Transaction.objects.create(
                     ledger=ledger, seq_no=seq_no,
                     txn={
-                        'data': txn_cnt
+                        "@type": "https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/issue-transaction",
+                        "@id": "1129fbc9-b9cf-4191-b5c1-ee9c68945f42",
+                        "no": "20-001-0000002-" + str(seq_no),
+                        "date": "14.09.20",
+                        "cargo": "Kids toys",
+                        "departure_station": "Караганда",
+                        "arrival_station": "Актау",
+                        "doc_type": "WayBill",
+                        "ledger": {
+                           "name": ledger.name
+                        },
+                        "waybill": {
+                           "no": "xxx-yyy",
+                           "wagon_no": "WSG-XXX-YYY"
+                        },
+                        "~attach": [
+                           {
+                              "@id": "document-1",
+                              "mime_type": "application/pdf",
+                              "filename": "WayBill_xxx_yyy_zzz.pdf",
+                              "data": {
+                                "json": {
+                                  "url": "...",
+                                  "md5": "..."
+                                }
+                              }
+                           },
+                           {
+                              "@id": "document-2",
+                              "mime_type": "image/png",
+                              "filename": "WayBill_xxx_yyy_zzz_attaches.png",
+                              "data": {
+                                "json": {
+                                  "url": "...",
+                                  "md5": "..."
+                                }
+                              }
+                           }
+                        ],
+                        "time_to_live": 15,
+                        "msg~sig": {
+                            "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/signature/1.0/ed25519Sha512_single",
+                            "signature": "_Oh48kK9I_QNiBRJfU-_HPAUxyIcrn3Ba8QwspSqiy8AMLMN4h8vbozImSr2dnVS2RaOfimWDgWVtZCTvbdjBQ==",
+                            "signer": "38r8qU19FRYqqRQVtaWyoNP55wBJUZfBiAKBd7z9y1Qv"
+                        }
                     },
                     metadata={'seqNo': seq_no, 'txnTime': str(stamp)}
                 )
