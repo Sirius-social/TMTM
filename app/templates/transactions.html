@@ -93,6 +93,51 @@
           </div>
         </div>
         <!-- ============================================================== -->
+        <!-- Modal Create new Ledger -->
+        <!-- ============================================================== -->
+        <div id="modal-make-transactions" class="modal" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.2);overflow-y: auto;">
+          <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 id="title-doc-viewer" class="modal-title">Make transaction</h5>
+                <button @click.prevent="close_modal_forms" type="button" class="close" data-dismiss="modal" aria-label="Close" id="btn-modal-close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                  <div style="width: 100%;">
+                      <form>
+                          <div class="row col-sm-3 my-1">
+                              <input name="ledger-name" type="text" class="form-control" placeholder="Ledger name">
+                          </div>
+                          <div class="row">
+                            <div class="col">
+                              <input name="no" type="text" class="form-control-sm" placeholder="No">
+                            </div>
+                            <div class="col">
+                              <input name="date" type="text" class="form-control-sm" placeholder="Date">
+                            </div>
+                            <div class="col">
+                              <input name="cargo" type="text" class="form-control-sm" placeholder="Cargo">
+                            </div>
+                            <div class="col">
+                              <input name="departure-station" type="text" class="form-control-sm" placeholder="Departure station">
+                            </div>
+                            <div class="col">
+                              <input name="arrival-station" type="text" class="form-control-sm" placeholder="Arrival station">
+                            </div>
+                          </div>
+                      </form>
+                  </div>
+              </div>
+              <div class="modal-footer">
+                <button @click.prevent="" type="button" class="btn btn-success" >Accept</button>
+                <button @click.prevent="close_modal_forms" type="button" class="btn btn-primary" >Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- ============================================================== -->
         <!-- Topbar header - style you can find in pages.scss -->
         <!-- ============================================================== -->
         <header class="topbar">
@@ -211,7 +256,7 @@
                                 <form class="app-search p-l-20">
                                     <input v-model="search_ledger" style="width: 400px;" type="text" class="form-control" placeholder="Выберите Ledger ...">
                                     <a class="srh-btn" style="margin-left: -30px;"><i class="ti-search"></i></a>
-                                    <a class="srh-btn" title="Добавить новый Ledger" style="margin-left: 20px;cursor:pointer;"><i class="ti-plus"></i></a>
+                                    <a @click.prevent="open_transaction_form()" class="srh-btn" title="Добавить новый Ledger" style="margin-left: 20px;cursor:pointer;"><i class="ti-plus"></i></a>
                                 </form>
                                 <div id="tagsContainer">
                                  <canvas width="400" height="400" id="tagsCanvas">
@@ -411,6 +456,7 @@
                 close_modal_forms: function(){
                     $("#modal-txn-detail").hide();
                     $('#modal-doc-viewer').hide();
+                    $('#modal-make-transactions').hide();
                 },
                 show_txn_details: function(txn) {
                     $("#dev-txn-detail").html(library.json.prettyPrint(txn));
@@ -423,6 +469,9 @@
                     div$.html(html);
                     $("#title-doc-viewer").html(filename + '  (md5: ' + md5 + ')');
                     $("#modal-doc-viewer").show();
+                },
+                open_transaction_form: function(op_code){
+                    $("#modal-make-transactions").show();
                 },
                 open_link_in_tab: function(link) {
                     console.log(link);
