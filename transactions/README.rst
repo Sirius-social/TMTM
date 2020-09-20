@@ -128,12 +128,16 @@ genesis block, any participant (ADY, DKT, GR, etc) may issue self-signed transac
    - QualityPassport
    - GoodsDeclaration
    - WayBillRelease
+   - Сonnaissement
+   - Manifest
+   - CargoPlan
+   - LogisticInfo
 
 - **ledger**: (required) - operation ledger
 
   - **ledger.name**: (required) - name of the ledger
   
-- **waybill**: (optional) - if filled when doc_type = "WayBill"
+- **waybill**: (optional) - if filled when doc_type == "WayBill" | "Сonnaissement" | "Manifest" | "CargoPlan" | "LogisticInfo"
 - **time_to_live**: (optional) - time to live of the state machines
 - **~attach**: (optional) - list of attached documents. Document should be uploaded and published via URL. See detail at `Aries RFC <https://github.com/hyperledger/aries-rfcs/tree/master/concepts/0017-attachments>`_
 - **msg~sig**: (required) - signature of the message according to `Aries RFC 0234 <https://github.com/hyperledger/aries-rfcs/tree/master/features/0234-signature-decorator>`_
