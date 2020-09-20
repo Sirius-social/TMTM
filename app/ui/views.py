@@ -4,6 +4,7 @@ from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework import serializers
+from django.utils import timezone
 from django.conf import settings
 from django.urls import reverse
 from django.http.response import HttpResponseRedirect
@@ -65,7 +66,9 @@ class TransactionsView(APIView):
             return Response(data={
                 'ledgers': [{'name': ledger.name, 'id': ledger.id} for ledger in Ledger.objects.filter(entity=entity).all()[:200]],
                 'logo': '/static/logos/%s' % settings.PARTICIPANTS_META[entity]['logo'],
-                'label': settings.PARTICIPANTS_META[entity]['label']
+                'label': settings.PARTICIPANTS_META[entity]['label'],
+                'cur_date': str(timezone.datetime.now().strftime('%d.%m.%Y')),
+                'upload_url': str(reverse('upload'))
             })
 
     @staticmethod

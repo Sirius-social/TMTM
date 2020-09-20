@@ -28,6 +28,7 @@
     <![endif]-->
     <script src="/static/js/vue.js"></script>
     <script src="https://unpkg.com/vue-scroll-loader"></script>
+    <script src="https://unpkg.com/browse/vue-scroll-progress@1.1.2/src/vue-scroll-progress.js"></script>
     {% include "libraries.html" %}
     <style>
         .modal-lg {
@@ -55,7 +56,7 @@
           <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title">Transaction details</h5>
+                <h3 class="modal-title">Transaction details</h3>
                 <button @click.prevent="close_modal_forms" type="button" class="close" data-dismiss="modal" aria-label="Close" id="btn-modal-close">
                   <span aria-hidden="true">&times;</span>
                 </button>
@@ -77,7 +78,7 @@
           <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 id="title-doc-viewer" class="modal-title"></h5>
+                <h3 id="title-doc-viewer" class="modal-title"></h3>
                 <button @click.prevent="close_modal_forms" type="button" class="close" data-dismiss="modal" aria-label="Close" id="btn-modal-close">
                   <span aria-hidden="true">&times;</span>
                 </button>
@@ -93,45 +94,103 @@
           </div>
         </div>
         <!-- ============================================================== -->
-        <!-- Modal Create new Ledger -->
+        <!-- Modal MAke Transactions -->
         <!-- ============================================================== -->
         <div id="modal-make-transactions" class="modal" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.2);overflow-y: auto;">
           <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 id="title-doc-viewer" class="modal-title">Make transaction</h5>
+                <h3 id="title-doc-viewer" class="modal-title">Transaction Master</h3>
                 <button @click.prevent="close_modal_forms" type="button" class="close" data-dismiss="modal" aria-label="Close" id="btn-modal-close">
                   <span aria-hidden="true">&times;</span>
                 </button>
               </div>
-              <div class="modal-body">
+              <div class="modal-body" style="min-height: 600px;">
                   <div style="width: 100%;">
-                      <form>
-                          <div class="row col-sm-3 my-1">
-                              <input name="ledger-name" type="text" class="form-control" placeholder="Ledger name">
+                      <form id="form-txn" v-if="form_step == 0">
+                          <div class="row col-sm-3 my-1" >
+                              <label for="i-ledger-name">Ledger name</label>
+                              <input v-model="form.ledger_name" id="i-ledger-name" name="ledger-name" type="text" class="form-control" placeholder="container ID">
                           </div>
-                          <div class="row">
-                            <div class="col">
-                              <input name="no" type="text" class="form-control-sm" placeholder="No">
-                            </div>
-                            <div class="col">
-                              <input name="date" type="text" class="form-control-sm" placeholder="Date">
-                            </div>
-                            <div class="col">
-                              <input name="cargo" type="text" class="form-control-sm" placeholder="Cargo">
-                            </div>
-                            <div class="col">
-                              <input name="departure-station" type="text" class="form-control-sm" placeholder="Departure station">
-                            </div>
-                            <div class="col">
-                              <input name="arrival-station" type="text" class="form-control-sm" placeholder="Arrival station">
-                            </div>
+                          <h6 style="margin-top: 30px;" class="text-secondary">Genesis transactions</h6>
+                          <div style="width: 100%; padding: 10px; margin: 5px; border-color: #79aec8;border-width: 1px;border-style: dashed;border-radius: 5px;">
+                                <div class="row" >
+                                    <div class="col">
+                                      <label for="i-no">No</label><br/>
+                                      <input v-model="form.no" id="i-no" name="no" type="text" class="form-control-sm" placeholder="20-001-0000002">
+                                    </div>
+                                    <div class="col">
+                                      <label for="i-date">Date</label><br/>
+                                      <input v-model="form.date" id="i-date" name="date" type="text" class="form-control-sm" placeholder="{{ cur_date }}">
+                                    </div>
+                                    <div class="col">
+                                      <label for="i-cargo">Cargo</label><br/>
+                                      <input v-model="form.cargo" id="i-cargo" name="cargo" type="text" class="form-control-sm" placeholder="Арбузы">
+                                    </div>
+                                    <div class="col">
+                                      <label for="i-departure-station">Departure station</label><br/>
+                                      <input v-model="form.departure_station" id="i-departure-station" name="departure-station" type="text" class="form-control-sm" placeholder="673702 Караганды">
+                                    </div>
+                                    <div class="col">
+                                      <label for="i-arrival-station">Arrival station</label><br/>
+                                      <input v-model="form.arrival_station" id="i-arrival-station" name="arrival-station" type="text" class="form-control-sm" placeholder="572107 Поти">
+                                    </div>
+                                </div>
+                                <hr/>
+                                <div class="row">
+                                    <div class="col">
+                                      <label for="i-doc-type">Doc Type</label> <br/>
+                                      <select v-model="form.doc_type" id="i-doc-type" class="custom-select custom-select-sm">
+                                          <option value="WayBill" selected>СМГС Накладная</option>
+                                          <option value="Invoice">Инвойс</option>
+                                          <option value="PackList">Упаковочный лист</option>
+                                          <option value="QualityPassport">Паспорт качества</option>
+                                          <option value="GoodsDeclaration">Декларация на товары</option>
+                                          <option value="WayBillRelease">Накладная на отпуск запасов на сторону</option>
+                                      </select>
+                                    </div>
+                                    <div class="col">
+                                        <label for="i-waybill-no">WayBill No</label> <br/>
+                                        <input v-model="form.waybill_no" id="i-waybill-no" name="waybill-no" type="text" class="form-control-sm" placeholder="11282656">
+                                    </div>
+                                    <div class="col">
+                                        <label for="i-wagon-no">Wagon No</label> <br/>
+                                        <input v-model="form.waybill_wagon_no" id="i-wagon-no" name="wagon-no" type="text" class="form-control-sm" placeholder="1221230">
+                                    </div>
+                                    <div class="col">
+                                    </div>
+                                    <div class="col">
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top: 10px;">
+                                    <div class="col" >
+
+                                        <label for="i-attachments">Attachments</label>
+                                        <a @click.prevent="upload_attachment()" class="srh-btn" title="Attach screen" style="margin-left: 20px;cursor:pointer;"><i class="ti-plus"></i></a>
+                                        <br/>
+                                        <ul id="i-attachments">
+                                            <li v-for="attach in attachments">
+                                                <a @click.prevent="open_doc_view_in_tab(attach.url)" :href="attach.url">[[ attach.filename ]]  (md5: [[ attach.md5 ]])</a>
+                                                <div class="progress" v-if="!attach.done" style="max-width: 30%;">
+                                                    <div class="progress-bar progress-bar-striped" role="progressbar" :aria-valuenow="attach.progress" aria-valuemin="0" aria-valuemax="100" :style="{'width': `${attach.progress}%`}">
+                                                      [[ attach.progress ]]%
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                        <input id="i-attach-file" type="file" hidden/>
+                                    </div>
+                                </div>
                           </div>
                       </form>
+                      <div v-if="form_step == 1" style="width: 90%; height: 600px;">
+                          <pre id="json-editor" style="width: 100%; height: 100%;"></pre>
+                      </div>
                   </div>
               </div>
               <div class="modal-footer">
-                <button @click.prevent="" type="button" class="btn btn-success" >Accept</button>
+                <button v-if="form_step > 0" @click.prevent="form_step -= 1" type="button" class="btn btn-secondary" ><< Back</button>
+                <button v-if="form_step < 3" @click.prevent="form_step += 1" type="button" class="btn btn-success" >[[ form_next_caption ]]</button>
                 <button @click.prevent="close_modal_forms" type="button" class="btn btn-primary" >Close</button>
               </div>
             </div>
@@ -350,6 +409,7 @@
     <!-- All Jquery -->
     <!-- ============================================================== -->
     <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+    <script src="/static/js/jquery.json-editor.min.js"></script>
     <!-- Bootstrap tether Core JavaScript -->
     <script src="/static/assets/plugins/bootstrap/js/tether.min.js"></script>
     <script src="/static/assets/plugins/bootstrap/js/bootstrap.min.js"></script>
@@ -375,9 +435,18 @@
     <!-- ============================================================== -->
     <script src="/static/assets/plugins/styleswitcher/jQuery.style.switcher.js"></script>
     <script type="text/javascript" src="/static/js/jquery.tagcanvas.min.js"></script>
+
     {{ ledgers|json_script:"ledgers-data" }}
     <script>
+        var json_editor = null;
         var ledgers_data = JSON.parse(document.getElementById('ledgers-data').textContent);
+        function uuid4() {
+          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+          });
+        }
+
         var app = new Vue({
             el: '#main-wrapper',
             delimiters: ['[[', ']]'],
@@ -396,6 +465,23 @@
                 active_menu: 0,
                 loader_enable: false,
                 transactions: [],
+                // Forms
+                attachments: [
+                    //{'filename': 'file1.png', 'md5': 'xxx', 'url': 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', 'progress': 50, 'done': true, 'canceled': false, 'mime_type': null},
+                    //{'filename': 'file2.png', 'md5': 'xxx', 'url': 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', 'progress': 10, 'done': true, 'canceled': false, 'mime_type': null}
+                ],
+                form_step: 0,
+                form: {
+                    "no": null,
+                    "date": null,
+                    "cargo": null,
+                    "departure_station": null,
+                    "arrival_station": null,
+                    "doc_type": "WayBill",
+                    "ledger_name": null,
+                    "waybill_no": null,
+                    "waybill_wagon_no": null
+                }
             },
             computed: {
                 filtered_ledgers: function(){
@@ -414,6 +500,14 @@
                 },
                 breadcrumb: function(){
                     return this.left_menu[this.active_menu].caption
+                },
+                form_next_caption: function (){
+                    if (this.form_step > 0) {
+                        return "Issue Transaction!"
+                    }
+                    else {
+                        return "Next >>"
+                    }
                 }
             },
             watch: {
@@ -428,6 +522,17 @@
                 selected_ledger: function(new_value, old_value){
                     if (new_value) {
                         this.search_ledger = null;
+                    }
+                },
+                form_step: function(new_value, old_value){
+                    var self = this;
+                    if (new_value == 0) {
+
+                    }
+                    else if (new_value == 1) {
+                        setTimeout(function() {
+                            json_editor = new JsonEditor('#json-editor', self.build_txn_body());
+                        }, 100);
                     }
                 }
             },
@@ -457,6 +562,12 @@
                     $("#modal-txn-detail").hide();
                     $('#modal-doc-viewer').hide();
                     $('#modal-make-transactions').hide();
+                    this.form_step = 0;
+                    for (var index in this.attachments) {
+                        var a = this.attachments[index];
+                        a.canceled = true;
+                    }
+                    this.attachments = [];
                 },
                 show_txn_details: function(txn) {
                     $("#dev-txn-detail").html(library.json.prettyPrint(txn));
@@ -470,12 +581,57 @@
                     $("#title-doc-viewer").html(filename + '  (md5: ' + md5 + ')');
                     $("#modal-doc-viewer").show();
                 },
+                open_doc_view_in_tab: function(url){
+                    if (url) {
+                        var link = "http://docs.google.com/gview?url=" + url;
+                        window.open(link, '_blank');
+                    }
+                },
                 open_transaction_form: function(op_code){
                     $("#modal-make-transactions").show();
                 },
                 open_link_in_tab: function(link) {
-                    console.log(link);
-                    window.open(link, '_blank');
+                    if (link) {
+                        console.log(link);
+                        window.open(link, '_blank');
+                    }
+                },
+                upload_attachment: function (){
+                    $("#i-attach-file").trigger("click");
+                },
+                build_txn_body: function(){
+                    var ttl = 15;
+                    var attachments = [];
+                    for (var index in this.attachments) {
+                        var attach = this.attachments[index];
+                        if (attach.done && !attach.canceled) {
+                            attachments.push(
+                                {
+                                    'url': attach.url,
+                                    'md5': attach.md5,
+                                    'filename': attach.filename,
+                                    'mime_type': attach.mime_type
+                                }
+                            );
+                        }
+                    }
+                    var txn = library.transactions.build_txn_ledger(
+                        uuid4(),
+                        this.form.no || "",
+                        this.form.date || "",
+                        this.form.cargo || "",
+                        this.form.departure_station || "",
+                        this.form.arrival_station || "",
+                        this.form.doc_type || "",
+                        this.form.ledger_name || "",
+                        this.form.waybill_no || "",
+                        this.form.waybill_wagon_no || "",
+                        attachments
+                    )
+                    var genesis = [txn];
+                    return library.transactions.build_init_ledger(
+                        uuid4(), this.form.ledger_name, ttl, genesis
+                    )
                 }
             }
         });
@@ -492,6 +648,63 @@
                  // failed to load
                  $('#tagsContainer').hide();
                }
+
+            $("#i-attach-file").change(function(e){
+                e.preventDefault();
+                var file = e.target.files[0];
+                var attachment = {
+                    'filename': file.name,
+                    'md5': null,
+                    'url': null,
+                    'progress': 0,
+                    'done': false,
+                    'canceled': false,
+                    'mime_type': file.type
+                }
+                app.$data.attachments.push(attachment);
+                attachment = app.$data.attachments[app.$data.attachments.length-1];
+                var formData = new FormData();
+                formData.append('file', file);
+                var url = "{{ upload_url }}";
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: formData,
+                    success: function (data) {
+                        attachment.md5 = data.md5;
+                        attachment.url = data.url;
+                        attachment.done = true;
+                    },
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    xhr: function(){
+                        var jqXHR = null;
+                        if ( window.ActiveXObject )
+                        {
+                            jqXHR = new window.ActiveXObject( "Microsoft.XMLHTTP" );
+                        }
+                        else
+                        {
+                            jqXHR = new window.XMLHttpRequest();
+                        }
+
+                        //Upload progress
+                        jqXHR.upload.addEventListener( "progress", function ( evt )
+                        {
+                            if (attachment.canceled) {
+                                xhr.abort();
+                            }
+                            if ( evt.lengthComputable )
+                            {
+                                var percent = Math.round( (evt.loaded * 100) / evt.total );
+                                attachment.progress = percent;
+                            }
+                        }, false );
+                        return jqXHR;
+                    }
+                });
+            });
         });
 
 

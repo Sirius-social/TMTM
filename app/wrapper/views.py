@@ -135,13 +135,14 @@ class UploadView(ExtendViewSetMixin, APIView):
         file = request.FILES.get('file', None)
         if file is None:
             return Response(b'Expected file value', status=400)
-        data = {'url': None, 'md5': None}
+        data = {'url': None, 'md5': None, 'filename': None}
         with transaction.atomic():
             content = Content()
             content.set_file(file)
             content.save()
             data['url'] = self.make_full_url(content.url)
             data['md5'] = content.md5
+            data['filename'] = content.name
         return Response(data, status=200)
 
 

@@ -20,6 +20,15 @@
     if (!library)
        var library = {};
 
+    function get_mime_type(url){
+        var extension = url.split('.').pop();
+        if (["png", "bmp", "jpg", "jpeg"].includes(extension)) {
+            return "image/" + extension;
+        } else {
+            return "application/" + extension;
+        }
+    }
+
     library.json = {
        replacer: function(match, pIndent, pKey, pVal, pEnd) {
           var key = '<span class=json-key>';
@@ -40,4 +49,60 @@
              .replace(jsonLine, library.json.replacer);
           }
        };
+
+    library.transactions = {
+        build_init_ledger: function(id, ledger_name, ttl, genesis){
+            var txn = {
+                "@type": "https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/create-ledger",
+                "@id": id,
+                "name": ledger_name,
+                "genesis": genesis,
+                "time_to_live": ttl,
+            }
+            return txn;
+        },
+        build_txn_ledger: function(id, no, date, cargo, departure_station, arrival_station, doc_type, ledger_name, waybill_no, waybill_wagon_no, attachments, ttl){
+            var attach_array = [];
+            for (var index in attachments) {
+                var attach = attachments[index];
+                attach_array.push(
+                    {
+                        "@id": "document-" + index,
+                        "mime_type": attach.mime_type || get_mime_type(attach.url),
+                        "filename": attach.filename,
+                        "data": {
+                            "json": {
+                                "url": attach.url,
+                                "md5": attach.md5
+                            }
+                        }
+                    }
+                );
+            }
+            var txn = {
+                "@type": "https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/issue-transaction",
+                "@id": id,
+                "no": no,
+                "date": date,
+                "cargo": cargo,
+                "departure_station": departure_station,
+                "arrival_station": arrival_station,
+                "doc_type": doc_type,
+                "ledger": {
+                    "name": ledger_name
+                },
+                "~attach": attach_array
+            }
+            if (doc_type === "WayBill") {
+                txn.waybill = {
+                    "no": waybill_no,
+                    "wagon_no": waybill_wagon_no
+                }
+            }
+            if (ttl) {
+                txn.time_to_live = ttl
+            }
+            return txn;
+        }
+    }
 </script>
