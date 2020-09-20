@@ -46,7 +46,7 @@ class Content(models.Model):
     uid = models.CharField(max_length=128, primary_key=True)
     entity = models.CharField(max_length=1024, null=True, db_index=True)
     name = models.CharField(max_length=512, db_index=True)
-    content_type = models.CharField(max_length=64, null=True, db_index=True)
+    content_type = models.CharField(max_length=1024, null=True, db_index=True)
     storage = models.CharField(max_length=256, db_index=True, choices=SUPPORTED_STORAGE, default=STORAGE_FILE_SYSTEM)
     created = models.DateTimeField(null=True, auto_now_add=True)
     updated = models.DateTimeField(null=True, auto_now=True)
