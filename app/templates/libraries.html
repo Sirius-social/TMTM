@@ -93,7 +93,7 @@
                 },
                 "~attach": attach_array
             }
-            if (doc_type === "WayBill") {
+            if (["WayBill", "Сonnaissement", "Manifest", "CargoPlan", "LogisticInfo"].includes(doc_type)) {
                 txn.waybill = {
                     "no": waybill_no,
                     "wagon_no": waybill_wagon_no

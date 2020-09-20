@@ -141,20 +141,17 @@
                                     <div class="col">
                                       <label for="i-doc-type">Doc Type</label> <br/>
                                       <select v-model="form.doc_type" id="i-doc-type" class="custom-select custom-select-sm">
-                                          <option value="WayBill" selected>СМГС Накладная</option>
-                                          <option value="Invoice">Инвойс</option>
-                                          <option value="PackList">Упаковочный лист</option>
-                                          <option value="QualityPassport">Паспорт качества</option>
-                                          <option value="GoodsDeclaration">Декларация на товары</option>
-                                          <option value="WayBillRelease">Накладная на отпуск запасов на сторону</option>
+                                          {% for item in doc_types.values %}
+                                              <option value="{{ item.id }}" {% if item.id == doc_types.default %} selected {% endif %}>{{ item.caption}}</option>
+                                          {% endfor %}
                                       </select>
                                     </div>
-                                    <div class="col">
-                                        <label for="i-waybill-no">WayBill No</label> <br/>
+                                    <div class="col" v-if="form_waybill_enabled">
+                                        <label for="i-waybill-no">No</label> <br/>
                                         <input v-model="form.waybill_no" id="i-waybill-no" name="waybill-no" type="text" class="form-control-sm" placeholder="11282656">
                                     </div>
-                                    <div class="col">
-                                        <label for="i-wagon-no">Wagon No</label> <br/>
+                                    <div class="col" v-if="form_waybill_enabled">
+                                        <label for="i-wagon-no">Wagon</label> <br/>
                                         <input v-model="form.waybill_wagon_no" id="i-wagon-no" name="wagon-no" type="text" class="form-control-sm" placeholder="1221230">
                                     </div>
                                     <div class="col">
@@ -478,7 +475,7 @@
                     "cargo": null,
                     "departure_station": null,
                     "arrival_station": null,
-                    "doc_type": "WayBill",
+                    "doc_type": "{{ doc_types.default }}",
                     "ledger_name": null,
                     "waybill_no": null,
                     "waybill_wagon_no": null
@@ -509,6 +506,9 @@
                     else {
                         return "Next >>"
                     }
+                },
+                form_waybill_enabled: function(){
+                    return ["WayBill", "Сonnaissement", "Manifest", "CargoPlan", "LogisticInfo"].includes(this.form.doc_type);
                 }
             },
             watch: {
@@ -568,6 +568,10 @@
                         var a = this.attachments[index];
                         a.canceled = true;
                     }
+                    for (var fld in this.form) {
+                        this.form[fld] = null;
+                    }
+                    this.form.doc_type = "{{ doc_types.default }}";
                     this.attachments = [];
                 },
                 show_txn_details: function(txn) {

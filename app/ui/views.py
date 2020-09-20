@@ -63,12 +63,35 @@ class TransactionsView(APIView):
             return Response(status=400, data=str(e).encode())
         else:
             entity = credentials['entity']
+            if settings.AGENT['is_sea']:
+                doc_types = {
+                    'default': 'Сonnaissement',
+                    'values': [
+                        {'id': 'Сonnaissement', 'caption': 'Коносамент'},
+                        {'id': 'Manifest', 'caption': 'Манифест'},
+                        {'id': 'CargoPlan', 'caption': 'Грузовой план'},
+                        {'id': 'LogisticInfo', 'caption': 'Перевозочная информация'}
+                    ]
+                }
+            else:
+                doc_types = {
+                    'default': 'WayBill',
+                    'values': [
+                        {'id': 'WayBill', 'caption': 'СМГС Накладная'},
+                        {'id': 'Invoice', 'caption': 'Инвойс'},
+                        {'id': 'PackList', 'caption': 'Упаковочный лист'},
+                        {'id': 'QualityPassport', 'caption': 'Паспорт качества'},
+                        {'id': 'GoodsDeclaration', 'caption': 'Декларация на товары'},
+                        {'id': 'WayBillRelease', 'caption': 'Накладная на отпуск запасов на сторону'}
+                    ]
+                }
             return Response(data={
                 'ledgers': [{'name': ledger.name, 'id': ledger.id} for ledger in Ledger.objects.filter(entity=entity).all()[:200]],
                 'logo': '/static/logos/%s' % settings.PARTICIPANTS_META[entity]['logo'],
                 'label': settings.PARTICIPANTS_META[entity]['label'],
                 'cur_date': str(timezone.datetime.now().strftime('%d.%m.%Y')),
-                'upload_url': str(reverse('upload'))
+                'upload_url': str(reverse('upload')),
+                'doc_types': doc_types
             })
 
     @staticmethod
