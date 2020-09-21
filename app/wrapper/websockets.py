@@ -196,7 +196,7 @@ class WsTransactions(AsyncJsonWebsocketConsumer):
                         token = await load_token(value)
                         if token:
                             await self.accept()
-                            return 
+                            return
             await self.close()
         else:
             await self.close()

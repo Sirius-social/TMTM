@@ -141,3 +141,47 @@ genesis block, any participant (ADY, DKT, GR, etc) may issue self-signed transac
 - **time_to_live**: (optional) - time to live of the state machines
 - **~attach**: (optional) - list of attached documents. Document should be uploaded and published via URL. See detail at `Aries RFC <https://github.com/hyperledger/aries-rfcs/tree/master/concepts/0017-attachments>`_
 - **msg~sig**: (required) - signature of the message according to `Aries RFC 0234 <https://github.com/hyperledger/aries-rfcs/tree/master/features/0234-signature-decorator>`_
+
+
+***************************************************
+[problem_report] - errors reporting
+***************************************************
+Example
+
+.. code-block:: python
+
+  {
+      "@type": "https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/problem_report",
+      "@id": "1129fbc9-b9cf-4191-b5c1-ee9c68945f42",
+      "problem-code": "request_processing_error",
+      "explain": "Merkle-Proof error"
+  }
+
+
+***************************************************
+[progress] - transaction progress
+***************************************************
+Example
+
+.. code-block:: python
+
+  {
+      "@type": "https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/progress",
+      "@id": "1129fbc9-b9cf-4191-b5c1-ee9c68945f42",
+      "progress": 50,
+      "message": "Stage-2: Collect commit responses",
+      "done": false,
+      "ledger": {
+         "id": 234,
+         "name": "Container-XRCU8004815"
+      }
+  }
+
+- **progress**: (optional) - operation progress in percents (%)
+- **message**: (optional) - current progress comment
+- **done**: (optional) - flag to indicate transaction request was terminated
+- **ledger**: (optional) - ledger that is source of the event
+
+   - **ledger.name**: (required) - name of the ledge
+   - **ledger.id**: (optional) - local database id of ledger record
+
