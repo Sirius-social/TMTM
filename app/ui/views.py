@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.http.response import HttpResponseRedirect
 from sirius_sdk import Agent, P2PConnection
 
-from wrapper.models import Ledger
+from wrapper.models import Ledger, Token
 from .utils import run_async
 
 
@@ -99,6 +99,8 @@ class TransactionsView(APIView):
             logging.error('-----------------')
             ws_url = 'wss://' if is_secure else 'ws://'
             ws_url += parts.netloc + '/transactions'
+            token = Token.allocate(request.user).value
+            ws_url += '?token=%s' % token
             return Response(data={
                 'ledgers': [{'name': ledger.name, 'id': ledger.id} for ledger in Ledger.objects.filter(entity=entity).all()[:200]],
                 'logo': '/static/logos/%s' % settings.PARTICIPANTS_META[entity]['logo'],

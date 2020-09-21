@@ -19,7 +19,7 @@ from sirius_sdk import Agent, P2PConnection
 from sirius_sdk.agent.aries_rfc.feature_0048_trust_ping import Ping
 
 from ui.utils import run_async
-from .models import Ledger, Transaction, Content
+from .models import Ledger, Transaction, Content, Token
 from .decorators import cross_domain
 from .mixins import ExtendViewSetMixin
 
@@ -28,6 +28,13 @@ from .mixins import ExtendViewSetMixin
 class MaintenanceViewSet(viewsets.GenericViewSet):
     """Maintenance"""
     renderer_classes = [JSONRenderer]
+    authentication_classes = [BasicAuthentication]
+
+    def get_permissions(self):
+        if self.action == 'check_health':
+            return []
+        else:
+            return [IsAuthenticated()]
 
     @action(methods=["GET", "POST"], detail=False)
     def check_health(self, request):
@@ -37,6 +44,11 @@ class MaintenanceViewSet(viewsets.GenericViewSet):
             timeout=15
         )
         return Response(dict(success=True, ping_id=ping_id, message='OK'))
+
+    @action(methods=["GET", "POST"], detail=False)
+    def allocate_token(self, request):
+        token = Token.allocate(request.user)
+        return Response({'token': token.value})
 
     @staticmethod
     async def participants_trust_ping(ping_id: str):

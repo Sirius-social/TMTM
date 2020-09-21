@@ -93,3 +93,12 @@ class Token(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     value = models.CharField(max_length=128, db_index=True)
     entity = models.CharField(max_length=1024, db_index=True)
+
+    @staticmethod
+    def allocate(user: User):
+        inst = Token.objects.create(
+            user=user,
+            value=secrets.token_hex(16),
+            entity=settings.AGENT['entity']
+        )
+        return inst

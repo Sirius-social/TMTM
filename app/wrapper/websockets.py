@@ -1,9 +1,11 @@
 import json
 import uuid
+from typing import Optional
 from datetime import datetime
 from typing import List, Dict
 from contextlib import asynccontextmanager
 from django.conf import settings
+from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from sirius_sdk import Agent, P2PConnection, Pairwise
 from sirius_sdk.agent.consensus import simple
@@ -15,9 +17,19 @@ from scripts.management.commands.decorators import sentry_capture_exceptions
 from scripts.management.commands.logger import StreamLogger
 from scripts.management.commands import orm
 
+from .models import Token
+
 
 REQUEST_ERROR = 'request_error'
 REQUEST_PROCESSING_ERROR = 'request_processing_error'
+
+
+async def load_token(value: str) -> Optional[Token]:
+
+    def sync(value_: str) -> Optional[Token]:
+        return Token.objects.filter(entity=settings.AGENT['entity'], value=value).first()
+
+    return await database_sync_to_async(sync)(value)
 
 
 def build_problem_report(problem_code: str, explain: str) -> dict:
@@ -173,7 +185,21 @@ class WsTransactions(AsyncJsonWebsocketConsumer):
 
     @sentry_capture_exceptions
     async def connect(self):
-        await self.accept()
+        qs = self.scope.get('query_string', None)
+        if qs:
+            qs = qs.decode()
+            qs_items = qs.split('&')
+            for item in qs_items:
+                if '=' in item:
+                    key, value = item.split('=')
+                    if key.lower() == 'token':
+                        token = await load_token(value)
+                        if token:
+                            await self.accept()
+                            return 
+            await self.close()
+        else:
+            await self.close()
 
     @sentry_capture_exceptions
     async def receive_json(self, payload, **kwargs):
