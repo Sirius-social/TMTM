@@ -1,3 +1,5 @@
+from urllib.parse import urlsplit
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authentication import BasicAuthentication
@@ -85,13 +87,17 @@ class TransactionsView(APIView):
                         {'id': 'WayBillRelease', 'caption': 'Накладная на отпуск запасов на сторону'}
                     ]
                 }
+            curr_abs_url = request.build_absolute_uri()
+            parts = urlsplit(curr_abs_url)
+            ws_url = 'wss://' if request.is_secure() else 'ws://' + parts.netloc + '/transactions'
             return Response(data={
                 'ledgers': [{'name': ledger.name, 'id': ledger.id} for ledger in Ledger.objects.filter(entity=entity).all()[:200]],
                 'logo': '/static/logos/%s' % settings.PARTICIPANTS_META[entity]['logo'],
                 'label': settings.PARTICIPANTS_META[entity]['label'],
                 'cur_date': str(timezone.datetime.now().strftime('%d.%m.%Y')),
                 'upload_url': str(reverse('upload')),
-                'doc_types': doc_types
+                'doc_types': doc_types,
+                'ws_url': ws_url
             })
 
     @staticmethod

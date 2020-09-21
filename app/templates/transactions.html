@@ -180,8 +180,21 @@
                                 </div>
                           </div>
                       </form>
-                      <div v-if="form_step == 1" style="width: 90%; height: 600px;">
-                          <pre id="json-editor" style="width: 100%; height: 100%;"></pre>
+                      <div v-if="form_step == 1" style="width: 90%; height: 500px;">
+                          <h5 style="margin-left: 20px;" class="text-primary">Send command to websocket endpoint <span class="btn btn-primary">{{ ws_url }}</span></h5>
+                          <h4 v-if="error_json_editor" style="margin-left: 20px;" class="btn btn-danger">[[ error_json_editor ]]</h4>
+                          <pre id="json-editor" style="width: 100%; height: 90%;"></pre>
+                      </div>
+                      <div v-if="form_step == 2" style="width: 90%; height: 500px;">
+                          <h3 v-if="txn_processing.error" style="margin-left: 20px;" class="btn btn-danger">[[ txn_processing.error ]]</h3>
+                          <div v-if="txn_processing.progress" class="progress" style="max-width: 30%; margin-bottom: 15px;">
+                            <div class="progress-bar progress-bar-striped" role="progressbar" :aria-valuenow="txn_processing.progress" aria-valuemin="0" aria-valuemax="100" :style="{'width': `${txn_processing.progress}%`}">
+                              [[ txn_processing.progress ]]%
+                            </div>
+                          </div>
+                          <textarea id="log-txn" style="height: 100%; width: 100%; overflow-y: auto;" readonly>
+
+                          </textarea>
                       </div>
                   </div>
               </div>
@@ -436,6 +449,7 @@
 
     {{ ledgers|json_script:"ledgers-data" }}
     <script>
+        var ws_transactions = null;
         var json_editor = null;
         var ledgers_data = JSON.parse(document.getElementById('ledgers-data').textContent);
         function uuid4() {
@@ -479,6 +493,13 @@
                     "ledger_name": null,
                     "waybill_no": null,
                     "waybill_wagon_no": null
+                },
+                error_json_editor: null,
+                txn_processing: {
+                    error: null,
+                    progress: 0,
+                    done: false,
+                    message: null
                 }
             },
             computed: {
@@ -535,6 +556,9 @@
                             json_editor = new JsonEditor('#json-editor', self.build_txn_body());
                         }, 100);
                     }
+                    else if (new_value == 2) {
+                        this.start_transaction();
+                    }
                 }
             },
             methods: {
@@ -573,6 +597,57 @@
                     }
                     this.form.doc_type = "{{ doc_types.default }}";
                     this.attachments = [];
+                    this.error_json_editor = null;
+                    if (ws_transactions) {
+                        ws_transactions.close();
+                        ws_transactions = null;
+                    }
+                    $("#log-txn").text("");
+                    this.txn_processing.done = false;
+                    this.txn_processing.error = null;
+                    this.txn_processing.message = null;
+                    this.txn_processing.progress = 0;
+                },
+                start_transaction: function(){
+                    var content = json_editor.$container.text();
+                    var self = this;
+                    try {
+                        var txn = JSON.parse(content);
+                        ws_transactions = new WebSocket("{{ ws_url }}");
+                        ws_transactions.onclose = function(event) {
+
+                        };
+                        ws_transactions.onmessage = function(event) {
+                          // alert("Получены данные " + event.data);
+                            console.log("Получены данные");
+                            var obj = JSON.parse(event.data);
+                            $("#log-txn").append(
+                                JSON.stringify(
+                                    obj,
+                                    null,
+                                    '\t'
+                                )
+                            );
+                            if ('@type' in obj) {
+                                var type_ = obj['@type'];
+                                if (type_.includes('problem_report')) {
+                                    self.txn_processing.error = obj.explain;
+                                    self.txn_processing.done = true;
+                                }
+                            }
+                        };
+                        ws_transactions.onerror = function(error) {
+                            console.log("Ошибка " + error.message);
+                        };
+                        ws_transactions.onopen = function() {
+                            console.log("OnOpen");
+                            ws_transactions.send(JSON.stringify(txn));
+                        };
+
+                    }catch (ex) {
+                        this.error_json_editor = 'Wrong JSON Format: ' + ex;
+                        this.form_step = 1;
+                    }
                 },
                 show_txn_details: function(txn) {
                     $("#dev-txn-detail").html(library.json.prettyPrint(txn));
@@ -622,15 +697,15 @@
                     }
                     var txn = library.transactions.build_txn_ledger(
                         uuid4(),
-                        this.form.no || "",
-                        this.form.date || "",
-                        this.form.cargo || "",
-                        this.form.departure_station || "",
-                        this.form.arrival_station || "",
-                        this.form.doc_type || "",
-                        this.form.ledger_name || "",
-                        this.form.waybill_no || "",
-                        this.form.waybill_wagon_no || "",
+                        this.form.no,
+                        this.form.date,
+                        this.form.cargo,
+                        this.form.departure_station,
+                        this.form.arrival_station,
+                        this.form.doc_type,
+                        this.form.ledger_name,
+                        this.form.waybill_no,
+                        this.form.waybill_wagon_no,
                         attachments
                     )
                     var genesis = [txn];

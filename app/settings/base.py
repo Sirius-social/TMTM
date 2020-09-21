@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'channels',
     'scripts',
     'wrapper',
     'ui'
@@ -193,6 +195,10 @@ PARTICIPANTS_META = {
         'url': 'https://solvotos.socialsirius.com'
     }
 }
+PARTICIPANTS = [
+    '4vEF4eHwQ1GB5s766rAYAe', 'U9A6U7LZQe4dCh84t3fpTK',
+    '6jzbnVE5S6j15afcpC9yhF', 'Ch4eVSWf7KXRubk5to6WFC', 'VU7c9jvBqLee9NkChXU1Kn'
+]
 
 
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', None)
