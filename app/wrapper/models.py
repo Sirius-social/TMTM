@@ -4,6 +4,7 @@ import secrets
 
 from django.db import models
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField, ArrayField
 
 
@@ -85,3 +86,10 @@ class Content(models.Model):
         except NotImplementedError:
             pass
         super().delete(using, keep_parents)
+
+
+class Token(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+    value = models.CharField(max_length=128, db_index=True)
+    entity = models.CharField(max_length=1024, db_index=True)
