@@ -408,6 +408,7 @@
                                     Ledger: [[selected_ledger.name]]
                                     <a @click.prevent="open_transaction_form(2)" class="srh-btn" title="Add transactions" style="margin-left: 20px;cursor:pointer;"><i class="ti-plus"></i></a>
                                     <a @click.prevent="open_smart_contract_commit_txns_form()" class="srh-btn" title="Smart contract source code" style="margin-left: 5px;cursor:pointer;"><i class="ti-link"></i></a>
+                                    <a @click.prevent="load_transactions(selected_ledger.id)" class="srh-btn" title="Reload transactions" style="margin-left: 5px;cursor:pointer;"><i class="ti-reload"></i></a>
                                 </h4>
 
                                 <scroll-loader :loader-method="get_loader_list" :loader-disable="!loader_enable" :loader-size="300">
