@@ -107,7 +107,8 @@ class TransactionsView(APIView):
                 'upload_url': str(reverse('upload')),
                 'doc_types': doc_types,
                 'ws_url': ws_url,
-                'smart_contract_init_ledger_url': str(reverse('smart-contract-init-ledger'))
+                'smart_contract_init_ledger_url': str(reverse('smart-contract-init-ledger')),
+                'smart_contract_commit_txns_url': str(reverse('smart-contract-commit-txns')),
             })
 
     @staticmethod
@@ -152,6 +153,15 @@ class TestView(APIView):
 
 class SmartContractInitLedgerView(APIView):
     template_name = 'smart_contract_create_ledger.html'
+    renderer_classes = [TemplateHTMLRenderer]
+    authentication_classes = []
+
+    def get(self, request, *args, **kwargs):
+        return Response(data={})
+
+
+class SmartContractCommitView(APIView):
+    template_name = 'smart_contract_commit_txns.html'
     renderer_classes = [TemplateHTMLRenderer]
     authentication_classes = []
 

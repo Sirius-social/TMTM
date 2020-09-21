@@ -5,7 +5,7 @@ class ExtendViewSetMixin(object):
 
     def get_http_referer(self):
         if settings.DEBUG:
-            url_scheme = self.request.META['wsgi.url_scheme']
+            url_scheme = 'http'
         else:
             url_scheme = 'https'
         if 'HTTP_HOST' in self.request.META:

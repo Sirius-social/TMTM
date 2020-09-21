@@ -93,14 +93,15 @@
             </div>
           </div>
         </div>
-        <!-- =================View source code fir init LEdger -->
+        <!-- ============================================================== -->
+        <!-- =================View source code for init Ledger -->
         <!-- ============================================================== -->
         <div id="modal-smart-contract-init-ledger" class="modal" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.2);overflow-y: auto;">
           <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
               <div class="modal-header">
                 <h3 id="title-doc-viewer" class="modal-title">
-                    Smart-Contract source code
+                    Init ledger smart-Contract source code
                     <a href="https://github.com/Sirius-social/sirius-sdk-python/tree/master/sirius_sdk/agent/consensus/simple#use-case-1-creating-new-ledger" target="_blank">click to see details...</a>
                 </h3>
                 <button @click.prevent="close_modal_forms" type="button" class="close" data-dismiss="modal" aria-label="Close" id="btn-modal-close">
@@ -109,6 +110,32 @@
               </div>
               <div class="modal-body">
                   <iframe style="width: 100%; height:600px;" src="{{ smart_contract_init_ledger_url }}">
+
+                  </iframe>
+              </div>
+              <div class="modal-footer">
+                <button @click.prevent="close_modal_forms" type="button" class="btn btn-primary" >Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- ============================================================== -->
+        <!-- =================View source code for Commit Transactions -->
+        <!-- ============================================================== -->
+        <div id="modal-smart-contract-commit-txns" class="modal" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.2);overflow-y: auto;">
+          <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h3 id="title-doc-viewer" class="modal-title">
+                    Commit txns smart-contract source code
+                    <a href="https://github.com/Sirius-social/sirius-sdk-python/tree/master/sirius_sdk/agent/consensus/simple#use-case-2-accept-transaction-to-existing-ledger-by-all-dealers-in-microledger-space" target="_blank">click to see details...</a>
+                </h3>
+                <button @click.prevent="close_modal_forms" type="button" class="close" data-dismiss="modal" aria-label="Close" id="btn-modal-close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                  <iframe style="width: 100%; height:600px;" src="{{ smart_contract_commit_txns_url }}">
 
                   </iframe>
               </div>
@@ -380,6 +407,7 @@
                                 <h4 v-if="selected_ledger" class="card-title text-primary">
                                     Ledger: [[selected_ledger.name]]
                                     <a @click.prevent="open_transaction_form(2)" class="srh-btn" title="Add transactions" style="margin-left: 20px;cursor:pointer;"><i class="ti-plus"></i></a>
+                                    <a @click.prevent="open_smart_contract_commit_txns_form()" class="srh-btn" title="Smart contract source code" style="margin-left: 5px;cursor:pointer;"><i class="ti-link"></i></a>
                                 </h4>
 
                                 <scroll-loader :loader-method="get_loader_list" :loader-disable="!loader_enable" :loader-size="300">
@@ -630,6 +658,7 @@
                     $('#modal-doc-viewer').hide();
                     $('#modal-make-transactions').hide();
                     $('#modal-smart-contract-init-ledger').hide();
+                    $('#modal-smart-contract-commit-txns').hide();
                     this.form_step = 0;
                     for (var index in this.attachments) {
                         var a = this.attachments[index];
@@ -700,7 +729,7 @@
                                         else if (op_code === 2 && self.selected_ledger) {
                                             var ledger_name = obj.ledger.name;
                                             if (ledger_name == self.selected_ledger.name) {
-
+                                                self.load_transactions(self.selected_ledger.id);
                                             }
                                         }
                                     }
@@ -771,6 +800,9 @@
                 },
                 open_smart_contract_init_ledger_form: function(){
                     $("#modal-smart-contract-init-ledger").show();
+                },
+                open_smart_contract_commit_txns_form: function(){
+                    $('#modal-smart-contract-commit-txns').show();
                 },
                 open_link_in_tab: function(link) {
                     if (link) {

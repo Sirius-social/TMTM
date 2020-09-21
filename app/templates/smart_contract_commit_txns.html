@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <<title>Smart-Contract: Commit Transactions</title>
+</head>
+<body>
+    <!-- HTML generated using hilite.me --><div style="background: #272822; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><table><tr><td><pre style="margin: 0; line-height: 125%"> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52</pre></td><td><pre style="margin: 0; line-height: 125%"><span style="color: #f92672">from</span> <span style="color: #f8f8f2">sirius_sdk</span> <span style="color: #f92672">import</span> <span style="color: #f8f8f2">Agent,</span> <span style="color: #f8f8f2">P2PConnection,</span> <span style="color: #f8f8f2">Pairwise</span>
+<span style="color: #f92672">from</span> <span style="color: #f8f8f2">sirius_sdk.agent.consensus</span> <span style="color: #f92672">import</span> <span style="color: #f8f8f2">simple</span>
+<span style="color: #f92672">from</span> <span style="color: #f8f8f2">sirius_sdk.agent.microledgers</span> <span style="color: #f92672">import</span> <span style="color: #f8f8f2">Transaction</span>
+<span style="color: #f92672">from</span> <span style="color: #f8f8f2">sirius_sdk.errors.exceptions</span> <span style="color: #f92672">import</span> <span style="color: #f8f8f2">SiriusPromiseContextException</span>
+<span style="color: #f92672">from</span> <span style="color: #f8f8f2">sirius_sdk.agent.aries_rfc.utils</span> <span style="color: #f92672">import</span> <span style="color: #f8f8f2">sign</span>
+<span style="color: #f92672">from</span> <span style="color: #f8f8f2">scripts.management.commands</span> <span style="color: #f92672">import</span> <span style="color: #f8f8f2">orm</span>
+
+<span style="color: #f92672">...</span>
+
+
+<span style="color: #f8f8f2">async</span> <span style="color: #66d9ef">def</span> <span style="color: #a6e22e">commit_transactions</span><span style="color: #f8f8f2">(</span>
+        <span style="color: #f8f8f2">my_did:</span> <span style="color: #f8f8f2">str,</span> <span style="color: #f8f8f2">ledger_name:</span> <span style="color: #f8f8f2">str,</span> <span style="color: #f8f8f2">transactions:</span> <span style="color: #f8f8f2">List[Transaction],</span> <span style="color: #f8f8f2">ttl:</span> <span style="color: #f8f8f2">int,</span> <span style="color: #f8f8f2">stream_id:</span> <span style="color: #f8f8f2">str,</span> <span style="color: #f8f8f2">handler</span><span style="color: #f92672">=</span><span style="color: #f8f8f2">None</span>
+<span style="color: #f8f8f2">):</span>
+    <span style="color: #f8f8f2">async</span> <span style="color: #66d9ef">with</span> <span style="color: #f8f8f2">get_connection()</span> <span style="color: #66d9ef">as</span> <span style="color: #f8f8f2">agent:</span>
+        <span style="color: #f8f8f2">my_verkey</span> <span style="color: #f92672">=</span> <span style="color: #f8f8f2">await</span> <span style="color: #f8f8f2">agent</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">wallet</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">did</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">key_for_local_did(my_did)</span>
+        <span style="color: #f8f8f2">logger</span> <span style="color: #f92672">=</span> <span style="color: #f8f8f2">await</span> <span style="color: #f8f8f2">StreamLogger</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">create(stream</span><span style="color: #f92672">=</span><span style="color: #f8f8f2">stream_id,</span> <span style="color: #f8f8f2">cb</span><span style="color: #f92672">=</span><span style="color: #f8f8f2">handler)</span>
+        <span style="color: #f8f8f2">state_machine</span> <span style="color: #f92672">=</span> <span style="color: #f8f8f2">simple</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">state_machines</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">MicroLedgerSimpleConsensus(</span>
+            <span style="color: #f8f8f2">crypto</span><span style="color: #f92672">=</span><span style="color: #f8f8f2">agent</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">wallet</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">crypto,</span>
+            <span style="color: #f8f8f2">me</span><span style="color: #f92672">=</span><span style="color: #f8f8f2">Pairwise</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">Me(my_did,</span> <span style="color: #f8f8f2">my_verkey),</span>
+            <span style="color: #f8f8f2">pairwise_list</span><span style="color: #f92672">=</span><span style="color: #f8f8f2">agent</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">pairwise_list,</span>
+            <span style="color: #f8f8f2">microledgers</span><span style="color: #f92672">=</span><span style="color: #f8f8f2">agent</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">microledgers,</span>
+            <span style="color: #f8f8f2">transports</span><span style="color: #f92672">=</span><span style="color: #f8f8f2">agent,</span>
+            <span style="color: #f8f8f2">logger</span><span style="color: #f92672">=</span><span style="color: #f8f8f2">logger,</span>
+            <span style="color: #f8f8f2">time_to_live</span><span style="color: #f92672">=</span><span style="color: #f8f8f2">ttl</span>
+        <span style="color: #f8f8f2">)</span>
+        <span style="color: #75715e"># Add signature to transactions</span>
+        <span style="color: #f8f8f2">signed_transactions</span> <span style="color: #f92672">=</span> <span style="color: #f8f8f2">[]</span>
+        <span style="color: #66d9ef">for</span> <span style="color: #f8f8f2">txn</span> <span style="color: #f92672">in</span> <span style="color: #f8f8f2">transactions:</span>
+            <span style="color: #66d9ef">if</span> <span style="color: #e6db74">&#39;msg~sig&#39;</span> <span style="color: #f92672">in</span> <span style="color: #f8f8f2">txn:</span>
+                <span style="color: #66d9ef">del</span> <span style="color: #f8f8f2">txn[</span><span style="color: #e6db74">&#39;msg~sig&#39;</span><span style="color: #f8f8f2">]</span>
+            <span style="color: #f8f8f2">signature</span> <span style="color: #f92672">=</span> <span style="color: #f8f8f2">await</span> <span style="color: #f8f8f2">sign(agent</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">wallet</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">crypto,</span> <span style="color: #f8f8f2">dict(txn),</span> <span style="color: #f8f8f2">my_verkey)</span>
+            <span style="color: #66d9ef">del</span> <span style="color: #f8f8f2">signature[</span><span style="color: #e6db74">&#39;sig_data&#39;</span><span style="color: #f8f8f2">]</span>
+            <span style="color: #f8f8f2">txn[</span><span style="color: #e6db74">&#39;msg~sig&#39;</span><span style="color: #f8f8f2">]</span> <span style="color: #f92672">=</span> <span style="color: #f8f8f2">signature</span>
+            <span style="color: #f8f8f2">signed_transactions</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">append(Transaction</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">create(txn))</span>
+        <span style="color: #75715e"># FIRE !!!</span>
+        <span style="color: #f8f8f2">ledger</span> <span style="color: #f92672">=</span> <span style="color: #f8f8f2">await</span> <span style="color: #f8f8f2">agent</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">microledgers</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">ledger(ledger_name)</span>
+        <span style="color: #f8f8f2">success,</span> <span style="color: #f8f8f2">txns_committed</span> <span style="color: #f92672">=</span> <span style="color: #f8f8f2">await</span> <span style="color: #f8f8f2">state_machine</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">commit(</span>
+            <span style="color: #f8f8f2">ledger</span><span style="color: #f92672">=</span><span style="color: #f8f8f2">ledger,</span>
+            <span style="color: #f8f8f2">participants</span><span style="color: #f92672">=</span><span style="color: #f8f8f2">settings</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">PARTICIPANTS,</span>
+            <span style="color: #f8f8f2">transactions</span><span style="color: #f92672">=</span><span style="color: #f8f8f2">signed_transactions</span>
+        <span style="color: #f8f8f2">)</span>
+        <span style="color: #66d9ef">if</span> <span style="color: #f8f8f2">success:</span>
+            <span style="color: #f8f8f2">await</span> <span style="color: #f8f8f2">orm</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">store_transactions(</span>
+                <span style="color: #f8f8f2">ledger</span><span style="color: #f92672">=</span><span style="color: #f8f8f2">ledger_name,</span>
+                <span style="color: #f8f8f2">transactions</span><span style="color: #f92672">=</span><span style="color: #f8f8f2">txns_committed</span>
+            <span style="color: #f8f8f2">)</span>
+        <span style="color: #66d9ef">else</span><span style="color: #f8f8f2">:</span>
+            <span style="color: #66d9ef">if</span> <span style="color: #f8f8f2">state_machine</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">problem_report:</span>
+                <span style="color: #f8f8f2">explain</span> <span style="color: #f92672">=</span> <span style="color: #f8f8f2">state_machine</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">problem_report</span><span style="color: #f92672">.</span><span style="color: #f8f8f2">explain</span>
+            <span style="color: #66d9ef">else</span><span style="color: #f8f8f2">:</span>
+                <span style="color: #f8f8f2">explain</span> <span style="color: #f92672">=</span> <span style="color: #e6db74">&#39;&#39;</span>
+            <span style="color: #66d9ef">raise</span> <span style="color: #a6e22e">RuntimeError</span><span style="color: #f8f8f2">(f</span><span style="color: #e6db74">&#39;Accepting of new transactions was terminated with error: </span><span style="color: #ae81ff">\n</span><span style="color: #e6db74">&quot;{explain}&quot;&#39;</span><span style="color: #f8f8f2">)</span>
+</pre></td></tr></table></div>
+
+</body>
+</html>
