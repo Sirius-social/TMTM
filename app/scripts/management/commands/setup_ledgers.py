@@ -1,8 +1,16 @@
 import uuid
+import random
 from datetime import datetime
+
+from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from wrapper.models import Ledger, Transaction
+
+
+def get_random_signer():
+    verkeys = [value['verkey'] for did, value in settings.PARTICIPANTS_META.items()]
+    return random.choice(verkeys)
 
 
 class Command(BaseCommand):
@@ -73,7 +81,7 @@ class Command(BaseCommand):
                         "msg~sig": {
                             "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/signature/1.0/ed25519Sha512_single",
                             "signature": "_Oh48kK9I_QNiBRJfU-_HPAUxyIcrn3Ba8QwspSqiy8AMLMN4h8vbozImSr2dnVS2RaOfimWDgWVtZCTvbdjBQ==",
-                            "signer": "38r8qU19FRYqqRQVtaWyoNP55wBJUZfBiAKBd7z9y1Qv"
+                            "signer": get_random_signer()
                         }
                     },
                     metadata={'seqNo': seq_no, 'txnTime': str(stamp)}

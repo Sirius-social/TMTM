@@ -423,6 +423,7 @@
                                       <th scope="col"># seq_no</th>
                                       <th scope="col">No</th>
                                       <th scope="col">Metadata</th>
+                                      <th scope="col">Signer</th>
                                       <th scope="col">Attachments</th>
                                       <th scope="col">Details...</th>
                                     </tr>
@@ -431,7 +432,8 @@
                                     <tr v-for="txn in transactions">
                                       <th scope="row">[[txn.seq_no]]</th>
                                       <td>[[txn.txn.no]]</td>
-                                      <td>[[txn.metadata]]</td>
+                                      <td style="max-width: 150px;">[[txn.metadata]]</td>
+                                      <td><img style="max-height: 32px;" :src="txn.signer_icon"/></td>
                                       <td>
                                           <ul>
                                               <li v-for="attachment in txn.attachments">
@@ -720,7 +722,7 @@
                                     }
                                     if (obj.done && obj.ledger) {
                                         self.txn_processing.done = true;
-                                        if (op_code === 1) {
+                                        if (op_code == 1) {
                                             var ledger_name = obj.ledger.name;
                                             self.ledgers.push(obj.ledger);
                                             self.ledger_selected(obj.ledger);

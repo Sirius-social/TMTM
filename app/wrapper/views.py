@@ -80,14 +80,27 @@ class LedgerSerializer(serializers.ModelSerializer):
 class TransactionSerializer(serializers.ModelSerializer):
 
     attachments = serializers.SerializerMethodField('get_attachments')
+    signer_icon = serializers.SerializerMethodField('get_signer_icon')
 
     def get_attachments(self, obj):
         collection = obj.txn['~attach']
         return collection
 
+    def get_signer_icon(self, obj):
+        signer_verkey = obj.txn.get('msg~sig', {}).get('signer', None)
+        if signer_verkey:
+            for did, item in settings.PARTICIPANTS_META.items():
+                verkey = item['verkey']
+                if verkey == signer_verkey:
+                    icon_url = '/static/logos/%s' % item['icon']
+                    return icon_url
+            return None
+        else:
+            return None
+
     class Meta:
         model = Transaction
-        fields = ('txn', 'seq_no', 'metadata', 'attachments')
+        fields = ('txn', 'seq_no', 'metadata', 'attachments', 'signer_icon')
         read_only_fields = fields
 
 
