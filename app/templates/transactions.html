@@ -62,7 +62,7 @@
                 </button>
               </div>
               <div class="modal-body">
-                  <div id="dev-txn-detail" style="white-space: pre-wrap;border:lightgray dotted 1px;padding:5px;width: 100%; height: 100%;font-size: 75%;">
+                  <div id="dev-txn-detail" style="white-space: pre-wrap;border:lightgray dotted 1px;padding:5px;width: 100%; height: 100%;">
                   </div>
               </div>
               <div class="modal-footer">
@@ -187,10 +187,13 @@
                       </div>
                       <div v-if="form_step == 2" style="width: 90%; height: 500px;">
                           <h3 v-if="txn_processing.error" style="margin-left: 20px;" class="btn btn-danger">[[ txn_processing.error ]]</h3>
-                          <div v-if="txn_processing.progress" class="progress" style="max-width: 30%; margin-bottom: 15px;">
-                            <div class="progress-bar progress-bar-striped" role="progressbar" :aria-valuenow="txn_processing.progress" aria-valuemin="0" aria-valuemax="100" :style="{'width': `${txn_processing.progress}%`}">
-                              [[ txn_processing.progress ]]%
-                            </div>
+                          <div class="row" style="margin-left: 30px;">
+                              <span class="text-primary" style="margin-right: 50px;">[[ txn_processing.message ]]</span>
+                              <div v-if="txn_processing.progress" class="progress" style="width: 30%; margin-bottom: 15px;">
+                                <div class="progress-bar progress-bar-striped" role="progressbar" :aria-valuenow="txn_processing.progress" aria-valuemin="0" aria-valuemax="100" :style="{'width': `${txn_processing.progress}%`}">
+                                  [[ txn_processing.progress ]]%
+                                </div>
+                              </div>
                           </div>
                           <textarea id="log-txn" style="height: 100%; width: 100%; overflow-y: auto;" readonly>
 
@@ -199,9 +202,9 @@
                   </div>
               </div>
               <div class="modal-footer">
-                <button v-if="form_step > 0" @click.prevent="form_step -= 1" type="button" class="btn btn-secondary" ><< Back</button>
-                <button v-if="form_step < 3" @click.prevent="form_step += 1" type="button" class="btn btn-success" >[[ form_next_caption ]]</button>
-                <button @click.prevent="close_modal_forms" type="button" class="btn btn-primary" >Close</button>
+                <button v-if="form_step < 2 || txn_processing.done" @click.prevent="form_step -= 1" type="button" class="btn btn-secondary" ><< Back</button>
+                <button v-if="form_step < 2" @click.prevent="form_step += 1" type="button" class="btn btn-success" >[[ form_next_caption ]]</button>
+                <button v-if="form_step < 2 || txn_processing.done" @click.prevent="close_modal_forms" type="button" class="btn btn-primary" >Close</button>
               </div>
             </div>
           </div>
@@ -507,7 +510,7 @@
                     if (this.search_ledger) {
                         var ret = [];
                         for (var i = 0; i < ledgers_data.length; i++) {
-                          if (ledgers_data[i].name.includes(this.search_ledger)) {
+                          if (ledgers_data[i].name.toLowerCase().includes(this.search_ledger.toLowerCase())) {
                               ret.push(ledgers_data[i]);
                           }
                         }
@@ -534,12 +537,14 @@
             },
             watch: {
                 search_ledger: function (new_value, old_value) {
-                    setTimeout(function() {
-                        $("#tagsCanvas").tagcanvas("update");
-                        if (new_value.length > 0) {
-                            $("#tagsCanvas").tagcanvas("tagtofront", {id: new_value[0].name});
-                        }
-                    }, 100);
+                    if (new_value) {
+                        setTimeout(function () {
+                            $("#tagsCanvas").tagcanvas("update");
+                            if (new_value.length > 0) {
+                                $("#tagsCanvas").tagcanvas("tagtofront", {id: new_value[0].name});
+                            }
+                        }, 100);
+                    }
                 },
                 selected_ledger: function(new_value, old_value){
                     if (new_value) {
@@ -557,6 +562,10 @@
                         }, 100);
                     }
                     else if (new_value == 2) {
+                        this.txn_processing.done = false;
+                        this.txn_processing.error = null;
+                        this.txn_processing.message = null;
+                        this.txn_processing.progress = 0;
                         this.start_transaction();
                     }
                 }
@@ -584,6 +593,9 @@
                     );
                 },
                 close_modal_forms: function(){
+                    if (this.form_step === 2 && !this.txn_processing.done) {
+                        return ;
+                    }
                     $("#modal-txn-detail").hide();
                     $('#modal-doc-viewer').hide();
                     $('#modal-make-transactions').hide();
@@ -615,29 +627,50 @@
                         var txn = JSON.parse(content);
                         ws_transactions = new WebSocket("{{ ws_url }}");
                         ws_transactions.onclose = function(event) {
-
+                            self.txn_processing.done = true;
                         };
                         ws_transactions.onmessage = function(event) {
                           // alert("Получены данные " + event.data);
                             console.log("Получены данные");
                             var obj = JSON.parse(event.data);
-                            $("#log-txn").append(
+                            var log$ = $("#log-txn");
+                            log$.append(
                                 JSON.stringify(
                                     obj,
                                     null,
                                     '\t'
                                 )
                             );
+                            var textarea = log$.get(0);
+                            textarea.scrollTop = textarea.scrollHeight;
                             if ('@type' in obj) {
                                 var type_ = obj['@type'];
                                 if (type_.includes('problem_report')) {
                                     self.txn_processing.error = obj.explain;
                                     self.txn_processing.done = true;
                                 }
+                                else if (type_.includes("progress")) {
+                                    //console.log(obj);
+                                    if (obj.progress) {
+                                        self.txn_processing.progress = obj.progress;
+                                    }
+                                    if (obj.message) {
+                                        self.txn_processing.message = obj.message;
+                                    }
+                                    if (obj.done && obj.ledger) {
+                                        self.txn_processing.done = true;
+                                        var ledger_name = obj.ledger.name;
+                                        self.ledgers.push(obj.ledger);
+                                        self.ledger_selected(obj.ledger);
+                                        self.search_ledger = ledger_name;
+                                    }
+                                }
                             }
                         };
                         ws_transactions.onerror = function(error) {
                             console.log("Ошибка " + error.message);
+                            self.txn_processing.error = "Ws Error: " + error.message;
+                            self.txn_processing.done = true;
                         };
                         ws_transactions.onopen = function() {
                             console.log("OnOpen");
@@ -680,7 +713,7 @@
                     $("#i-attach-file").trigger("click");
                 },
                 build_txn_body: function(){
-                    var ttl = 15;
+                    var ttl = 20;
                     var attachments = [];
                     for (var index in this.attachments) {
                         var attach = this.attachments[index];

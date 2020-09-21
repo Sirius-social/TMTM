@@ -1,5 +1,6 @@
 import json
 import uuid
+from datetime import datetime
 from typing import List, Dict
 from contextlib import asynccontextmanager
 from django.conf import settings
@@ -7,11 +8,15 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from sirius_sdk import Agent, P2PConnection, Pairwise
 from sirius_sdk.agent.consensus import simple
 from sirius_sdk.agent.microledgers import Transaction
+from sirius_sdk.errors.exceptions import SiriusPromiseContextException
 
 from scripts.management.commands.decorators import sentry_capture_exceptions
+from scripts.management.commands.logger import StreamLogger
+from scripts.management.commands import orm
 
 
 REQUEST_ERROR = 'request_error'
+REQUEST_PROCESSING_ERROR = 'request_processing_error'
 
 
 def build_problem_report(problem_code: str, explain: str) -> dict:
@@ -60,29 +65,57 @@ async def get_connection():
         await agent.close()
 
 
-async def create_new_ledger(my_did: str, name: str, genesis: List[Transaction], ttl: int):
+async def create_new_ledger(
+        my_did: str, name: str, genesis: List[Transaction], ttl: int, stream_id: str, handler=None
+) -> int:
     async with get_connection() as agent:
-        agent = alloc_agent_connection()
         my_verkey = await agent.wallet.did.key_for_local_did(my_did)
+        logger = await StreamLogger.create(stream=stream_id, cb=handler)
         state_machine = simple.state_machines.MicroLedgerSimpleConsensus(
             crypto=agent.wallet.crypto,
             me=Pairwise.Me(my_did, my_verkey),
             pairwise_list=agent.pairwise_list,
             microledgers=agent.microledgers,
             transports=agent,
+            logger=logger,
             time_to_live=ttl
         )
-        await state_machine.init_microledger(
+        success, new_ledger = await state_machine.init_microledger(
             ledger_name=name,
             participants=settings.PARTICIPANTS,
             genesis=genesis
         )
+        if success:
+            genesis = await new_ledger.get_all_transactions()
+            # Store ledger metadata and service info for post-processing and visualize in monitoring service
+            ledger_id = await orm.create_ledger(
+                name=new_ledger.name,
+                metadata={
+                    'actor': {
+                        'label': 'SELF',
+                        'did': my_did
+                    },
+                    'local_timestamp_utc': str(datetime.utcnow()),
+                    'participants': settings.PARTICIPANTS
+                },
+                genesis=genesis
+            )
+            return ledger_id
+        else:
+            if state_machine.problem_report:
+                explain = state_machine.problem_report.explain
+            else:
+                explain = ''
+            if await agent.microledgers.is_exists(name):
+                await agent.microledgers.reset(name)
+            raise RuntimeError(f'Creation of new ledger was terminated with error: \n"{explain}"')
 
 
 class WsTransactions(AsyncJsonWebsocketConsumer):
 
     TYP_CREATE_LEDGER = 'https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/create-ledger'
     TYP_ISSUE_TXN = 'https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/issue-transaction'
+    TYP_PROGRESS = 'https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/progress'
 
     @sentry_capture_exceptions
     async def connect(self):
@@ -99,6 +132,37 @@ class WsTransactions(AsyncJsonWebsocketConsumer):
                         await self.send_problem_report_and_close(REQUEST_ERROR, f'[{attr}] attribute is empty')
                     for txn in payload['genesis']:
                         await self._validate_txn(txn)
+                try:
+                    ttl = payload.get('time_to_live', 15)
+                    genesis = [Transaction.create(**txn) for txn in payload['genesis']]
+                    ledger_id = await create_new_ledger(
+                        my_did=settings.AGENT['entity'],
+                        name=payload['name'],
+                        genesis=genesis,
+                        ttl=ttl,
+                        stream_id='ledgers',
+                        handler=self.route_event_to_client
+                    )
+                    msg = {
+                        '@type': self.TYP_PROGRESS,
+                        '@id': uuid.uuid4().hex,
+                        'ledger': {
+                            'name': payload['name'],
+                            'id': ledger_id
+                        },
+                        'done': True
+                    }
+                    await self.send_json(msg)
+                    await self.close()
+                except Exception as e:
+                    if isinstance(e, SiriusPromiseContextException):
+                        explain = e.printable
+                    else:
+                        explain = str(e)
+                    await self.send_problem_report_and_close(
+                        REQUEST_PROCESSING_ERROR, explain
+                    )
+                    return
             elif payload['@type'] == self.TYP_ISSUE_TXN:
                 txn = payload
                 await self._validate_txn(txn)
@@ -122,6 +186,20 @@ class WsTransactions(AsyncJsonWebsocketConsumer):
         report = build_problem_report(problem_code, explain)
         await self.send_json(report)
         await self.close()
+
+    async def route_event_to_client(self, event: dict):
+        progress = event.get('payload').get('progress', None)
+        message = event.get('payload').get('message', None)
+        if message or progress:
+            msg = {
+                '@type': self.TYP_PROGRESS,
+                '@id': uuid.uuid4().hex
+            }
+            if progress:
+                msg['progress'] = progress
+            if message:
+                msg['message'] = message
+            await self.send_json(msg)
 
     async def _validate_txn(self, txn: dict):
         for attr in ['@type', '@id', 'no', 'date', 'cargo', 'departure_station', 'arrival_station', 'doc_type', 'ledger']:

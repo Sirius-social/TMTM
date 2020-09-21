@@ -7,9 +7,9 @@ from channels.db import database_sync_to_async
 from wrapper.models import Ledger, Transaction
 
 
-async def create_ledger(name: str, metadata: dict, genesis: List[dict]):
+async def create_ledger(name: str, metadata: dict, genesis: List[dict]) -> int:
 
-    def sync(name_: str, metadata_: dict, genesis_: List[dict]):
+    def sync(name_: str, metadata_: dict, genesis_: List[dict]) -> int:
         with atomic():
             ledger = Ledger.objects.create(
                 name=name_,
@@ -25,8 +25,9 @@ async def create_ledger(name: str, metadata: dict, genesis: List[dict]):
                         seq_no=m.get('seqNo'),
                         metadata=m
                     )
+            return ledger.id
 
-    await database_sync_to_async(sync)(name, metadata, genesis)
+    return await database_sync_to_async(sync)(name, metadata, genesis)
 
 
 async def reset_ledger(name: str):
