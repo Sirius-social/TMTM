@@ -167,32 +167,44 @@ PARTICIPANTS_META = {
     '4vEF4eHwQ1GB5s766rAYAe': {
         'label': 'ADI Smart',
         'logo': 'ady_container.png',
-        'url': 'https://ady.socialsirius.com'
+        'icon': 'ady_smart.jpg',
+        'url': 'https://ady.socialsirius.com',
+        'verkey': '38r8qU19FRYqqRQVtaWyoNP55wBJUZfBiAKBd7z9y1Qv'
     },
     'U9A6U7LZQe4dCh84t3fpTK': {
         'label': 'DKR',
         'logo': 'ktz_express.svg',
-        'url': 'https://dkr.socialsirius.com'
+        'icon': 'dkr.png',
+        'url': 'https://dkr.socialsirius.com',
+        'verkey': 'FnyCacPf4R128ZwZnzzqStSwaUF54FXmhSL2ycy9aYG5'
     },
     '6jzbnVE5S6j15afcpC9yhF': {
         'label': 'GR Logistics & Terminals',
         'logo': 'gr_logistics.png',
-        'url': 'https://gr.socialsirius.com'
+        'icon': 'gr.jpg',
+        'url': 'https://gr.socialsirius.com',
+        'verkey': '48VZxo8boPPikNPGEEHfLoCtUN8g1n6veYwndRDpW9BD'
     },
     'D96GgE1PVtWeSfuAQZ9neY': {
         'label': 'KAZMORTRANSFLOT',
         'logo': 'kazmortransflot.jpg',
-        'url': 'https://kazmortransflot.socialsirius.com'
+        'icon': 'kazmortransflot.jpg',
+        'url': 'https://kazmortransflot.socialsirius.com',
+        'verkey': '7ckhcwQCMV9RpYC4RQ3EgXEn4nbjgumGLL9CyWtqf5es'
     },
     'Ch4eVSWf7KXRubk5to6WFC': {
         'label': 'PMIS - PORT OF BAKU',
         'logo': 'port_of_baku.jpg',
-        'url': 'https://pmis.socialsirius.com'
+        'icon': 'pmis_port_baku.png',
+        'url': 'https://pmis.socialsirius.com',
+        'verkey': '7NZuS52TEAnrD5VTme3JHbyXQHQtbstTUpdgBGxhZkMp'
     },
     'VU7c9jvBqLee9NkChXU1Kn': {
         'label': 'Solvo.tos - PORT AKTAU',
         'logo': 'port_aktau.png',
-        'url': 'https://solvotos.socialsirius.com'
+        'icon': 'solvo.tos.png',
+        'url': 'https://solvotos.socialsirius.com',
+        'verkey': 'GWuxzCXX3ddX9R6bX1if1Me7wz1WiiyKEdzsdB7X5npG'
     }
 }
 PARTICIPANTS = [

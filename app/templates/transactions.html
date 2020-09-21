@@ -414,7 +414,7 @@
                                 </scroll-loader>
 
                                 <!--
-                                <iframe src="http://docs.google.com/gview?url=https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf&embedded=true"></iframe>
+                                <iframe src="https://docs.google.com/gview?url=https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf&embedded=true"></iframe>
                                 -->
 
                                 <table v-if="!loader_enable" class="table">
@@ -756,7 +756,7 @@
                     $("#modal-txn-detail").show();
                 },
                 show_doc_viewer: function (url, filename, md5) {''
-                    var html = '<iframe style="width:100%;height:600px;" src="http://docs.google.com/gview?url='+url+'&embedded=true"></iframe>';
+                    var html = '<iframe style="width:100%;height:600px;" src="https://docs.google.com/gview?url='+url+'&embedded=true"></iframe>';
                     var div$ = $("#div-doc-viewer");
                     div$.children().remove();
                     div$.html(html);
@@ -765,7 +765,7 @@
                 },
                 open_doc_view_in_tab: function(url){
                     if (url) {
-                        var link = "http://docs.google.com/gview?url=" + url;
+                        var link = "https://docs.google.com/gview?url=" + url;
                         window.open(link, '_blank');
                     }
                 },
@@ -814,7 +814,7 @@
                     $("#i-attach-file").trigger("click");
                 },
                 build_txn_body: function(){
-                    var ttl = 30;
+                    var ttl = 50;
                     var attachments = [];
                     for (var index in this.attachments) {
                         var attach = this.attachments[index];
