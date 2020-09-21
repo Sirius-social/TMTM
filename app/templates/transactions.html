@@ -817,7 +817,7 @@
                     $("#i-attach-file").trigger("click");
                 },
                 build_txn_body: function(){
-                    var ttl = 50;
+                    var ttl = 20;
                     var attachments = [];
                     for (var index in this.attachments) {
                         var attach = this.attachments[index];
@@ -852,7 +852,7 @@
                         )
                     }
                     else if (this.op_code === 2) {
-                        txn.time_to_live = ttl;
+                        txn.time_to_live = 40;
                         return txn;
                     }
 
