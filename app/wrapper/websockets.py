@@ -235,7 +235,7 @@ class WsTransactions(AsyncJsonWebsocketConsumer):
                         '@type': self.TYP_PROGRESS,
                         '@id': uuid.uuid4().hex,
                         'ledger': {
-                            'name': payload['name'],
+                            'name': txn['ledger']['name'],
                         },
                         'done': True
                     }
