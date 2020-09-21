@@ -90,7 +90,7 @@ class TransactionsView(APIView):
                 }
             curr_abs_url = request.build_absolute_uri()
             parts = urlsplit(curr_abs_url)
-            is_secure = 'https' in parts.scheme
+            is_secure = request.is_secure()
             logging.error('-----------------')
             logging.error('parts.scheme: ' + parts.scheme)
             logging.error('is_secure: ' + str(is_secure))
