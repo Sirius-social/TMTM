@@ -685,6 +685,7 @@
                 start_transaction: function(){
                     var content = json_editor.$container.text();
                     var self = this;
+                    var op_code = this.op_code;
                     try {
                         var txn = JSON.parse(content);
                         ws_transactions = new WebSocket("{{ ws_url }}");
@@ -696,7 +697,6 @@
                             console.log("Получены данные");
                             var obj = JSON.parse(event.data);
                             var log$ = $("#log-txn");
-                            var op_code = this.op_code;
                             log$.append(
                                 JSON.stringify(
                                     obj,
