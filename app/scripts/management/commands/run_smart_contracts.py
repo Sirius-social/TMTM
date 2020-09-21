@@ -78,7 +78,7 @@ class Command(BaseCommand):
         try:
             ledgers = await agent.microledgers.list()
             logging.error('* ledgers count: %d' % len(ledgers))
-            test_ledgers = [ledger for ledger in ledgers if ledger['name'].startswith(self.test_ledger_prefix)]
+            test_ledgers = [ledger for ledger in ledgers if ledger['name'].lower().startswith(self.test_ledger_prefix)]
             logging.error('* test ledgers count: %d' % len(test_ledgers))
             for name in [ledger['name'] for ledger in test_ledgers]:
                 try:
