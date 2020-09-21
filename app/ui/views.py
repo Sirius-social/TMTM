@@ -97,7 +97,8 @@ class TransactionsView(APIView):
             logging.error('curr_abs_url: ' + curr_abs_url)
             logging.error('parts.netloc: ' + str(parts.netloc))
             logging.error('-----------------')
-            ws_url = 'wss://' if is_secure else 'ws://' + parts.netloc + '/transactions'
+            ws_url = 'wss://' if is_secure else 'ws://'
+            ws_url += parts.netloc + '/transactions'
             return Response(data={
                 'ledgers': [{'name': ledger.name, 'id': ledger.id} for ledger in Ledger.objects.filter(entity=entity).all()[:200]],
                 'logo': '/static/logos/%s' % settings.PARTICIPANTS_META[entity]['logo'],
