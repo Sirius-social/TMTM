@@ -94,6 +94,8 @@ class TransactionsView(APIView):
             logging.error('-----------------')
             logging.error('parts.scheme: ' + parts.scheme)
             logging.error('is_secure: ' + str(is_secure))
+            logging.error('curr_abs_url: ' + curr_abs_url)
+            logging.error('parts.netloc: ' + str(parts.netloc))
             logging.error('-----------------')
             ws_url = 'wss://' if is_secure else 'ws://' + parts.netloc + '/transactions'
             return Response(data={
