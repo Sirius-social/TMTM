@@ -89,7 +89,8 @@ class TransactionsView(APIView):
                 }
             curr_abs_url = request.build_absolute_uri()
             parts = urlsplit(curr_abs_url)
-            ws_url = 'wss://' if request.is_secure() else 'ws://' + parts.netloc + '/transactions'
+            is_secure = 'https' in parts.scheme
+            ws_url = 'wss://' if is_secure else 'ws://' + parts.netloc + '/transactions'
             return Response(data={
                 'ledgers': [{'name': ledger.name, 'id': ledger.id} for ledger in Ledger.objects.filter(entity=entity).all()[:200]],
                 'logo': '/static/logos/%s' % settings.PARTICIPANTS_META[entity]['logo'],
