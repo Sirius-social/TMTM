@@ -79,7 +79,6 @@ async def create_new_ledger(my_did: str, name: str, genesis: List[Transaction], 
         )
 
 
-
 class WsTransactions(AsyncJsonWebsocketConsumer):
 
     TYP_CREATE_LEDGER = 'https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/create-ledger'

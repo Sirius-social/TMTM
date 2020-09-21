@@ -1,3 +1,4 @@
+import logging
 from urllib.parse import urlsplit
 
 from rest_framework.views import APIView
@@ -90,10 +91,10 @@ class TransactionsView(APIView):
             curr_abs_url = request.build_absolute_uri()
             parts = urlsplit(curr_abs_url)
             is_secure = 'https' in parts.scheme
-            print('-----------------')
-            print('parts.scheme: ' + parts.scheme)
-            print('is_secure: ' + str(is_secure))
-            print('-----------------')
+            logging.error('-----------------')
+            logging.error('parts.scheme: ' + parts.scheme)
+            logging.error('is_secure: ' + str(is_secure))
+            logging.error('-----------------')
             ws_url = 'wss://' if is_secure else 'ws://' + parts.netloc + '/transactions'
             return Response(data={
                 'ledgers': [{'name': ledger.name, 'id': ledger.id} for ledger in Ledger.objects.filter(entity=entity).all()[:200]],
