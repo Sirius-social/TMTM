@@ -93,6 +93,31 @@
             </div>
           </div>
         </div>
+        <!-- =================View source code fir init LEdger -->
+        <!-- ============================================================== -->
+        <div id="modal-smart-contract-init-ledger" class="modal" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.2);overflow-y: auto;">
+          <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h3 id="title-doc-viewer" class="modal-title">
+                    Smart-Contract source code
+                    <a href="https://github.com/Sirius-social/sirius-sdk-python/tree/master/sirius_sdk/agent/consensus/simple#use-case-1-creating-new-ledger" target="_blank">click to see details...</a>
+                </h3>
+                <button @click.prevent="close_modal_forms" type="button" class="close" data-dismiss="modal" aria-label="Close" id="btn-modal-close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                  <iframe style="width: 100%; height:600px;" src="{{ smart_contract_init_ledger_url }}">
+
+                  </iframe>
+              </div>
+              <div class="modal-footer">
+                <button @click.prevent="close_modal_forms" type="button" class="btn btn-primary" >Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
         <!-- ============================================================== -->
         <!-- Modal MAke Transactions -->
         <!-- ============================================================== -->
@@ -110,7 +135,7 @@
                       <form id="form-txn" v-if="form_step == 0">
                           <div class="row col-sm-3 my-1" >
                               <label for="i-ledger-name">Ledger name</label>
-                              <input v-model="form.ledger_name" id="i-ledger-name" name="ledger-name" type="text" class="form-control" placeholder="container ID">
+                              <input v-model="form.ledger_name" id="i-ledger-name" name="ledger-name" type="text" class="form-control" placeholder="container ID" :readonly="op_code != 1">
                           </div>
                           <h6 style="margin-top: 30px;" class="text-secondary">Genesis transactions</h6>
                           <div style="width: 100%; padding: 10px; margin: 5px; border-color: #79aec8;border-width: 1px;border-style: dashed;border-radius: 5px;">
@@ -327,9 +352,10 @@
                         <div class="card">
                             <div class="card-block">
                                 <form class="app-search p-l-20">
-                                    <input v-model="search_ledger" style="width: 400px;" type="text" class="form-control" placeholder="Выберите Ledger ...">
+                                    <input v-model="search_ledger" style="width: 350px;" type="text" class="form-control" placeholder="Выберите Ledger ...">
                                     <a class="srh-btn" style="margin-left: -30px;"><i class="ti-search"></i></a>
-                                    <a @click.prevent="open_transaction_form()" class="srh-btn" title="Добавить новый Ledger" style="margin-left: 20px;cursor:pointer;"><i class="ti-plus"></i></a>
+                                    <a @click.prevent="open_transaction_form(1)" class="srh-btn" title="Добавить новый Ledger" style="margin-left: 20px;cursor:pointer;"><i class="ti-plus"></i></a>
+                                    <a @click.prevent="open_smart_contract_init_ledger_form()" class="srh-btn" title="Smart contract source code" style="margin-left: 5px;cursor:pointer;"><i class="ti-link"></i></a>
                                 </form>
                                 <div id="tagsContainer">
                                  <canvas width="400" height="400" id="tagsCanvas">
@@ -351,7 +377,10 @@
                         <div class="card">
                             <div class="card-block">
                                 <h4 v-if="!selected_ledger" class="text-danger">Выберите Ledger для работы с транзакциями</h4>
-                                <h4 v-if="selected_ledger" class="card-title text-primary">Ledger: [[selected_ledger.name]]</h4>
+                                <h4 v-if="selected_ledger" class="card-title text-primary">
+                                    Ledger: [[selected_ledger.name]]
+                                    <a @click.prevent="open_transaction_form(2)" class="srh-btn" title="Add transactions" style="margin-left: 20px;cursor:pointer;"><i class="ti-plus"></i></a>
+                                </h4>
 
                                 <scroll-loader :loader-method="get_loader_list" :loader-disable="!loader_enable" :loader-size="300">
                                 </scroll-loader>
@@ -486,6 +515,7 @@
                     //{'filename': 'file2.png', 'md5': 'xxx', 'url': 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', 'progress': 10, 'done': true, 'canceled': false, 'mime_type': null}
                 ],
                 form_step: 0,
+                op_code: null,
                 form: {
                     "no": null,
                     "date": null,
@@ -599,6 +629,7 @@
                     $("#modal-txn-detail").hide();
                     $('#modal-doc-viewer').hide();
                     $('#modal-make-transactions').hide();
+                    $('#modal-smart-contract-init-ledger').hide();
                     this.form_step = 0;
                     for (var index in this.attachments) {
                         var a = this.attachments[index];
@@ -634,6 +665,7 @@
                             console.log("Получены данные");
                             var obj = JSON.parse(event.data);
                             var log$ = $("#log-txn");
+                            var op_code = this.op_code;
                             log$.append(
                                 JSON.stringify(
                                     obj,
@@ -659,10 +691,18 @@
                                     }
                                     if (obj.done && obj.ledger) {
                                         self.txn_processing.done = true;
-                                        var ledger_name = obj.ledger.name;
-                                        self.ledgers.push(obj.ledger);
-                                        self.ledger_selected(obj.ledger);
-                                        self.search_ledger = ledger_name;
+                                        if (op_code === 1) {
+                                            var ledger_name = obj.ledger.name;
+                                            self.ledgers.push(obj.ledger);
+                                            self.ledger_selected(obj.ledger);
+                                            self.search_ledger = ledger_name;
+                                        }
+                                        else if (op_code === 2 && self.selected_ledger) {
+                                            var ledger_name = obj.ledger.name;
+                                            if (ledger_name == self.selected_ledger.name) {
+
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -701,7 +741,36 @@
                     }
                 },
                 open_transaction_form: function(op_code){
+                    if (op_code === 1) {
+                        // Init Ledger
+                        this.op_code = op_code;
+                    }
+                    else if (op_code === 2) {
+
+                        this.op_code = op_code;
+                        this.form.ledger_name = this.selected_ledger.name;
+                        if (this.transactions.length > 0) {
+                            var first_txn = this.transactions[this.transactions.length - 1].txn;
+                            console.log(first_txn);
+                            this.form.no = first_txn.no;
+                            this.form.date = first_txn.date;
+                            this.form.cargo = first_txn.cargo
+                            this.form.departure_station = first_txn.departure_station;
+                            this.form.arrival_station = first_txn.arrival_station;
+                            this.form.doc_type = first_txn.doc_type;
+                            if (first_txn.waybill) {
+                                this.form.waybill_no = first_txn.waybill.no || null;
+                                this.form.waybill_wagon_no = first_txn.waybill.wagon_no || null;
+                            }
+                        }
+                    }
+                    else {
+                        return;
+                    }
                     $("#modal-make-transactions").show();
+                },
+                open_smart_contract_init_ledger_form: function(){
+                    $("#modal-smart-contract-init-ledger").show();
                 },
                 open_link_in_tab: function(link) {
                     if (link) {
@@ -713,7 +782,7 @@
                     $("#i-attach-file").trigger("click");
                 },
                 build_txn_body: function(){
-                    var ttl = 20;
+                    var ttl = 30;
                     var attachments = [];
                     for (var index in this.attachments) {
                         var attach = this.attachments[index];
@@ -741,10 +810,17 @@
                         this.form.waybill_wagon_no,
                         attachments
                     )
-                    var genesis = [txn];
-                    return library.transactions.build_init_ledger(
-                        uuid4(), this.form.ledger_name, ttl, genesis
-                    )
+                    if (this.op_code === 1) {
+                        var genesis = [txn];
+                        return library.transactions.build_init_ledger(
+                            uuid4(), this.form.ledger_name, ttl, genesis
+                        )
+                    }
+                    else if (this.op_code === 2) {
+                        txn.time_to_live = ttl;
+                        return txn;
+                    }
+
                 }
             }
         });

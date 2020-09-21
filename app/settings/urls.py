@@ -16,7 +16,7 @@ Including another URLconf
 from django.urls import path
 from django.conf.urls import url, include
 from django.conf import settings
-from ui.views import TransactionsView, IndexView
+from ui.views import TransactionsView, IndexView, SmartContractInitLedgerView
 from wrapper.views import MaintenanceRouter, LedgersRouter, UploadView, ContentView
 
 
@@ -28,6 +28,7 @@ if CONTENT_URL.startswith('/'):
 urlpatterns = [
     # Others
     path('transactions/', TransactionsView.as_view(), name='transactions'),
+    path('smart_contract_init_ledger/', SmartContractInitLedgerView.as_view(), name='smart-contract-init-ledger'),
     path('', IndexView.as_view(), name='index'),
     # Uploads
     url(r'^upload', UploadView.as_view(), name='upload'),

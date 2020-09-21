@@ -9,6 +9,7 @@ from sirius_sdk import Agent, P2PConnection, Pairwise
 from sirius_sdk.agent.consensus import simple
 from sirius_sdk.agent.microledgers import Transaction
 from sirius_sdk.errors.exceptions import SiriusPromiseContextException
+from sirius_sdk.agent.aries_rfc.utils import sign
 
 from scripts.management.commands.decorators import sentry_capture_exceptions
 from scripts.management.commands.logger import StreamLogger
@@ -80,10 +81,19 @@ async def create_new_ledger(
             logger=logger,
             time_to_live=ttl
         )
+        # Add signature to transactions
+        signed_genesis = []
+        for txn in genesis:
+            if 'msg~sig' in txn:
+                del txn['msg~sig']
+            signature = await sign(agent.wallet.crypto, dict(txn), my_verkey)
+            del signature['sig_data']
+            txn['msg~sig'] = signature
+            signed_genesis.append(Transaction.create(txn))
         success, new_ledger = await state_machine.init_microledger(
             ledger_name=name,
             participants=settings.PARTICIPANTS,
-            genesis=genesis
+            genesis=signed_genesis
         )
         if success:
             genesis = await new_ledger.get_all_transactions()
@@ -111,6 +121,50 @@ async def create_new_ledger(
             raise RuntimeError(f'Creation of new ledger was terminated with error: \n"{explain}"')
 
 
+async def commit_transactions(
+        my_did: str, ledger_name: str, transactions: List[Transaction], ttl: int, stream_id: str, handler=None
+):
+    async with get_connection() as agent:
+        my_verkey = await agent.wallet.did.key_for_local_did(my_did)
+        logger = await StreamLogger.create(stream=stream_id, cb=handler)
+        state_machine = simple.state_machines.MicroLedgerSimpleConsensus(
+            crypto=agent.wallet.crypto,
+            me=Pairwise.Me(my_did, my_verkey),
+            pairwise_list=agent.pairwise_list,
+            microledgers=agent.microledgers,
+            transports=agent,
+            logger=logger,
+            time_to_live=ttl
+        )
+        # Add signature to transactions
+        signed_transactions = []
+        for txn in transactions:
+            if 'msg~sig' in txn:
+                del txn['msg~sig']
+            signature = await sign(agent.wallet.crypto, dict(txn), my_verkey)
+            del signature['sig_data']
+            txn['msg~sig'] = signature
+            signed_transactions.append(Transaction.create(txn))
+        # FIRE !!!
+        ledger = await agent.microledgers.ledger(ledger_name)
+        success, txns_committed = await state_machine.commit(
+            ledger=ledger,
+            participants=settings.PARTICIPANTS,
+            transactions=signed_transactions
+        )
+        if success:
+            await orm.store_transactions(
+                ledger=ledger_name,
+                transactions=txns_committed
+            )
+        else:
+            if state_machine.problem_report:
+                explain = state_machine.problem_report.explain
+            else:
+                explain = ''
+            raise RuntimeError(f'Accepting of new transactions was terminated with error: \n"{explain}"')
+
+
 class WsTransactions(AsyncJsonWebsocketConsumer):
 
     TYP_CREATE_LEDGER = 'https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/create-ledger'
@@ -133,7 +187,7 @@ class WsTransactions(AsyncJsonWebsocketConsumer):
                     for txn in payload['genesis']:
                         await self._validate_txn(txn)
                 try:
-                    ttl = payload.get('time_to_live', 15)
+                    ttl = payload.get('time_to_live', 30)
                     genesis = [Transaction.create(**txn) for txn in payload['genesis']]
                     ledger_id = await create_new_ledger(
                         my_did=settings.AGENT['entity'],
@@ -166,6 +220,36 @@ class WsTransactions(AsyncJsonWebsocketConsumer):
             elif payload['@type'] == self.TYP_ISSUE_TXN:
                 txn = payload
                 await self._validate_txn(txn)
+                ttl = payload.pop('time_to_live', 30)
+                txn = Transaction.create(**payload)
+                try:
+                    await commit_transactions(
+                        my_did=settings.AGENT['entity'],
+                        ledger_name=txn['ledger']['name'],
+                        transactions=[txn],
+                        ttl=ttl,
+                        stream_id='transactions',
+                        handler=self.route_event_to_client
+                    )
+                    msg = {
+                        '@type': self.TYP_PROGRESS,
+                        '@id': uuid.uuid4().hex,
+                        'ledger': {
+                            'name': payload['name'],
+                        },
+                        'done': True
+                    }
+                    await self.send_json(msg)
+                    await self.close()
+                except Exception as e:
+                    if isinstance(e, SiriusPromiseContextException):
+                        explain = e.printable
+                    else:
+                        explain = str(e)
+                    await self.send_problem_report_and_close(
+                        REQUEST_PROCESSING_ERROR, explain
+                    )
+                    return
             else:
                 await self.send_problem_report_and_close(
                     REQUEST_ERROR, 'Unexpected @type = "%s"' % payload['@type']
@@ -195,9 +279,9 @@ class WsTransactions(AsyncJsonWebsocketConsumer):
                 '@type': self.TYP_PROGRESS,
                 '@id': uuid.uuid4().hex
             }
-            if progress:
+            if progress is not None:
                 msg['progress'] = progress
-            if message:
+            if message is not None:
                 msg['message'] = message
             await self.send_json(msg)
 

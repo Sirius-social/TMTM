@@ -106,7 +106,8 @@ class TransactionsView(APIView):
                 'cur_date': str(timezone.datetime.now().strftime('%d.%m.%Y')),
                 'upload_url': str(reverse('upload')),
                 'doc_types': doc_types,
-                'ws_url': ws_url
+                'ws_url': ws_url,
+                'smart_contract_init_ledger_url': str(reverse('smart-contract-init-ledger'))
             })
 
     @staticmethod
@@ -142,6 +143,15 @@ class IndexView(APIView):
 
 class TestView(APIView):
     template_name = 'test.html'
+    renderer_classes = [TemplateHTMLRenderer]
+    authentication_classes = []
+
+    def get(self, request, *args, **kwargs):
+        return Response(data={})
+
+
+class SmartContractInitLedgerView(APIView):
+    template_name = 'smart_contract_create_ledger.html'
     renderer_classes = [TemplateHTMLRenderer]
     authentication_classes = []
 
