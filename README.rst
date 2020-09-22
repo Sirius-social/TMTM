@@ -7,7 +7,7 @@ Therminology
 ==================
 
   - **Agent**:
-  - **Dictributed state-machines**:
+  - **Distributed state-machines**:
 
 
 Start Guide: step-by-step
