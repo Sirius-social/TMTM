@@ -12,6 +12,7 @@ from sirius_sdk.agent.consensus import simple
 from sirius_sdk.agent.microledgers import Transaction
 from sirius_sdk.errors.exceptions import SiriusPromiseContextException
 from sirius_sdk.agent.aries_rfc.utils import sign
+from sirius_sdk.agent.aries_rfc.feature_0160_connection_protocol import Invitation
 
 from scripts.management.commands.decorators import sentry_capture_exceptions
 from scripts.management.commands.logger import StreamLogger
@@ -345,3 +346,29 @@ class WsTransactions(AsyncJsonWebsocketConsumer):
 
     async def disconnect(self, code):
         pass
+
+
+class WsQRCodeAuth(AsyncJsonWebsocketConsumer):
+
+    @sentry_capture_exceptions
+    async def connect(self):
+        if settings.AGENT['entity']:
+            await self.accept()
+            async with get_connection() as agent:
+                entity = settings.AGENT['entity']
+                endpoint_address = [e for e in agent.endpoints if e.routing_keys == []][0].address
+                connection_key = await agent.wallet.crypto.create_key()
+                invitation = Invitation(
+                    label=settings.PARTICIPANTS_META[entity]['label'],
+                    endpoint=endpoint_address,
+                    recipient_keys=[connection_key]
+                )
+
+                url = await agent.generate_qr_code(invitation.invitation_url)
+                await self.send_json({
+                    'invitation': invitation,
+                    'qr': url
+                })
+        else:
+            await self.close()
+

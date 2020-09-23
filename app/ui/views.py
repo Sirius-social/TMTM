@@ -173,7 +173,7 @@ class AuthView(APIView):
             return HttpResponseRedirect(redirect_to=reverse('index'))
         if request.user.is_authenticated:
             return HttpResponseRedirect(redirect_to=reverse('transactions'))
-        return Response(data=self.get_response_data())
+        return Response(data=self.get_response_data(request))
 
     def post(self, request, *args, **kwargs):
         ser = LoginSerializer(data=request.data)
@@ -197,7 +197,7 @@ class AuthView(APIView):
                     login(request, user)
                 else:
                     errors['password'] = 'Invalid password'
-        data = self.get_response_data()
+        data = self.get_response_data(request)
         if errors:
             data['errors'] = errors
             return Response(data=data)
@@ -205,12 +205,18 @@ class AuthView(APIView):
             return HttpResponseRedirect(redirect_to=reverse('index'))
 
     @staticmethod
-    def get_response_data():
+    def get_response_data(request):
+        curr_abs_url = request.build_absolute_uri()
+        parts = urlsplit(curr_abs_url)
+        is_secure = request.is_secure()
+        ws_url = 'wss://' if is_secure else 'ws://'
+        ws_url += parts.netloc + '/auth'
         entity = settings.AGENT['entity']
         return {
             'logo': '/static/logos/%s' % settings.PARTICIPANTS_META[entity]['logo'],
             'label': settings.PARTICIPANTS_META[entity]['label'],
-            'errors': {}
+            'errors': {},
+            'ws_url': ws_url
         }
 
 

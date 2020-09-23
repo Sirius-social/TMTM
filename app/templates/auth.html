@@ -75,6 +75,16 @@
                               <div class="row">
                                 <button type="submit" class="btn btn-primary" style="margin: auto;">Submit</button>
                               </div>
+                                <div class="row" style="margin-top: 30px;">
+                                    <div class="col"></div>
+                                    <a @click.prevent="" href="">Scan to authorize with QR</a>
+                                    <div class="col"></div>
+                                </div>
+                              <div class="row">
+                                <div class="col"></div>
+                                <img src="http://178.63.1.220:8082/qr/ce77ed0d8cdc4faf877bc9c6adc69154" style="width: 300px;">
+                                <div class="col"></div>
+                              </div>
                             </form>
                         </div>
                     </div>
@@ -136,6 +146,7 @@
     {{ errors|json_script:"errors-data" }}
     <script>
         var errors_data = JSON.parse(document.getElementById('errors-data').textContent);
+        var ws_auth = null;
 
         var app = new Vue({
             el: '#main-wrapper',
@@ -148,6 +159,19 @@
 
         $(function(){
             app.$data.content_height = $("#main-wrapper").height() - 70;
+            ws_auth = new WebSocket("{{ ws_url }}");
+            ws_auth.onclose = function(event) {
+                console.log("OnClode " + error.message);
+            };
+            ws_auth.onmessage = function(event) {
+              console.log("Получены данные " + event.data);
+            };
+            ws_auth.onerror = function(error) {
+                console.log("Ошибка " + error.message);
+            };
+            ws_auth.onopen = function() {
+                console.log("OnOpen");
+            };
         });
     </script>
 
