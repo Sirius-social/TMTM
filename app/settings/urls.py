@@ -16,7 +16,8 @@ Including another URLconf
 from django.urls import path
 from django.conf.urls import url, include
 from django.conf import settings
-from ui.views import TransactionsView, IndexView, SmartContractInitLedgerView, SmartContractCommitView, AuthView
+from ui.views import TransactionsView, IndexView, SmartContractInitLedgerView, SmartContractCommitView, \
+    AuthView, LogoutView
 from wrapper.views import MaintenanceRouter, LedgersRouter, UploadView, ContentView
 
 
@@ -28,6 +29,7 @@ if CONTENT_URL.startswith('/'):
 urlpatterns = [
     # Others
     path('auth/', AuthView.as_view(), name='auth'),
+    path('logout/', LogoutView.as_view(), name='logout'),
     path('transactions/', TransactionsView.as_view(), name='transactions'),
     path('smart_contract_init_ledger/', SmartContractInitLedgerView.as_view(), name='smart-contract-init-ledger'),
     path('smart_contract_commit_txns/', SmartContractCommitView.as_view(), name='smart-contract-commit-txns'),

@@ -140,7 +140,10 @@ class IndexView(APIView):
 
     def get(self, request, *args, **kwargs):
         if settings.AGENT['entity']:
-            return HttpResponseRedirect(redirect_to=reverse('transactions'))
+            if request.user and request.user.is_authenticated:
+                return HttpResponseRedirect(redirect_to=reverse('transactions'))
+            else:
+                return HttpResponseRedirect(redirect_to=reverse('auth'))
         else:
             return Response(data={})
 
@@ -167,7 +170,7 @@ class AuthView(APIView):
         if not settings.AGENT['entity']:
             return HttpResponseRedirect(redirect_to=reverse('index'))
         if request.user.is_authenticated:
-            return HttpResponseRedirect(redirect_to=reverse('index'))
+            return HttpResponseRedirect(redirect_to=reverse('transactions'))
         return Response(data=self.get_response_data())
 
     def post(self, request, *args, **kwargs):
@@ -204,6 +207,17 @@ class AuthView(APIView):
             'label': settings.PARTICIPANTS_META[entity]['label'],
             'errors': {}
         }
+
+
+class LogoutView(APIView):
+    permission_classes = []
+
+    def get(self, request, *args, **kwargs):
+        if request.user and request.user.is_authenticated:
+            logout(request)
+            return HttpResponseRedirect(redirect_to=reverse('auth'))
+        else:
+            return HttpResponseRedirect(redirect_to=reverse('auth'))
 
 
 class TestView(APIView):
