@@ -165,6 +165,7 @@ class LoginSerializer(serializers.Serializer):
 class AuthView(APIView):
     template_name = 'auth.html'
     renderer_classes = [TemplateHTMLRenderer]
+    authentication_classes = [SessionAuthentication]
     permission_classes = []
 
     def get(self, request, *args, **kwargs):
