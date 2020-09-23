@@ -3,13 +3,15 @@ from urllib.parse import urlsplit
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.authentication import BasicAuthentication
+from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework import serializers
 from django.utils import timezone
 from django.conf import settings
 from django.urls import reverse
+from django.contrib.auth.models import User
+from django.contrib.auth import login, logout
 from django.http.response import HttpResponseRedirect
 from sirius_sdk import Agent, P2PConnection
 
@@ -38,7 +40,6 @@ class AgentCredentialsSerializer(serializers.Serializer):
 class TransactionsView(APIView):
     template_name = 'transactions.html'
     renderer_classes = [TemplateHTMLRenderer]
-    authentication_classes = [BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -142,6 +143,67 @@ class IndexView(APIView):
             return HttpResponseRedirect(redirect_to=reverse('transactions'))
         else:
             return Response(data={})
+
+
+class LoginSerializer(serializers.Serializer):
+
+    login = serializers.CharField(max_length=36, required=True)
+    password = serializers.CharField(max_length=128, required=True)
+
+    def create(self, validated_data):
+        return dict(validated_data)
+
+    def update(self, instance, validated_data):
+        instance.update(validated_data)
+        return instance
+
+
+class AuthView(APIView):
+    template_name = 'auth.html'
+    renderer_classes = [TemplateHTMLRenderer]
+    permission_classes = []
+
+    def get(self, request, *args, **kwargs):
+        if not settings.AGENT['entity']:
+            return HttpResponseRedirect(redirect_to=reverse('index'))
+        if request.user.is_authenticated:
+            return HttpResponseRedirect(redirect_to=reverse('index'))
+        return Response(data=self.get_response_data())
+
+    def post(self, request, *args, **kwargs):
+        ser = LoginSerializer(data=request.data)
+        errors = {}
+        try:
+            ser.is_valid(raise_exception=True)
+        except serializers.ValidationError as e:
+            for k, v in e.get_full_details().items():
+                errors[k] = str(v[0]['message'])
+        params = ser.create(ser.validated_data)
+        if not errors:
+            user = User.objects.filter(username=params['login']).first()
+            if not user:
+                errors['login'] = 'Unknown login'
+            else:
+                ok = user.check_password(params['password'])
+                if ok:
+                    login(request, user)
+                else:
+                    errors['password'] = 'Invalid password'
+        data = self.get_response_data()
+        if errors:
+            data['errors'] = errors
+            return Response(data=data)
+        else:
+            return HttpResponseRedirect(redirect_to=reverse('index'))
+
+    @staticmethod
+    def get_response_data():
+        entity = settings.AGENT['entity']
+        return {
+            'logo': '/static/logos/%s' % settings.PARTICIPANTS_META[entity]['logo'],
+            'label': settings.PARTICIPANTS_META[entity]['label'],
+            'errors': {}
+        }
 
 
 class TestView(APIView):

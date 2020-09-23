@@ -11,6 +11,8 @@ class Command(BaseCommand):
         if settings.ADMIN_USERNAME and settings.ADMIN_PASSWORD:
             user, created = User.objects.get_or_create(username=settings.ADMIN_USERNAME)
             user.set_password(settings.ADMIN_PASSWORD)
+            user.is_active = True
+            user.is_superuser = True
             user.save()
             print('===================================')
             print('ADMIN account was set %s: %s' % (settings.ADMIN_USERNAME, settings.ADMIN_PASSWORD))
