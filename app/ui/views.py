@@ -185,9 +185,12 @@ class AuthView(APIView):
                 errors[k] = str(v[0]['message'])
         params = ser.create(ser.validated_data)
         if not errors:
-            user = User.objects.filter(username=params['login']).first()
+            user = User.objects.filter(
+                username=params['login'],
+                entities__entity=settings.AGENT['entity']
+            ).first()
             if not user:
-                errors['login'] = 'Unknown login'
+                errors['login'] = 'Unknown user'
             else:
                 ok = user.check_password(params['password'])
                 if ok:
