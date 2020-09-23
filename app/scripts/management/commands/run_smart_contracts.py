@@ -9,13 +9,11 @@ from django.conf import settings
 from sirius_sdk import Agent, P2PConnection, Pairwise
 from sirius_sdk.agent.listener import Event
 from sirius_sdk.errors.exceptions import SiriusConnectionClosed
-from sirius_sdk.errors.indy_exceptions import WalletItemAlreadyExists
 from sirius_sdk.agent.consensus import simple as simple_consensus
 
 from scripts.management.commands import orm
 from scripts.management.commands.decorators import sentry_capture_exceptions
 from scripts.management.commands.logger import StreamLogger
-from wrapper.utils import get_auth_connection_key_seed
 
 
 class Command(BaseCommand):
@@ -37,13 +35,6 @@ class Command(BaseCommand):
             try:
                 logging.error('* clean test ledgers')
                 asyncio.get_event_loop().run_until_complete(self.clean_test_ledgers())
-            except Exception as e:
-                logging.error('EXCEPTION: check was terminated with exception:')
-                logging.error(repr(e))
-
-            try:
-                logging.error('* init connection invitations')
-                asyncio.get_event_loop().run_until_complete(self.init_connect_invitations())
             except Exception as e:
                 logging.error('EXCEPTION: check was terminated with exception:')
                 logging.error(repr(e))
@@ -114,21 +105,6 @@ class Command(BaseCommand):
             logging.error('* find entity in wallet')
             _ = await agent.wallet.did.get_my_did_with_meta(settings.AGENT['entity'])
             logging.error('* entity was found')
-        finally:
-            logging.error('* agent.close()')
-            await agent.close()
-
-    async def init_connect_invitations(self):
-        agent = self.alloc_agent_connection()
-        logging.error('* agent.open()')
-        await agent.open()
-        try:
-            seed_auth_key = get_auth_connection_key_seed()
-            try:
-                # Ensure key exists
-                await agent.wallet.crypto.create_key(seed=seed_auth_key)
-            except WalletItemAlreadyExists:
-                pass
         finally:
             logging.error('* agent.close()')
             await agent.close()
