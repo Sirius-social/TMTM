@@ -16,6 +16,14 @@ def import_class(name):
     return mod
 
 
+class UserEntityBind(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    entity = models.CharField(max_length=64)
+
+    class Meta:
+        unique_together = ('entity', 'user')
+
+
 class Ledger(models.Model):
     entity = models.CharField(max_length=64, db_index=True, null=True)
     name = models.CharField(max_length=512, db_index=True)
