@@ -17,7 +17,7 @@ def import_class(name):
 
 
 class UserEntityBind(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='entities')
     entity = models.CharField(max_length=64)
 
     class Meta:
