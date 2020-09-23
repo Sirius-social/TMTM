@@ -28,7 +28,6 @@ from .mixins import ExtendViewSetMixin
 class MaintenanceViewSet(viewsets.GenericViewSet):
     """Maintenance"""
     renderer_classes = [JSONRenderer]
-    authentication_classes = [BasicAuthentication]
 
     def get_permissions(self):
         if self.action == 'check_health':
@@ -123,7 +122,6 @@ class LedgerViewSet(
         ):
 
     renderer_classes = [JSONRenderer]
-    authentication_classes = [BasicAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = LedgerSerializer
     queryset = Ledger.objects.filter(entity=settings.AGENT['entity']).order_by('-id').all()
@@ -138,7 +136,6 @@ class TransactionViewSet(
 
     lookup_field = 'seq_no'
     renderer_classes = [JSONRenderer]
-    authentication_classes = [BasicAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = TransactionSerializer
 
