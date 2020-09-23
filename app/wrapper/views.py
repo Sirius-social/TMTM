@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.renderers import JSONRenderer
 from rest_framework_extensions.routers import ExtendedDefaultRouter
-from rest_framework.authentication import BasicAuthentication
+from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_extensions.mixins import PaginateByMaxMixin, NestedViewSetMixin
 from rest_framework import serializers
@@ -150,7 +150,7 @@ class UploadView(ExtendViewSetMixin, APIView):
 
     renderer_classes = [JSONRenderer]
     permission_classes = [IsAuthenticated]
-    authentication_classes = [BasicAuthentication]
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
 
     @cross_domain
     def post(self, request, *args, **kwargs):
