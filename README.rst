@@ -40,4 +40,4 @@ Start Guide: step-by-step
 
 Upload service
 ==========================
-You may upload documents and give back md5 and public-url to download one: **<your_domain>/upload**
+You may upload documents and give back md5 and public-url to download one: **<your_domain>/upload**, service will respond json object with **md5**, **url**, **filename**
