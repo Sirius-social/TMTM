@@ -57,6 +57,7 @@
                     <div class="col-md-4" >
                         <div class="card" v-bind:style="{ height: content_height + 'px' }">
                             <form style="margin: auto; padding: 30px;" method="POST">
+                              {% csrf_token %}
                               <div class="row">
                                   <div class="col"></div>
                                   <h2 class="text-primary">{{ label }}</h2>

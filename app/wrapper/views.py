@@ -149,7 +149,15 @@ class TransactionViewSet(
 class UploadView(ExtendViewSetMixin, APIView):
 
     renderer_classes = [JSONRenderer]
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            resp = super().dispatch(request, *args, **kwargs)
+        except Exception as e:
+            raise
+        return resp
 
     @cross_domain
     def post(self, request, *args, **kwargs):

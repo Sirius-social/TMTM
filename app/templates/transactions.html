@@ -517,6 +517,7 @@
 
     {{ ledgers|json_script:"ledgers-data" }}
     <script>
+        var token = '{{csrf_token}}';
         var ws_transactions = null;
         var json_editor = null;
         var ledgers_data = JSON.parse(document.getElementById('ledgers-data').textContent);
@@ -896,6 +897,7 @@
                 formData.append('file', file);
                 var url = "{{ upload_url }}";
                 $.ajax({
+                    headers: { "X-CSRFToken": token },
                     url: url,
                     type: 'POST',
                     data: formData,
