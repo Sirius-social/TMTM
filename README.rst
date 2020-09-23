@@ -36,3 +36,8 @@ Start Guide: step-by-step
     - every time request transaction is done regardless of OK or Error server will close websocket connection
 
   - **Step 5**: to make new request, repeat Step-4
+
+
+Upload service
+==========================
+You may upload documents and give back md5 and public-url to download one: **<your_domain>/upload**
