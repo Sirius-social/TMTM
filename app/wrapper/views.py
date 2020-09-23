@@ -149,8 +149,7 @@ class TransactionViewSet(
 class UploadView(ExtendViewSetMixin, APIView):
 
     renderer_classes = [JSONRenderer]
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = []
 
     @cross_domain
     def post(self, request, *args, **kwargs):
