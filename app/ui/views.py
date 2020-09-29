@@ -41,9 +41,11 @@ class TransactionsView(APIView):
     template_name = 'transactions.html'
     renderer_classes = [TemplateHTMLRenderer]
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = []
 
     def get(self, request, *args, **kwargs):
+        if not (request.user and request.user.is_authenticated):
+            return HttpResponseRedirect(redirect_to=reverse('auth'))
         params = {k: v for k, v in request.query_params.items()}
         params_from_settings = dict(
             credentials=settings.AGENT['credentials'],
