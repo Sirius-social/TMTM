@@ -1,5 +1,6 @@
 import json
 import uuid
+import asyncio
 from typing import Optional
 from datetime import datetime
 from typing import List, Dict
@@ -7,17 +8,17 @@ from contextlib import asynccontextmanager
 from django.conf import settings
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
-from sirius_sdk import Agent, P2PConnection, Pairwise
+from sirius_sdk import Agent, P2PConnection, Pairwise, Endpoint
 from sirius_sdk.agent.consensus import simple
 from sirius_sdk.agent.microledgers import Transaction
 from sirius_sdk.errors.exceptions import SiriusPromiseContextException
 from sirius_sdk.agent.aries_rfc.utils import sign
-from sirius_sdk.agent.aries_rfc.feature_0160_connection_protocol import Invitation
+from sirius_sdk.agent.aries_rfc.feature_0160_connection_protocol import Invitation, Inviter, ConnRequest
 
 from scripts.management.commands.decorators import sentry_capture_exceptions
 from scripts.management.commands.logger import StreamLogger
 from scripts.management.commands import orm
-
+from ui.models import QRCode
 from .models import Token
 
 
@@ -355,7 +356,65 @@ class WsQRCodeAuth(AsyncJsonWebsocketConsumer):
         if settings.AGENT['entity']:
             _ = [(name, value) for name, value in self.scope['headers'] if name == b'cookie']
             cookies = _[0][1].decode() if len(_) > 0 else ''
-            await self.accept()
+            cookies = [s.strip(' ') for s in cookies.split(';') if '=' in s]
+            qr_url = None
+            for cookie in cookies:
+                name, value = cookie.split('=')
+                if name == 'qr':
+                    qr_url = value.replace("'", '').replace('"', '')
+                    break
+            if qr_url:
+                qr_code_model = await self.load_qr_code_model(qr_url)
+                if qr_code_model:
+                    endpoint = Endpoint(**qr_code_model.my_endpoint)
+                    asyncio.ensure_future(self.connection_listener(qr_code_model.connection_key, endpoint))
+                    await self.accept()
+                else:
+                    await self.close()
+            else:
+                await self.close()
         else:
             await self.close()
+
+    @staticmethod
+    async def connection_listener(connection_key: str, my_endpoint: Endpoint):
+        print('connection_key: ' + connection_key)
+        async with get_connection() as agent:
+            assert isinstance(agent, Agent)
+            listener = await agent.subscribe()
+            async for event in listener:
+                if event.recipient_verkey == connection_key and isinstance(event.message, ConnRequest):
+                    print('============= INVITER: Connection request ==============')
+                    print(json.dumps(event, indent=2, sort_keys=True))
+                    print('==================================')
+                    entity = settings.AGENT['entity']
+                    state_machine = Inviter(transports=agent)
+                    try:
+                        success, pairwise = await state_machine.create_connection(
+                            me=Pairwise.Me(
+                                did=entity, verkey=settings.PARTICIPANTS_META[entity]['verkey']
+                            ),
+                            connection_key=connection_key,
+                            request=event.message,
+                            my_endpoint=my_endpoint
+                        )
+                    except Exception as e:
+                        print('============= INVITER: exception ==============')
+                        print(repr(e))
+                        print('==================================')
+                    if success:
+                        print('')
+                        await agent.pairwise_list.ensure_exists(pairwise)
+                        print('========= INVITER: PAIRWISE ============')
+                        print(json.dumps(pairwise.metadata, indent=2, sort_keys=True))
+                        print('===============================')
+
+    @staticmethod
+    async def load_qr_code_model(url: str) -> QRCode:
+
+        def sync(url_: str) -> QRCode:
+            inst = QRCode.objects.filter(url=url_).first()
+            return inst
+
+        return await database_sync_to_async(sync)(url)
 

@@ -19,6 +19,7 @@ from sirius_sdk.agent.aries_rfc.feature_0160_connection_protocol import Invitati
 
 from wrapper.models import Ledger, Token
 from wrapper.websockets import get_connection
+from ui.models import QRCode
 from .utils import run_async
 
 
@@ -182,7 +183,15 @@ class AuthView(APIView):
         if qr:
             resp = requests.get(qr)
             if resp.status_code != 200:
+                QRCode.objects.filter(url=qr).all().delete()
                 qr = None
+            else:
+                qr_model = QRCode.objects.filter(url=qr).first()
+                if qr_model is None:
+                    qr = None
+                elif not qr_model.my_endpoint:
+                    QRCode.objects.filter(url=qr).all().delete()
+                    qr = None
         if not qr:
             qr = run_async(
                 self.generate_invitation_qr()
@@ -216,6 +225,9 @@ class AuthView(APIView):
                 else:
                     errors['password'] = 'Invalid password'
         data = self.get_response_data(request)
+        qr = request.COOKIES.get('qr', None)
+        if qr:
+            data['qr'] = qr
         if errors:
             data['errors'] = errors
             return Response(data=data)
@@ -250,8 +262,12 @@ class AuthView(APIView):
                 endpoint=endpoint_address,
                 recipient_keys=[connection_key]
             )
-
             url = await agent.generate_qr_code(invitation.invitation_url)
+            my_endpoint = {
+                'address': endpoint_address,
+                'routing_keys': []
+            }
+            QRCode.objects.get_or_create(connection_key=connection_key, url=url, my_endpoint=my_endpoint)
             return url
 
 
