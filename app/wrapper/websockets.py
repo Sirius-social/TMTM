@@ -18,7 +18,7 @@ from sirius_sdk.agent.aries_rfc.feature_0160_connection_protocol import Invitati
 from scripts.management.commands.decorators import sentry_capture_exceptions
 from scripts.management.commands.logger import StreamLogger
 from scripts.management.commands import orm
-from ui.models import QRCode
+from ui.models import QRCode, PairwiseRecord
 from .models import Token
 
 
@@ -387,8 +387,7 @@ class WsQRCodeAuth(AsyncJsonWebsocketConsumer):
             self.conn_listener.cancel()
         await super().disconnect(code)
 
-    @staticmethod
-    async def connection_listener(connection_key: str, my_endpoint: Endpoint):
+    async def connection_listener(self, connection_key: str, my_endpoint: Endpoint):
         print('connection_key: ' + connection_key)
         async with get_connection() as agent:
             assert isinstance(agent, Agent)
@@ -418,7 +417,10 @@ class WsQRCodeAuth(AsyncJsonWebsocketConsumer):
                         await agent.pairwise_list.ensure_exists(pairwise)
                         print('========= INVITER: PAIRWISE ============')
                         print(json.dumps(pairwise.metadata, indent=2, sort_keys=True))
+                        await self.store_pairwise_in_db(pairwise)
+                        print('========= INVITER: PAIRWISE STORED IN DATABASE ============')
                         print('===============================')
+
 
     @staticmethod
     async def load_qr_code_model(url: str) -> QRCode:
@@ -430,5 +432,18 @@ class WsQRCodeAuth(AsyncJsonWebsocketConsumer):
         return await database_sync_to_async(sync)(url)
 
     @staticmethod
-    async def store_pairwise_in_db(self):
-        pass
+    async def store_pairwise_in_db(pairwise: Pairwise):
+
+        def sync(p: Pairwise):
+            model = PairwiseRecord.objects.filter(
+                their_did=p.their.did, entity=settings.AGENT['entity']
+            ).first()
+            if model:
+                model.metadata = p.metadata
+                model.save()
+            else:
+                model = PairwiseRecord.objects.create(
+                    their_did=p.their.did, entity=settings.AGENT['entity'], metadata=p.metadata
+                )
+
+        await database_sync_to_async(sync)(pairwise)
