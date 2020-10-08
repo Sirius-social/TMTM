@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 
 
@@ -12,3 +13,9 @@ class PairwiseRecord(models.Model):
     entity = models.CharField(max_length=64)
     their_did = models.CharField(max_length=64, db_index=True)
     metadata = JSONField()
+
+
+class AuthRef(models.Model):
+    uid = models.CharField(max_length=1024, db_index=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='auth_refs')
+    created_at = models.DateTimeField(auto_now_add=True)
