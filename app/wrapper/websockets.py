@@ -351,6 +351,10 @@ class WsTransactions(AsyncJsonWebsocketConsumer):
 
 class WsQRCodeAuth(AsyncJsonWebsocketConsumer):
 
+    def __init__(self, *args, **kwargs):
+        self.conn_listener = None
+        super().__init__(*args, **kwargs)
+
     @sentry_capture_exceptions
     async def connect(self):
         if settings.AGENT['entity']:
@@ -367,7 +371,9 @@ class WsQRCodeAuth(AsyncJsonWebsocketConsumer):
                 qr_code_model = await self.load_qr_code_model(qr_url)
                 if qr_code_model:
                     endpoint = Endpoint(**qr_code_model.my_endpoint)
-                    asyncio.ensure_future(self.connection_listener(qr_code_model.connection_key, endpoint))
+                    self.conn_listener = asyncio.ensure_future(
+                        self.connection_listener(qr_code_model.connection_key, endpoint)
+                    )
                     await self.accept()
                 else:
                     await self.close()
@@ -375,6 +381,11 @@ class WsQRCodeAuth(AsyncJsonWebsocketConsumer):
                 await self.close()
         else:
             await self.close()
+
+    async def disconnect(self, code):
+        if self.conn_listener:
+            self.conn_listener.cancel()
+        await super().disconnect(code)
 
     @staticmethod
     async def connection_listener(connection_key: str, my_endpoint: Endpoint):
@@ -418,3 +429,6 @@ class WsQRCodeAuth(AsyncJsonWebsocketConsumer):
 
         return await database_sync_to_async(sync)(url)
 
+    @staticmethod
+    async def store_pairwise_in_db(self):
+        pass
