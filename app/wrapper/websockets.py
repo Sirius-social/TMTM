@@ -353,22 +353,9 @@ class WsQRCodeAuth(AsyncJsonWebsocketConsumer):
     @sentry_capture_exceptions
     async def connect(self):
         if settings.AGENT['entity']:
+            _ = [(name, value) for name, value in self.scope['headers'] if name == b'cookie']
+            cookies = _[0][1].decode() if len(_) > 0 else ''
             await self.accept()
-            async with get_connection() as agent:
-                entity = settings.AGENT['entity']
-                endpoint_address = [e for e in agent.endpoints if e.routing_keys == []][0].address
-                connection_key = await agent.wallet.crypto.create_key()
-                invitation = Invitation(
-                    label=settings.PARTICIPANTS_META[entity]['label'],
-                    endpoint=endpoint_address,
-                    recipient_keys=[connection_key]
-                )
-
-                url = await agent.generate_qr_code(invitation.invitation_url)
-                await self.send_json({
-                    'invitation': invitation,
-                    'qr': url
-                })
         else:
             await self.close()
 

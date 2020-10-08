@@ -80,9 +80,9 @@
                                     <a @click.prevent="" href="">Scan to authorize with QR</a>
                                     <div class="col"></div>
                                 </div>
-                              <div class="row">
+                              <div class="row" style="height: 250px;">
                                 <div class="col"></div>
-                                <img src="http://178.63.1.220:8082/qr/ce77ed0d8cdc4faf877bc9c6adc69154" style="width: 300px;">
+                                <img v-bind:src="qr" style="width: 250px;">
                                 <div class="col"></div>
                               </div>
                             </form>
@@ -123,6 +123,8 @@
     <script src="/static/assets/plugins/bootstrap/js/bootstrap.min.js"></script>
     <!-- slimscrollbar scrollbar JavaScript -->
     <script src="/static/js/jquery.slimscroll.js"></script>
+    <!-- jQuery Cookies -->
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
     <!--Wave Effects -->
     <script src="/static/js/waves.js"></script>
     <!--Menu sidebar -->
@@ -153,25 +155,36 @@
             delimiters: ['[[', ']]'],
             data: {
                 content_height: 300,
-                errors: errors_data
+                errors: errors_data,
+                qr: null
             },
         });
 
-        $(function(){
-            app.$data.content_height = $("#main-wrapper").height() - 70;
+        function ws_connect() {
             ws_auth = new WebSocket("{{ ws_url }}");
             ws_auth.onclose = function(event) {
-                console.log("OnClode " + error.message);
+                //app.$data.qr = null;
+                console.log("OnClose ");
             };
             ws_auth.onmessage = function(event) {
               console.log("Получены данные " + event.data);
+              var obj = JSON.parse(event.data);
+              app.$data.qr = obj.qr;
             };
             ws_auth.onerror = function(error) {
                 console.log("Ошибка " + error.message);
             };
             ws_auth.onopen = function() {
                 console.log("OnOpen");
+                app.$data.qr = "{{ qr }}";
             };
+        }
+
+        $(function(){
+            app.$data.content_height = $("#main-wrapper").height() - 70;
+
+            // QR
+            ws_connect();
         });
     </script>
 

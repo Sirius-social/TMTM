@@ -1,6 +1,7 @@
 import logging
 from urllib.parse import urlsplit
 
+import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
@@ -14,8 +15,10 @@ from django.contrib.auth.models import User
 from django.contrib.auth import login, logout
 from django.http.response import HttpResponseRedirect
 from sirius_sdk import Agent, P2PConnection
+from sirius_sdk.agent.aries_rfc.feature_0160_connection_protocol import Invitation
 
 from wrapper.models import Ledger, Token
+from wrapper.websockets import get_connection
 from .utils import run_async
 
 
@@ -175,7 +178,20 @@ class AuthView(APIView):
             return HttpResponseRedirect(redirect_to=reverse('index'))
         if request.user.is_authenticated:
             return HttpResponseRedirect(redirect_to=reverse('transactions'))
-        return Response(data=self.get_response_data(request))
+        qr = request.COOKIES.get('qr', None)
+        if qr:
+            resp = requests.get(qr)
+            if resp.status_code != 200:
+                qr = None
+        if not qr:
+            qr = run_async(
+                self.generate_invitation_qr()
+            )
+        data = self.get_response_data(request)
+        data['qr'] = qr
+        resp = Response(data=data)
+        resp.set_cookie('qr', qr)
+        return resp
 
     def post(self, request, *args, **kwargs):
         ser = LoginSerializer(data=request.data)
@@ -220,6 +236,23 @@ class AuthView(APIView):
             'errors': {},
             'ws_url': ws_url
         }
+
+    @staticmethod
+    async def generate_invitation_qr():
+        entity = settings.AGENT['entity']
+        if not entity:
+            return None
+        async with get_connection() as agent:
+            endpoint_address = [e for e in agent.endpoints if e.routing_keys == []][0].address
+            connection_key = await agent.wallet.crypto.create_key()
+            invitation = Invitation(
+                label=settings.PARTICIPANTS_META[entity]['label'],
+                endpoint=endpoint_address,
+                recipient_keys=[connection_key]
+            )
+
+            url = await agent.generate_qr_code(invitation.invitation_url)
+            return url
 
 
 class LogoutView(APIView):
