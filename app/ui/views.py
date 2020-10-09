@@ -1,3 +1,4 @@
+import copy
 import logging
 from urllib.parse import urlsplit
 
@@ -5,7 +6,6 @@ import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework import serializers
 from django.utils import timezone
@@ -29,7 +29,7 @@ MENU = [
     {'caption': 'ГУ-12', 'class': 'fa fa-table m-r-10', 'enabled': True, 'link': reverse_lazy('gu12')},
     {'caption': 'Грузоперевозки', 'class': 'fa fa-globe m-r-10', 'enabled': False, 'link': None},
     {'caption': 'Морские документы', 'class': 'fa fa-globe m-r-10', 'enabled': False, 'link': None},
-    {'caption': 'Admin', 'class': 'fa fa-globe m-r-10', 'enabled': True, 'link': reverse_lazy('admin')},
+    {'caption': 'Admin', 'class': 'fa fa-globe m-r-10', 'enabled': False, 'link': reverse_lazy('admin')},
 ]
 
 
@@ -119,8 +119,10 @@ class TransactionsView(APIView):
             ws_url += parts.netloc + '/transactions'
             token = Token.allocate(request.user).value
             ws_url += '?token=%s' % token
+            menu = copy.copy(MENU)
+            menu[-1]['enabled'] = request.user.is_superuser
             return Response(data={
-                'menu': MENU,
+                'menu': menu,
                 'active_menu_index': 0,
                 'ledgers': [{'name': ledger.name, 'id': ledger.id} for ledger in Ledger.objects.filter(entity=entity).all()[:200]],
                 'logo': '/static/logos/%s' % settings.PARTICIPANTS_META[entity]['logo'],
@@ -161,8 +163,12 @@ class AdminView(APIView):
     def get(self, request, *args, **kwargs):
         if not (request.user and request.user.is_authenticated):
             return HttpResponseRedirect(redirect_to=reverse('auth'))
+        if not request.user.is_superuser:
+            return Response(status=403)
+        menu = copy.copy(MENU)
+        menu[-1]['enabled'] = request.user.is_superuser
         return Response(data={
-            'menu': MENU,
+            'menu': menu,
             'active_menu_index': 5,
         })
 
@@ -176,8 +182,10 @@ class BaseGUView(APIView):
     def get(self, request, *args, **kwargs):
         if not (request.user and request.user.is_authenticated):
             return HttpResponseRedirect(redirect_to=reverse('auth'))
+        menu = copy.copy(MENU)
+        menu[-1]['enabled'] = request.user.is_superuser
         return Response(data={
-            'menu': MENU,
+            'menu': menu,
             'active_menu_index': self.get_active_menu_index(),
             'title': MENU[self.get_active_menu_index()]['caption']
         })
@@ -320,6 +328,7 @@ class AuthView(APIView):
                 endpoint=endpoint_address,
                 recipient_keys=[connection_key]
             )
+            invitation['did'] = entity
             url = await agent.generate_qr_code(invitation.invitation_url)
             my_endpoint = {
                 'address': endpoint_address,
