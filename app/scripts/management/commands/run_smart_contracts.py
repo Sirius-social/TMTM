@@ -8,6 +8,7 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 from sirius_sdk import Agent, P2PConnection, Pairwise
 from sirius_sdk.agent.listener import Event
+from sirius_sdk.agent.ledger import CredentialDefinition
 from sirius_sdk.errors.exceptions import SiriusConnectionClosed
 from sirius_sdk.agent.consensus import simple as simple_consensus
 
@@ -35,6 +36,13 @@ class Command(BaseCommand):
             try:
                 logging.error('* clean test ledgers')
                 asyncio.get_event_loop().run_until_complete(self.clean_test_ledgers())
+            except Exception as e:
+                logging.error('EXCEPTION: check was terminated with exception:')
+                logging.error(repr(e))
+
+            try:
+                logging.error('* ensure cred def exists')
+                asyncio.get_event_loop().run_until_complete(self.ensure_cred_def_exists())
             except Exception as e:
                 logging.error('EXCEPTION: check was terminated with exception:')
                 logging.error(repr(e))
@@ -71,6 +79,30 @@ class Command(BaseCommand):
             )
         )
         return agent
+
+    async def ensure_cred_def_exists(self):
+        agent = self.alloc_agent_connection()
+        await agent.open()
+        try:
+            entity = settings.AGENT['entity']
+            schema_id, anoncred_schema = await agent.wallet.anoncreds.issuer_create_schema(
+                entity, 'Account', '1.0', ['username', 'role']
+            )
+            ledger = agent.ledger('staging')
+            schema = await ledger.ensure_schema_exists(schema=anoncred_schema, submitter_did=entity)
+            assert schema, 'Error while registering Account schema'
+
+            cred_defs = await ledger.fetch_cred_defs(schema_id=schema.id, submitter_did=entity)
+            if cred_defs:
+                cred_def = cred_defs[0]
+            else:
+                ok, cred_def = await ledger.register_cred_def(
+                    cred_def=CredentialDefinition(tag='Security', schema=schema),
+                    submitter_did=entity
+                )
+                assert ok is True, 'Error while registering Account Cred-Def'
+        finally:
+            await agent.close()
 
     async def clean_test_ledgers(self):
         agent = self.alloc_agent_connection()
