@@ -25,8 +25,8 @@ from .utils import run_async
 
 MENU = [
     {'caption': 'Transactions', 'class': 'fa fa-columns m-r-10', 'enabled': True, 'link': reverse_lazy('transactions')},
-    {'caption': 'ГУ-11', 'class': 'fa fa-table m-r-10', 'enabled': False, 'link': None},
-    {'caption': 'ГУ-12', 'class': 'fa fa-table m-r-10', 'enabled': False, 'link': None},
+    {'caption': 'ГУ-11', 'class': 'fa fa-table m-r-10', 'enabled': True, 'link': reverse_lazy('gu11')},
+    {'caption': 'ГУ-12', 'class': 'fa fa-table m-r-10', 'enabled': True, 'link': reverse_lazy('gu12')},
     {'caption': 'Грузоперевозки', 'class': 'fa fa-globe m-r-10', 'enabled': False, 'link': None},
     {'caption': 'Морские документы', 'class': 'fa fa-globe m-r-10', 'enabled': False, 'link': None},
     {'caption': 'Admin', 'class': 'fa fa-globe m-r-10', 'enabled': True, 'link': reverse_lazy('admin')},
@@ -165,6 +165,37 @@ class AdminView(APIView):
             'menu': MENU,
             'active_menu_index': 5,
         })
+
+
+class BaseGUView(APIView):
+    template_name = 'gu.html'
+    renderer_classes = [TemplateHTMLRenderer]
+    authentication_classes = [SessionAuthentication]
+    permission_classes = []
+
+    def get(self, request, *args, **kwargs):
+        if not (request.user and request.user.is_authenticated):
+            return HttpResponseRedirect(redirect_to=reverse('auth'))
+        return Response(data={
+            'menu': MENU,
+            'active_menu_index': self.get_active_menu_index(),
+            'title': MENU[self.get_active_menu_index()]['caption']
+        })
+
+    def get_active_menu_index(self):
+        raise NotImplemented
+
+
+class GU11View(BaseGUView):
+
+    def get_active_menu_index(self):
+        return 1
+
+
+class GU12View(BaseGUView):
+
+    def get_active_menu_index(self):
+        return 2
 
 
 class IndexView(APIView):
