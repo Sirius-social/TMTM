@@ -1,5 +1,6 @@
 import json
 import uuid
+import logging
 import asyncio
 from typing import Optional
 from datetime import datetime
@@ -394,9 +395,9 @@ class WsQRCodeAuth(AsyncJsonWebsocketConsumer):
             listener = await agent.subscribe()
             async for event in listener:
                 if event.recipient_verkey == connection_key and isinstance(event.message, ConnRequest):
-                    print('============= INVITER: Connection request ==============')
-                    print(json.dumps(event, indent=2, sort_keys=True))
-                    print('==================================')
+                    logging.error('============= INVITER: Connection request ==============')
+                    logging.error(json.dumps(event, indent=2, sort_keys=True))
+                    logging.error('==================================')
                     entity = settings.AGENT['entity']
                     state_machine = Inviter(transports=agent)
                     try:
@@ -409,18 +410,16 @@ class WsQRCodeAuth(AsyncJsonWebsocketConsumer):
                             my_endpoint=my_endpoint
                         )
                     except Exception as e:
-                        print('============= INVITER: exception ==============')
+                        logging.error('============= INVITER: exception ==============')
                         print(repr(e))
-                        print('==================================')
+                        logging.error('==================================')
                     if success:
-                        print('')
                         await agent.pairwise_list.ensure_exists(pairwise)
-                        print('========= INVITER: PAIRWISE ============')
-                        print(json.dumps(pairwise.metadata, indent=2, sort_keys=True))
+                        logging.error('========= INVITER: PAIRWISE ============')
+                        logging.error(json.dumps(pairwise.metadata, indent=2, sort_keys=True))
                         await self.store_pairwise_in_db(pairwise)
-                        print('========= INVITER: PAIRWISE STORED IN DATABASE ============')
-                        print('===============================')
-
+                        logging.error('========= INVITER: PAIRWISE STORED IN DATABASE ============')
+                        logging.error('===============================')
 
     @staticmethod
     async def load_qr_code_model(url: str) -> QRCode:
