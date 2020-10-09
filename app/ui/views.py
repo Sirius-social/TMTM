@@ -6,7 +6,8 @@ import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.renderers import TemplateHTMLRenderer
+from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
+from rest_framework.permissions import BasePermission
 from rest_framework import serializers
 from django.utils import timezone
 from django.conf import settings
@@ -17,9 +18,9 @@ from django.http.response import HttpResponseRedirect
 from sirius_sdk import Agent, P2PConnection
 from sirius_sdk.agent.aries_rfc.feature_0160_connection_protocol import Invitation
 
-from wrapper.models import Ledger, Token
+from wrapper.models import Ledger, Token, UserEntityBind
 from wrapper.websockets import get_connection
-from ui.models import QRCode
+from ui.models import QRCode, CredentialQR
 from .utils import run_async
 
 
@@ -154,6 +155,21 @@ class TransactionsView(APIView):
             await agent.close()
 
 
+class CreateAccountSerializer(serializers.Serializer):
+
+    username = serializers.CharField(max_length=36, required=True)
+    password = serializers.CharField(max_length=128, required=True, min_length=5)
+    first_name = serializers.CharField(max_length=36, required=True)
+    last_name = serializers.CharField(max_length=36, required=False)
+
+    def create(self, validated_data):
+        return dict(validated_data)
+
+    def update(self, instance, validated_data):
+        instance.update(validated_data)
+        return instance
+
+
 class AdminView(APIView):
     template_name = 'admin.html'
     renderer_classes = [TemplateHTMLRenderer]
@@ -167,10 +183,99 @@ class AdminView(APIView):
             return Response(status=403)
         menu = copy.copy(MENU)
         menu[-1]['enabled'] = request.user.is_superuser
+        accounts = []
+        for user in User.objects.filter(entities__entity=settings.AGENT['entity']).all():
+            if user.username != request.user.username:
+                accounts.append(
+                    {
+                        'username': user.username,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name
+                    }
+                )
         return Response(data={
             'menu': menu,
+            'accounts': accounts,
             'active_menu_index': 5,
         })
+
+
+class IsSuperUser(BasePermission):
+
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_superuser)
+
+
+class UserCreationView(APIView):
+    renderer_classes = [JSONRenderer]
+    permission_classes = [IsSuperUser]
+
+    @staticmethod
+    async def create_cred_issue_qr(username: str):
+        model = CredentialQR.objects.filter(username=username).first()
+        if model is None:
+            async with get_connection() as agent:
+                entity = settings.AGENT['entity']
+                endpoint_address = [e for e in agent.endpoints if e.routing_keys == []][0].address
+                connection_key = await agent.wallet.crypto.create_key()
+                invitation = Invitation(
+                    label=settings.PARTICIPANTS_META[entity]['label'],
+                    endpoint=endpoint_address,
+                    recipient_keys=[connection_key]
+                )
+                invitation['did'] = entity
+                url = await agent.generate_qr_code(invitation.invitation_url)
+                my_endpoint = {
+                    'address': endpoint_address,
+                    'routing_keys': []
+                }
+                qr, _ = QRCode.objects.get_or_create(connection_key=connection_key, url=url, my_endpoint=my_endpoint)
+                model = CredentialQR.objects.create(username=username, qr=qr)
+
+    def post(self, request, *args, **kwargs):
+        ser = CreateAccountSerializer(data=request.data)
+        errors = {}
+        account = None
+        try:
+            ser.is_valid(raise_exception=True)
+        except serializers.ValidationError as e:
+            for k, v in e.get_full_details().items():
+                errors[k] = str(v[0]['message'])
+        params = ser.create(ser.validated_data)
+        if not errors:
+            user = User.objects.filter(
+                username=params['username'],
+                entities__entity=settings.AGENT['entity']
+            ).first()
+            if user:
+                errors['username'] = 'User already exists'
+            else:
+                try:
+                    run_async(self.create_cred_issue_qr(username=params['username']))
+                    user = User.objects.create(
+                        username=params['username'],
+                        first_name=params.get('first_name', None) or '',
+                        last_name=params.get('last_name', None) or '',
+                    )
+                    user.set_password(params['password'])
+                    user.save()
+                    UserEntityBind.objects.create(user=user, entity=settings.AGENT['entity'])
+                except Exception as e:
+                    raise
+                account = {'username': user.username, 'first_name': user.first_name, 'last_name': user.last_name}
+        if errors:
+            data = {
+                'errors': errors,
+                'success': False,
+                'account': account
+            }
+        else:
+            data = {
+                'errors': None,
+                'success': True,
+                'account': account
+            }
+        return Response(data=data)
 
 
 class BaseGUView(APIView):

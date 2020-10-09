@@ -52,21 +52,45 @@
         <!-- ============================================================== -->
         <!-- Modal Txn details -->
         <!-- ============================================================== -->
-        <div id="modal-txn-detail" class="modal" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.2);overflow-y: auto;">
+        <div id="modal-create-account" class="modal" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.2);overflow-y: auto;">
           <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
               <div class="modal-header">
-                <h3 class="modal-title">Transaction details</h3>
+                <h3 class="modal-title">Create Account</h3>
                 <button @click.prevent="close_modal_forms" type="button" class="close" data-dismiss="modal" aria-label="Close" id="btn-modal-close">
                   <span aria-hidden="true">&times;</span>
                 </button>
               </div>
               <div class="modal-body">
-                  <div id="dev-txn-detail" style="white-space: pre-wrap;border:lightgray dotted 1px;padding:5px;width: 100%; height: 100%;">
-                  </div>
+                  <form v-if="!is_loading" id="form-create-account">
+                      <div class="row col-sm-4 my-1" >
+                          <div class="col">
+                            <label for="i-username" v-bind:class="{ 'text-danger': errors.username }">[[ errors.username || "Username" ]]</label>
+                            <input v-model="form.username" id="i-username" name="username" type="text" class="form-control" placeholder="username">
+                          </div>
+                          <div class="col">
+                            <label for="i-password" v-bind:class="{ 'text-danger': errors.password }">[[ errors.password || "Password" ]]</label>
+                            <input v-model="form.password" id="i-password" name="password" type="password" class="form-control" placeholder="password">
+                          </div>
+                      </div>
+                      <div class="row col-sm-4 my-1" >
+                          <div class="col">
+                            <label for="i-first-name" v-bind:class="{ 'text-danger': errors.first_name }">[[ errors.first_name || "First name" ]]</label>
+                            <input v-model="form.first_name" id="i-first-name" name="first_name" type="text" class="form-control">
+                          </div>
+                          <div class="col">
+                            <label for="i-last-name" v-bind:class="{ 'text-danger': errors.last_name }">[[ errors.last_name || "Last name" ]]</label>
+                            <input v-model="form.last_name" id="i-last-name" name="last_name" type="text" class="form-control">
+                          </div>
+                      </div>
+                      <button @click.prevent="create_new_account()" type="button" class="btn btn-primary" >Submit</button>
+                  </form>
+
+                  <scroll-loader :loader-method="get_loader_list" :loader-disable="!is_loading" :loader-size="200">
+                  </scroll-loader>
               </div>
               <div class="modal-footer">
-                <button @click.prevent="close_modal_forms" type="button" class="btn btn-primary" >Close</button>
+                <button @click.prevent="close_modal_forms" type="button" class="btn btn-secondary" >Close</button>
               </div>
             </div>
           </div>
@@ -192,7 +216,26 @@
                     <!-- Column -->
                     <div class="col-sm-4">
                         <div class="card">
-                            XXX
+                            <div class="row" style="margin-top: 15px;">
+                                <h4 style="margin-left: 35px;">User accounts</h4>
+                                <a @click.prevent="open_create_account()" class="srh-btn" title="Create new account" style="margin-left: 20px;cursor:pointer;"><i class="ti-plus"></i></a>
+                            </div>
+                            <table class="table">
+                              <thead>
+                                <tr>
+                                  <th scope="col">Username</th>
+                                  <th scope="col">First name</th>
+                                  <th scope="col">Last name</th>
+                                </tr>
+                              </thead>
+                              <tbody >
+                                <tr v-for="account in accounts">
+                                    <td>[[ account.username ]]</td>
+                                    <td>[[ account.first_name ]]</td>
+                                    <td>[[ account.last_name ]]</td>
+                                </tr>
+                              </tbody>
+                            </table>
                         </div>
                     </div>
                     <!-- Column -->
@@ -254,11 +297,13 @@
 
     {{ ledgers|json_script:"ledgers-data" }}
     {{ menu|json_script:"menu-data" }}
+    {{ accounts|json_script:"accounts-data" }}
 
     <script>
         var token = '{{csrf_token}}';
         var ws_transactions = null;
         var menu_data = JSON.parse(document.getElementById('menu-data').textContent);
+        var accounts_data = JSON.parse(document.getElementById('accounts-data').textContent);
 
         var app = new Vue({
             el: '#main-wrapper',
@@ -267,6 +312,20 @@
                 scanning: false,
                 left_menu: menu_data,
                 active_menu: {{ active_menu_index }},
+                form: {
+                    username: null,
+                    password: null,
+                    first_name: null,
+                    last_name: null
+                },
+                errors: {
+                    username: null,
+                    password: null,
+                    first_name: null,
+                    last_name: null
+                },
+                accounts: accounts_data,
+                is_loading: false
             },
             computed: {
                 breadcrumb: function(){
@@ -278,7 +337,64 @@
 
             },
             methods: {
-
+                get_loader_list: function(){
+                    return [];
+                },
+                close_modal_forms: function() {
+                    this.is_loading = false;
+                    $("#modal-create-account").hide();
+                    for (var fld in this.form) {
+                        this.form[fld] = null;
+                    }
+                    for (var fld in this.errors) {
+                        this.errors[fld] = null;
+                    }
+                },
+                open_create_account: function(){
+                    $("#modal-create-account").show();
+                },
+                create_new_account: function(){
+                    var formData = new FormData();
+                    if (this.form.username) {
+                        formData.append('username', this.form.username);
+                    }
+                    if (this.form.password) {
+                        formData.append('password', this.form.password);
+                    }
+                    if (this.form.first_name) {
+                        formData.append('first_name', this.form.first_name);
+                    }
+                    if (this.form.last_name) {
+                        formData.append('last_name', this.form.last_name);
+                    }
+                    this.is_loading = true;
+                    var self = this;
+                    $.ajax({
+                        headers: { "X-CSRFToken": token },
+                        url: '/user-create/',
+                        type: 'POST',
+                        data: formData,
+                        success: function (data) {
+                            self.is_loading = false;
+                            console.log(data);
+                            if (data.success) {
+                                self.accounts.push(data.account);
+                                self.close_modal_forms();
+                            }
+                            else {
+                                for (var fld in data.errors) {
+                                    self.errors[fld] = data.errors[fld];
+                                }
+                            }
+                        },
+                        error: function(){
+                            self.is_loading = false;
+                        },
+                        cache: false,
+                        contentType: false,
+                        processData: false,
+                    });
+                }
             }
         });
 
