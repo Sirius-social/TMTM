@@ -10,7 +10,7 @@ from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework import serializers
 from django.utils import timezone
 from django.conf import settings
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.contrib.auth.models import User
 from django.contrib.auth import login, logout
 from django.http.response import HttpResponseRedirect
@@ -21,6 +21,16 @@ from wrapper.models import Ledger, Token
 from wrapper.websockets import get_connection
 from ui.models import QRCode
 from .utils import run_async
+
+
+MENU = [
+    {'caption': 'Transactions', 'class': 'fa fa-columns m-r-10', 'enabled': True, 'link': reverse_lazy('transactions')},
+    {'caption': 'ГУ-11', 'class': 'fa fa-table m-r-10', 'enabled': False, 'link': None},
+    {'caption': 'ГУ-12', 'class': 'fa fa-table m-r-10', 'enabled': False, 'link': None},
+    {'caption': 'Грузоперевозки', 'class': 'fa fa-globe m-r-10', 'enabled': False, 'link': None},
+    {'caption': 'Морские документы', 'class': 'fa fa-globe m-r-10', 'enabled': False, 'link': None},
+    {'caption': 'Admin', 'class': 'fa fa-globe m-r-10', 'enabled': True, 'link': reverse_lazy('admin')},
+]
 
 
 class AgentCredentialsSerializer(serializers.Serializer):
@@ -110,6 +120,8 @@ class TransactionsView(APIView):
             token = Token.allocate(request.user).value
             ws_url += '?token=%s' % token
             return Response(data={
+                'menu': MENU,
+                'active_menu_index': 0,
                 'ledgers': [{'name': ledger.name, 'id': ledger.id} for ledger in Ledger.objects.filter(entity=entity).all()[:200]],
                 'logo': '/static/logos/%s' % settings.PARTICIPANTS_META[entity]['logo'],
                 'label': settings.PARTICIPANTS_META[entity]['label'],
@@ -138,6 +150,21 @@ class TransactionsView(APIView):
             print('======== AGENT PING OK ========')
         finally:
             await agent.close()
+
+
+class AdminView(APIView):
+    template_name = 'admin.html'
+    renderer_classes = [TemplateHTMLRenderer]
+    authentication_classes = [SessionAuthentication]
+    permission_classes = []
+
+    def get(self, request, *args, **kwargs):
+        if not (request.user and request.user.is_authenticated):
+            return HttpResponseRedirect(redirect_to=reverse('auth'))
+        return Response(data={
+            'menu': MENU,
+            'active_menu_index': 5,
+        })
 
 
 class IndexView(APIView):

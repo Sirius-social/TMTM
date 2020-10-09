@@ -334,7 +334,7 @@
                 <nav class="sidebar-nav">
                     <ul id="sidebarnav">
                         <li v-for="(menu, index) in left_menu" v-bind:class="{ active: active_menu == index }">
-                           <a v-if="menu.enabled" @click.prevent="active_menu = index" href="#" class="waves-effect"><i v-bind:class="menu.class" aria-hidden="true"></i>[[menu.caption]]</a>
+                           <a v-if="menu.enabled" v-bind:href="menu.link" class="waves-effect"><i v-bind:class="menu.class" aria-hidden="true"></i>[[menu.caption]]</a>
                         </li>
 
                     </ul>
@@ -516,11 +516,14 @@
     <script type="text/javascript" src="/static/js/jquery.tagcanvas.min.js"></script>
 
     {{ ledgers|json_script:"ledgers-data" }}
+    {{ menu|json_script:"menu-data" }}
+
     <script>
         var token = '{{csrf_token}}';
         var ws_transactions = null;
         var json_editor = null;
         var ledgers_data = JSON.parse(document.getElementById('ledgers-data').textContent);
+        var menu_data = JSON.parse(document.getElementById('menu-data').textContent);
         function uuid4() {
           return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
             var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -536,14 +539,8 @@
                 ledgers: ledgers_data,
                 search_ledger: null,
                 selected_ledger: null,
-                left_menu: [
-                    {'caption': 'Transactions', 'class': 'fa fa-columns m-r-10', 'enabled': true},
-                    {'caption': 'ГУ-11', 'class': 'fa fa-table m-r-10', 'enabled': false},
-                    {'caption': 'ГУ-12', 'class': 'fa fa-table m-r-10', 'enabled': false},
-                    {'caption': 'Грузоперевозки', 'class': 'fa fa-globe m-r-10', 'enabled': false},
-                    {'caption': 'Морские документы', 'class': 'fa fa-globe m-r-10', 'enabled': false}
-                ],
-                active_menu: 0,
+                left_menu: menu_data,
+                active_menu: {{ active_menu_index }},
                 loader_enable: false,
                 transactions: [],
                 // Forms
