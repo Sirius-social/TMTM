@@ -19,3 +19,9 @@ class AuthRef(models.Model):
     uid = models.CharField(max_length=1024, db_index=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='auth_refs')
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class CredentialQR(models.Model):
+    username = models.CharField(max_length=126, db_index=True)
+    connection_key = models.CharField(max_length=128)
+    qr_url = models.CharField(max_length=2048)
