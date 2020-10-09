@@ -23,5 +23,4 @@ class AuthRef(models.Model):
 
 class CredentialQR(models.Model):
     username = models.CharField(max_length=126, db_index=True)
-    connection_key = models.CharField(max_length=128)
-    qr_url = models.CharField(max_length=2048)
+    qr = models.OneToOneField(QRCode, on_delete=models.CASCADE, null=True)
