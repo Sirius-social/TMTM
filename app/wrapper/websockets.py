@@ -486,16 +486,6 @@ class WsQRCodeAuth(AsyncJsonWebsocketConsumer):
                                         ),
                                         to=pairwise
                                     )
-                                    q = Question(
-                                        valid_responses=['Yes', 'No'],
-                                        question_text='Choose option',
-                                        question_detail='You may enter any text to call this menu again. '
-                                    )
-                                    q.set_ttl(60)
-                                    await agent.send_to(
-                                        message=q,
-                                        to=pairwise
-                                    )
                                 else:
                                     raise RuntimeError('Not found account')
                             else:
