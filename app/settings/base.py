@@ -163,7 +163,8 @@ AGENT = {
     'my_verkey': os.getenv('AGENT_MY_VERKEY'),
     'my_secret_key': os.getenv('AGENT_MY_SECRET_KEY'),
     'agent_verkey': os.getenv('AGENT_VERKEY'),
-    'is_sea': os.getenv('AGENT_IS_SEA', False) in ['1', 'on', 'yes']
+    'is_sea': os.getenv('AGENT_IS_SEA', False) in ['1', 'on', 'yes'],
+    'ledger': 'staging'
 }
 
 

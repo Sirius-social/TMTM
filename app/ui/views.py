@@ -30,6 +30,7 @@ MENU = [
     {'caption': 'ГУ-12', 'class': 'fa fa-table m-r-10', 'enabled': True, 'link': reverse_lazy('gu12')},
     {'caption': 'Грузоперевозки', 'class': 'fa fa-globe m-r-10', 'enabled': False, 'link': None},
     {'caption': 'Морские документы', 'class': 'fa fa-globe m-r-10', 'enabled': False, 'link': None},
+    {'caption': 'Credentials', 'class': 'fa fa-globe m-r-10', 'enabled': True, 'link': reverse_lazy('credentials')},
     {'caption': 'Admin', 'class': 'fa fa-globe m-r-10', 'enabled': False, 'link': reverse_lazy('admin')},
 ]
 
@@ -196,7 +197,7 @@ class AdminView(APIView):
         return Response(data={
             'menu': menu,
             'accounts': accounts,
-            'active_menu_index': 5,
+            'active_menu_index': len(menu) - 1,
         })
 
 
@@ -309,6 +310,38 @@ class GU12View(BaseGUView):
 
     def get_active_menu_index(self):
         return 2
+
+
+class CredentialsView(APIView):
+    template_name = 'credentials.html'
+    renderer_classes = [TemplateHTMLRenderer]
+    authentication_classes = [SessionAuthentication]
+    permission_classes = []
+
+    def get(self, request, *args, **kwargs):
+        if not (request.user and request.user.is_authenticated):
+            return HttpResponseRedirect(redirect_to=reverse('auth'))
+        menu = copy.copy(MENU)
+        menu[-1]['enabled'] = request.user.is_superuser
+        cred_qr = CredentialQR.objects.filter(username=request.user.username).first()
+        if cred_qr is None:
+            run_async(UserCreationView.create_cred_issue_qr(request.user.username))
+        cred_qr = CredentialQR.objects.get(username=request.user.username)
+
+        curr_abs_url = request.build_absolute_uri()
+        parts = urlsplit(curr_abs_url)
+        is_secure = request.is_secure()
+        ws_url = 'wss://' if is_secure else 'ws://'
+        ws_url += parts.netloc + '/credentials'
+
+        resp = Response(data={
+            'menu': menu,
+            'active_menu_index': 5,
+            'qr': cred_qr.qr.url,
+            'ws_url': ws_url
+        })
+        resp.set_cookie('username', request.user.username)
+        return resp
 
 
 class IndexView(APIView):

@@ -15,11 +15,12 @@ from sirius_sdk.agent.microledgers import Transaction
 from sirius_sdk.errors.exceptions import SiriusPromiseContextException
 from sirius_sdk.agent.aries_rfc.utils import sign
 from sirius_sdk.agent.aries_rfc.feature_0160_connection_protocol import Invitation, Inviter, ConnRequest
+from sirius_sdk.agent.aries_rfc.feature_0036_issue_credential import Issuer
 
 from scripts.management.commands.decorators import sentry_capture_exceptions
 from scripts.management.commands.logger import StreamLogger
 from scripts.management.commands import orm
-from ui.models import QRCode, PairwiseRecord
+from ui.models import QRCode, PairwiseRecord, CredentialQR
 from .models import Token
 
 
@@ -446,3 +447,107 @@ class WsQRCodeAuth(AsyncJsonWebsocketConsumer):
                 )
 
         await database_sync_to_async(sync)(pairwise)
+
+
+class WsQRCredentialsAuth(AsyncJsonWebsocketConsumer):
+
+    def __init__(self, *args, **kwargs):
+        self.conn_listener = None
+        super().__init__(*args, **kwargs)
+
+    @sentry_capture_exceptions
+    async def connect(self):
+        if settings.AGENT['entity']:
+            _ = [(name, value) for name, value in self.scope['headers'] if name == b'cookie']
+            cookies = _[0][1].decode() if len(_) > 0 else ''
+            cookies = [s.strip(' ') for s in cookies.split(';') if '=' in s]
+            username = None
+            for cookie in cookies:
+                name, value = cookie.split('=')
+                if name == 'username':
+                    username = value.replace("'", '').replace('"', '')
+                    break
+            if username:
+                cred_qr_model = await self.load_cred_qr_model(username)
+                if cred_qr_model:
+                    endpoint = Endpoint(**cred_qr_model.qr.my_endpoint)
+                    self.conn_listener = asyncio.ensure_future(
+                        self.connection_listener(username, cred_qr_model.qr.connection_key, endpoint)
+                    )
+                    await self.accept()
+                else:
+                    await self.close()
+            else:
+                await self.close()
+        else:
+            await self.close()
+
+    async def disconnect(self, code):
+        if self.conn_listener:
+            self.conn_listener.cancel()
+        await super().disconnect(code)
+
+    @staticmethod
+    async def connection_listener(username: str, connection_key: str, my_endpoint: Endpoint):
+        print('username: ' + username)
+        print('connection_key: ' + connection_key)
+        entity = settings.AGENT['entity']
+        async with get_connection() as agent:
+            assert isinstance(agent, Agent)
+            listener = await agent.subscribe()
+            async for event in listener:
+                if event.recipient_verkey == connection_key and isinstance(event.message, ConnRequest):
+                    logging.error('============= INVITER: Connection request ==============')
+                    logging.error(json.dumps(event, indent=2, sort_keys=True))
+                    logging.error('==================================')
+                    state_machine = Inviter(transports=agent)
+                    try:
+                        success, pairwise = await state_machine.create_connection(
+                            me=Pairwise.Me(
+                                did=entity, verkey=settings.PARTICIPANTS_META[entity]['verkey']
+                            ),
+                            connection_key=connection_key,
+                            request=event.message,
+                            my_endpoint=my_endpoint
+                        )
+                    except Exception as e:
+                        logging.error('============= INVITER: exception ==============')
+                        print(repr(e))
+                        logging.error('==================================')
+                    if success:
+                        await agent.pairwise_list.ensure_exists(pairwise)
+                        logging.error('========= INVITER: PAIRWISE ============')
+                        logging.error(json.dumps(pairwise.metadata, indent=2, sort_keys=True))
+                        await WsQRCodeAuth.store_pairwise_in_db(pairwise)
+                        logging.error('========= INVITER: PAIRWISE STORED IN DATABASE ============')
+                        logging.error('===============================')
+                        logging.error('====== START ISSUING ===========')
+                        try:
+                            ledger = agent.ledger(name=settings.AGENT['ledger'])
+                            fetched = await ledger.fetch_schemas(name='Account', version='1.0', submitter_did=entity)
+                            schema = fetched[0]
+                            fetched = await ledger.fetch_cred_defs(schema_id=schema.id)
+                            cred_def = fetched[0]
+                            machine = Issuer(holder=pairwise, api=agent.wallet.anoncreds, transports=agent)
+                            await machine.issue(
+                                values={
+                                    'username': username,
+                                    'role': 'employee'
+                                },
+                                schema=schema,
+                                cred_def=cred_def,
+                                comment='Your credentials. Use it to authorize later.',
+                                cred_id='credential-for-' + username
+                            )
+                        except Exception as e:
+                            raise
+
+
+    @staticmethod
+    async def load_cred_qr_model(username: str) -> CredentialQR:
+
+        def sync(username_: str) -> CredentialQR:
+            inst = CredentialQR.objects.filter(username=username_).first()
+            return inst
+
+        return await database_sync_to_async(sync)(username)
