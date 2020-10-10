@@ -13,6 +13,7 @@ class PairwiseRecord(models.Model):
     entity = models.CharField(max_length=64)
     their_did = models.CharField(max_length=64, db_index=True)
     metadata = JSONField()
+    username = models.CharField(max_length=128, null=True, db_index=True)
 
 
 class AuthRef(models.Model):
