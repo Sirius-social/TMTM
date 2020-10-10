@@ -20,7 +20,7 @@ from sirius_sdk.agent.aries_rfc.feature_0160_connection_protocol import Invitati
 
 from wrapper.models import Ledger, Token, UserEntityBind
 from wrapper.websockets import get_connection
-from ui.models import QRCode, CredentialQR
+from ui.models import QRCode, CredentialQR, AuthRef
 from .utils import run_async
 
 
@@ -474,6 +474,30 @@ class AuthView(APIView):
             }
             QRCode.objects.get_or_create(connection_key=connection_key, url=url, my_endpoint=my_endpoint)
             return url
+
+
+class AuthByRefView(APIView):
+    renderer_classes = [JSONRenderer]
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request, *args, **kwargs):
+        if not settings.AGENT['entity']:
+            return HttpResponseRedirect(redirect_to=reverse('index'))
+        uid = kwargs.get('uid', None)
+        if not uid:
+            return Response(data=b'Not found', status=404)
+        auth_ref = AuthRef.objects.filter(uid=uid).first()
+        if not auth_ref:
+            return Response(data=b'Not found', status=404)
+        if request.user.is_authenticated:
+            if request.user.id != auth_ref.user.id:
+                logout(request)
+                login(request, auth_ref.user)
+        else:
+            login(request, auth_ref.user)
+        auth_ref.delete()
+        return HttpResponseRedirect(redirect_to=reverse('transactions'))
 
 
 class LogoutView(APIView):

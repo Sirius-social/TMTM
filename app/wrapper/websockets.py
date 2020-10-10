@@ -7,6 +7,8 @@ from datetime import datetime
 from typing import List, Dict
 from contextlib import asynccontextmanager
 from django.conf import settings
+from django.urls import reverse
+from django.contrib.auth.models import User as UserModel
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from sirius_sdk import Agent, P2PConnection, Pairwise, Endpoint
@@ -14,13 +16,19 @@ from sirius_sdk.agent.consensus import simple
 from sirius_sdk.agent.microledgers import Transaction
 from sirius_sdk.errors.exceptions import SiriusPromiseContextException
 from sirius_sdk.agent.aries_rfc.utils import sign
+from sirius_sdk.agent.aries_rfc.feature_0095_basic_message import Message as TextMessage
+from sirius_sdk.agent.aries_rfc.feature_0113_question_answer import Question, Answer
 from sirius_sdk.agent.aries_rfc.feature_0160_connection_protocol import Invitation, Inviter, ConnRequest
-from sirius_sdk.agent.aries_rfc.feature_0036_issue_credential import Issuer
+from sirius_sdk.agent.aries_rfc.feature_0036_issue_credential import Issuer, \
+    AttribTranslation as IssuerAttribTranslation, ProposedAttrib
+from sirius_sdk.agent.aries_rfc.feature_0037_present_proof import Verifier, \
+    AttribTranslation as VerifierAttribTranslation
 
 from scripts.management.commands.decorators import sentry_capture_exceptions
 from scripts.management.commands.logger import StreamLogger
 from scripts.management.commands import orm
-from ui.models import QRCode, PairwiseRecord, CredentialQR
+from ui.models import QRCode, PairwiseRecord, CredentialQR, AuthRef
+from wrapper.models import UserEntityBind
 from .models import Token
 
 
@@ -396,6 +404,9 @@ class WsQRCodeAuth(AsyncJsonWebsocketConsumer):
             listener = await agent.subscribe()
             async for event in listener:
                 if event.recipient_verkey == connection_key and isinstance(event.message, ConnRequest):
+                    await self.send_json(
+                        {'in_progress': True}
+                    )
                     logging.error('============= INVITER: Connection request ==============')
                     logging.error(json.dumps(event, indent=2, sort_keys=True))
                     logging.error('==================================')
@@ -411,6 +422,9 @@ class WsQRCodeAuth(AsyncJsonWebsocketConsumer):
                             my_endpoint=my_endpoint
                         )
                     except Exception as e:
+                        await self.send_json(
+                            {'in_progress': False}
+                        )
                         logging.error('============= INVITER: exception ==============')
                         print(repr(e))
                         logging.error('==================================')
@@ -418,9 +432,83 @@ class WsQRCodeAuth(AsyncJsonWebsocketConsumer):
                         await agent.pairwise_list.ensure_exists(pairwise)
                         logging.error('========= INVITER: PAIRWISE ============')
                         logging.error(json.dumps(pairwise.metadata, indent=2, sort_keys=True))
-                        await self.store_pairwise_in_db(pairwise)
+                        pairwise_in_db = await self.store_pairwise_in_db(pairwise)
                         logging.error('========= INVITER: PAIRWISE STORED IN DATABASE ============')
-                        logging.error('===============================')
+                        logging.error('========== START VERIFY=======')
+                        try:
+                            machine = Verifier(
+                                prover=pairwise, pool_name=settings.AGENT['ledger'],
+                                api=agent.wallet.anoncreds, cache=agent.wallet.cache,
+                                transports=agent
+                            )
+                            success = await machine.verify(
+                                proof_request={
+                                    "nonce": await agent.wallet.anoncreds.generate_nonce(),
+                                    "name": "Account-Credentials",
+                                    "version": "0.1",
+                                    "requested_attributes": {
+                                        "attr1_referent": {
+                                            "name": "username",
+                                            "restrictions": {
+                                                "issuer_did": entity
+                                            }
+                                        }
+                                    },
+                                    "requested_predicates": {}
+                                },
+                                comment='Validate yourself to Enter service',
+                                translation=[
+                                    VerifierAttribTranslation('username', 'Username')
+                                ],
+                                proto_version='1.0'
+                            )
+                            logging.error(f'******* VERIFY RESULT: {success} ********')
+                            if success:
+                                logging.error('=========== PROOF =========')
+                                logging.error(json.dumps(machine.requested_proof, indent=2, sort_keys=True))
+                                username_value = machine.requested_proof['revealed_attrs']['attr1_referent']['raw']
+                                await self.set_username_for_pairwise(pairwise_in_db, username_value)
+                                user_bind = UserEntityBind.objects.filter(
+                                    entity=settings.AGENT['entity'],
+                                    user__username=username_value
+                                ).first()
+                                if user_bind:
+                                    ref = AuthRef.objects.create(uid=uuid.uuid4().hex, user=user_bind.user)
+                                    route_url = reverse('auth-ref', kwargs={'uid': ref.uid})
+                                    logging.error(f'===== ROUTE URL: {route_url} ====')
+                                    await self.send_json(
+                                        {'url': route_url, 'in_progress': True}
+                                    )
+                                    await agent.send_to(
+                                        message=TextMessage(
+                                            content='Welcome to ' + settings.PARTICIPANTS_META[entity]['label'],
+                                            locale='en'
+                                        ),
+                                        to=pairwise
+                                    )
+                                    q = Question(
+                                        valid_responses=['Yes', 'No'],
+                                        question_text='Choose option',
+                                        question_detail='You may enter any text to call this menu again. '
+                                    )
+                                    q.set_ttl(60)
+                                    await agent.send_to(
+                                        message=q,
+                                        to=pairwise
+                                    )
+                                else:
+                                    raise RuntimeError('Not found account')
+                            else:
+                                await self.send_json(
+                                    {'in_progress': False}
+                                )
+                        except Exception as e:
+                            await self.send_json(
+                                {'in_progress': False}
+                            )
+                            logging.error('========== EXCEPTION WHILE VERIFY =======')
+                            logging.error(repr(e))
+                            logging.error('======================================')
 
     @staticmethod
     async def load_qr_code_model(url: str) -> QRCode:
@@ -432,7 +520,7 @@ class WsQRCodeAuth(AsyncJsonWebsocketConsumer):
         return await database_sync_to_async(sync)(url)
 
     @staticmethod
-    async def store_pairwise_in_db(pairwise: Pairwise):
+    async def store_pairwise_in_db(pairwise: Pairwise) -> PairwiseRecord:
 
         def sync(p: Pairwise):
             model = PairwiseRecord.objects.filter(
@@ -445,8 +533,18 @@ class WsQRCodeAuth(AsyncJsonWebsocketConsumer):
                 model = PairwiseRecord.objects.create(
                     their_did=p.their.did, entity=settings.AGENT['entity'], metadata=p.metadata
                 )
+            return model
 
-        await database_sync_to_async(sync)(pairwise)
+        return await database_sync_to_async(sync)(pairwise)
+
+    @staticmethod
+    async def set_username_for_pairwise(pairwise: PairwiseRecord, username: str):
+
+        def sync(p: PairwiseRecord, u: str):
+            p.username = u
+            p.save()
+
+        await database_sync_to_async(sync)(pairwise, username)
 
 
 class WsQRCredentialsAuth(AsyncJsonWebsocketConsumer):
@@ -518,7 +616,8 @@ class WsQRCredentialsAuth(AsyncJsonWebsocketConsumer):
                         await agent.pairwise_list.ensure_exists(pairwise)
                         logging.error('========= INVITER: PAIRWISE ============')
                         logging.error(json.dumps(pairwise.metadata, indent=2, sort_keys=True))
-                        await WsQRCodeAuth.store_pairwise_in_db(pairwise)
+                        pairwise_in_db = await WsQRCodeAuth.store_pairwise_in_db(pairwise)
+                        await WsQRCodeAuth.set_username_for_pairwise(pairwise_in_db, username)
                         logging.error('========= INVITER: PAIRWISE STORED IN DATABASE ============')
                         logging.error('===============================')
                         logging.error('====== START ISSUING ===========')
@@ -537,11 +636,26 @@ class WsQRCredentialsAuth(AsyncJsonWebsocketConsumer):
                                 schema=schema,
                                 cred_def=cred_def,
                                 comment='Your credentials. Use it to authorize later.',
-                                cred_id='credential-for-' + username
+                                cred_id='credential-for-' + username,
+                                translation=[
+                                    IssuerAttribTranslation('username', 'Username')
+                                ],
+                                preview=[
+                                    ProposedAttrib('username', username)
+                                ]
+                            )
+                            logging.error('========= ISSUING SUCCESSFULLY STOPPED ============')
+                            await agent.send_to(
+                                message=TextMessage(
+                                    content='You may authorize with this credentials later',
+                                    locale='en'
+                                ),
+                                to=pairwise
                             )
                         except Exception as e:
-                            raise
-
+                            logging.error('====== EXCEPTION While issuing ===========')
+                            logging.error(repr(e))
+                            logging.error('==========================================')
 
     @staticmethod
     async def load_cred_qr_model(username: str) -> CredentialQR:

@@ -17,6 +17,7 @@
     <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
     <script src="/static/js/vue.js"></script>
+    <script src="https://unpkg.com/vue-scroll-loader"></script>
     <style>
         .page-wrapper{
             margin-left: 0;
@@ -82,7 +83,9 @@
                                 </div>
                               <div class="row" style="height: 250px;">
                                 <div class="col"></div>
-                                <img v-bind:src="qr" style="width: 250px;">
+                                <img v-if="!in_progress" v-bind:src="qr" style="width: 250px;">
+                                <scroll-loader :loader-method="get_loader_list" :loader-disable="!in_progress" :loader-size="250">
+                                </scroll-loader>
                                 <div class="col"></div>
                               </div>
                             </form>
@@ -156,8 +159,14 @@
             data: {
                 content_height: 300,
                 errors: errors_data,
-                qr: null
+                qr: null,
+                in_progress: false
             },
+            methods: {
+                get_loader_list: function(){
+                    return [];
+                }
+            }
         });
 
         function ws_connect() {
@@ -169,7 +178,11 @@
             ws_auth.onmessage = function(event) {
               console.log("Получены данные " + event.data);
               var obj = JSON.parse(event.data);
-              app.$data.qr = obj.qr;
+              app.$data.in_progress = obj.in_progress;
+              if (obj.url) {
+                  location.replace(obj.url);
+
+              }
             };
             ws_auth.onerror = function(error) {
                 console.log("Ошибка " + error.message);
