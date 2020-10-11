@@ -41,3 +41,10 @@ Start Guide: step-by-step
 Upload service
 ==========================
 You may upload documents and give back md5 and public-url to download one: **<your_domain>/upload**, service will respond json object with **md5**, **url**, **filename**
+
+
+TMTM High level architecture
+==========================
+
+.. image:: https://github.com/Sirius-social/TMTM/blob/master/docs/_static/TMTM.png?raw=true
+   :alt: Entry
