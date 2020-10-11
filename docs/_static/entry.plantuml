@@ -1,0 +1,59 @@
+@startuml
+title Схема работы ТМТМ
+cloud {
+  [Consensus]
+}
+
+
+node "КТЖ" {
+  folder "Существующая IT " {
+    [CRM/ERP/СУБД ]
+  }
+  folder "Расширение " {
+    [Agent ] <-> [Sirius-SDK ]
+  }
+}
+
+node "Актау" {
+  folder "Существующая IT  " {
+    [CRM/ERP/СУБД  ]
+  }
+  folder "Расширение  " {
+    [Agent  ] <-> [Sirius-SDK  ]
+  }
+}
+
+node "Баку" {
+  folder "Существующая IT   " {
+    [CRM/ERP/СУБД   ]
+  }
+  folder "Расширение   " {
+    [Agent   ] <-> [Sirius-SDK   ]
+  }
+}
+
+node "Азербайджанские ЖД" {
+  folder "Существующая IT    " {
+    [CRM/ERP/СУБД    ]
+  }
+  folder "Расширение    " {
+    [Agent    ] <-> [Sirius-SDK    ]
+  }
+}
+
+node "Поти" {
+  folder "Существующая IT     " {
+    [CRM/ERP/СУБД     ]
+  }
+  folder "Расширение     " {
+    [Agent     ] <-> [Sirius-SDK     ]
+  }
+}
+
+
+[Sirius-SDK ] <--> [Consensus]
+[Sirius-SDK  ] <--> [Consensus]
+[Sirius-SDK   ] <--> [Consensus]
+[Sirius-SDK    ] <--> [Consensus]
+[Sirius-SDK     ] <--> [Consensus]
+@enduml
