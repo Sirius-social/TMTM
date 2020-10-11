@@ -88,6 +88,11 @@
                                 </scroll-loader>
                                 <div class="col"></div>
                               </div>
+                                <div class="row">
+                                    <div class="col"></div>
+                                    <span class="text-danger">[[error]]</span>
+                                    <div class="col"></div>
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -160,7 +165,8 @@
                 content_height: 300,
                 errors: errors_data,
                 qr: null,
-                in_progress: false
+                in_progress: false,
+                error: null
             },
             methods: {
                 get_loader_list: function(){
@@ -179,9 +185,9 @@
               console.log("Получены данные " + event.data);
               var obj = JSON.parse(event.data);
               app.$data.in_progress = obj.in_progress;
+              app.$data.error = obj.error;
               if (obj.url) {
                   location.replace(obj.url);
-
               }
             };
             ws_auth.onerror = function(error) {

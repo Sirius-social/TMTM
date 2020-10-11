@@ -489,16 +489,21 @@ class WsQRCodeAuth(AsyncJsonWebsocketConsumer):
                                 else:
                                     raise RuntimeError('Not found account')
                             else:
-                                await self.send_json(
-                                    {'in_progress': False}
-                                )
+                                raise RuntimeError('Proof invalid')
                         except Exception as e:
                             await self.send_json(
-                                {'in_progress': False}
+                                {'in_progress': False, 'error': str(e)}
                             )
                             logging.error('========== EXCEPTION WHILE VERIFY =======')
                             logging.error(repr(e))
                             logging.error('======================================')
+                            await agent.send_to(
+                                message=TextMessage(
+                                    content='Authorization error: ' + str(e),
+                                    locale='en'
+                                ),
+                                to=pairwise
+                            )
 
     @staticmethod
     async def load_qr_code_model(url: str) -> QRCode:
