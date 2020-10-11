@@ -44,6 +44,22 @@ class Transaction(models.Model):
         unique_together = ('seq_no', 'ledger')
 
 
+class GURecord(models.Model):
+    entity = models.CharField(max_length=64, db_index=True)
+    category = models.CharField(max_length=36, db_index=True)
+    no = models.CharField(max_length=128)
+    date = models.CharField(max_length=128)
+    cargo_name = models.CharField(max_length=128)
+    depart_station = models.CharField(max_length=128)
+    arrival_station = models.CharField(max_length=128)
+    month = models.CharField(max_length=128)
+    year = models.CharField(max_length=128)
+    decade = models.CharField(max_length=128)
+    tonnage = models.CharField(max_length=128)
+    shipper = models.CharField(max_length=128)
+    attachments = JSONField()
+
+
 class Content(models.Model):
 
     STORAGE_FILE_SYSTEM = 'django.core.files.storage.FileSystemStorage'
