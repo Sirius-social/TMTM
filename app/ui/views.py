@@ -421,7 +421,7 @@ class BaseGUView(APIView):
                     print(f'============ SEND message to DID: {did}  =======')
                     print(json.dumps(msg, indent=2, sort_keys=True))
                     print('================================================')
-                    # await agent.send_to(msg, to)
+                    await agent.send_to(msg, to)
                 else:
                     print('Empty pairwise for DID: ' + did)
 
