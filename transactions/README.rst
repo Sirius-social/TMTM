@@ -185,3 +185,95 @@ Example
    - **ledger.name**: (required) - name of the ledge
    - **ledger.id**: (optional) - local database id of ledger record
 
+   
+***************************************************
+[GU-11] ГУ-11
+***************************************************
+Example
+
+.. code-block:: python
+
+  {
+      "@type": "https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/gu-11",
+      "@id": "1129fbc9-b9cf-4191-b5c1-ee9c68945f42",
+      "no": "100000-03",
+      "date": "01/01/2020",
+      "cargo_name": "Сборный контейнер",
+	  "depart_station": "Karagandi",
+	  "arrival_station": "Poti",
+	  "month": "Май",
+	  "year": "2020",
+	  "decade": "2",
+	  "tonnage": "10",
+	  "shipper": "ООО ТревелСейл",
+	  "~attach": [
+         {
+            "@id": "document-1",
+            "mime_type": "application/pdf",
+            "filename": "WayBill_xxx_yyy_zzz.pdf",
+            "data": {
+              "json": {
+                "url": "...",
+                "md5": "..."
+              }
+            }
+         },
+         {
+            "@id": "document-2",
+            "mime_type": "image/png",
+            "filename": "WayBill_xxx_yyy_zzz_attaches.png",
+            "data": {
+              "json": {
+                "url": "...",
+                "md5": "..."
+              }
+            }
+         }
+      ]
+  }
+  
+  
+***************************************************
+[GU-12] ГУ-12
+***************************************************
+Example
+
+.. code-block:: python
+
+  {
+      "@type": "https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/gu-12",
+      "@id": "1129fbc9-b9cf-4191-b5c1-ee9c68945f42",
+      "no": "100000-03",
+      "date": "01/01/2020",
+      "cargo_name": "Сборный контейнер",
+	  "depart_station": "Karagandi",
+	  "arrival_station": "Poti",
+	  "month": "Май",
+	  "year": "2020",
+	  "tonnage": "10",
+	  "shipper": "ООО ТревелСейл",
+	  "~attach": [
+         {
+            "@id": "document-1",
+            "mime_type": "application/pdf",
+            "filename": "WayBill_xxx_yyy_zzz.pdf",
+            "data": {
+              "json": {
+                "url": "...",
+                "md5": "..."
+              }
+            }
+         },
+         {
+            "@id": "document-2",
+            "mime_type": "image/png",
+            "filename": "WayBill_xxx_yyy_zzz_attaches.png",
+            "data": {
+              "json": {
+                "url": "...",
+                "md5": "..."
+              }
+            }
+         }
+      ]
+  }
