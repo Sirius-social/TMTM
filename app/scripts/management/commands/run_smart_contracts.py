@@ -4,6 +4,7 @@ import asyncio
 from time import sleep
 from datetime import datetime
 
+from channels.db import database_sync_to_async
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from sirius_sdk import Agent, P2PConnection, Pairwise
@@ -15,6 +16,34 @@ from sirius_sdk.agent.consensus import simple as simple_consensus
 from scripts.management.commands import orm
 from scripts.management.commands.decorators import sentry_capture_exceptions
 from scripts.management.commands.logger import StreamLogger
+
+from wrapper.models import GURecord
+
+
+def parse_and_store_gu(txn: dict, category: str):
+    try:
+        fields = {}
+        for fld in ['no', 'date', 'cargo_name', 'depart_station', 'arrival_station', 'month', 'year', 'tonnage', 'shipper']:
+            fields[fld] = txn.get(fld, '')
+        fields['decade'] = txn.get('decade', '')
+        fields['category'] = category
+        fields['entity'] = settings.AGENT['entity']
+        collection = txn.get('~attach', [])
+        attachments = []
+        for item in collection:
+            a = {
+                'url': item.get('data', {}).get('json', {}).get('url', None),
+                'md5': item.get('data', {}).get('json', {}).get('md5', None),
+                'filename': item.get('filename', None),
+                'mime_type': item.get('mime_type', None)
+            }
+            attachments.append(a)
+        fields['attachments'] = attachments
+        GURecord.objects.create(**fields)
+    except Exception as e:
+        logging.error('============ ERROR while parsing GU message ===========')
+        logging.error(repr(e))
+        logging.error('=======================================================')
 
 
 class Command(BaseCommand):
@@ -171,6 +200,10 @@ class Command(BaseCommand):
                             p2p=event.pairwise
                         )
                         asyncio.ensure_future(fut)
+                    elif event.message.type == 'https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/gu-11':
+                        await database_sync_to_async(parse_and_store_gu)(event.message, 'gu11')
+                    elif event.message.type == 'https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/gu-12':
+                        await database_sync_to_async(parse_and_store_gu)(event.message, 'gu12')
         finally:
             await agent.close()
 
