@@ -1,4 +1,5 @@
 import json
+import uuid
 import copy
 import logging
 from typing import List, Dict
@@ -18,6 +19,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import login, logout
 from django.http.response import HttpResponseRedirect
 from sirius_sdk import Agent, P2PConnection
+from sirius_sdk.messaging import Message
 from sirius_sdk.agent.aries_rfc.feature_0160_connection_protocol import Invitation
 
 from wrapper.models import Ledger, Token, UserEntityBind, GURecord
@@ -357,11 +359,7 @@ class BaseGUView(APIView):
                 fields['attachments'] = json.loads(attachments)
             else:
                 fields['attachments'] = []
-            record = GURecord.objects.create(
-                entity=settings.AGENT['entity'],
-                category=self.get_category(),
-                **fields
-            )
+            self.create_record(**fields)
         except serializers.ValidationError as e:
             errors = {}
             for k, v in e.get_full_details().items():
@@ -370,6 +368,62 @@ class BaseGUView(APIView):
             return Response({'success': False, 'errors': errors})
         else:
             return Response({'success': True, 'errors': errors})
+
+    def create_record(self, **fields) -> GURecord:
+        record = GURecord.objects.create(
+            entity=settings.AGENT['entity'],
+            category=self.get_category(),
+            **fields
+        )
+        txn = {
+            '@id': uuid.uuid4().hex,
+        }
+        if self.get_category() == 'gu11':
+            txn['@type'] = 'https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/gu-11'
+            txn['decade'] = fields.get('decade', '')
+        elif self.get_category() == 'gu12':
+            txn['@type'] = 'https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/gu-12'
+        else:
+            raise RuntimeError('Unexpected category')
+        for fld in ['no', 'date', 'cargo_name', 'depart_station', 'arrival_station', 'month', 'year', 'tonnage', 'shipper']:
+            txn[fld] = fields[fld]
+        attachments = fields.get('attachments', None)
+        if attachments:
+            collection = []
+            for i, a in enumerate(attachments):
+                item = {
+                    '@id': f'document-{i}',
+                    'filename': a.get('filename', None),
+                    "data": {
+                        "json": {
+                            "url": a.get('url', None),
+                            "md5": a.get('md5', None)
+                        }
+                    }
+                }
+                mime_type = a.get('mime_type', None)
+                if mime_type:
+                    item['mime_type'] = mime_type
+                collection.append(item)
+            txn['~attach'] = collection
+        run_async(self.emit(txn))
+        return record
+
+    @staticmethod
+    async def emit(txn: dict):
+        async with get_connection() as agent:
+            entity = settings.AGENT['entity']
+            participants_dids = [did for did in settings.PARTICIPANTS_META.keys() if did != entity]
+            for did in participants_dids:
+                to = await agent.pairwise_list.load_for_did(did)
+                if to:
+                    msg = Message(txn)
+                    print(f'============ SEND message to DID: {did}  =======')
+                    print(json.dumps(msg, indent=2, sort_keys=True))
+                    print('================================================')
+                    # await agent.send_to(msg, to)
+                else:
+                    print('Empty pairwise for DID: ' + did)
 
     def get_active_menu_index(self):
         raise NotImplemented
