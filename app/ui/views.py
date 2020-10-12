@@ -303,7 +303,8 @@ class BaseGUView(APIView):
             'active_menu_index': self.get_active_menu_index(),
             'title': MENU[self.get_active_menu_index()]['caption'],
             'category': self.get_category(),
-            'records': self.load_from_db()
+            'records': self.load_from_db(),
+            'caption': self.get_caption()
         })
 
     def get_active_menu_index(self):
@@ -312,12 +313,15 @@ class BaseGUView(APIView):
     def get_category(self) -> str:
         raise NotImplemented
 
+    def get_caption(self) -> str:
+        raise NotImplemented
+
     def load_from_db(self) -> List[Dict]:
         ret = []
         for rec in GURecord.objects.filter(
             entity=settings.AGENT['entity'],
             category=self.get_category()
-        ).all():
+        ).order_by('-id').all():
             ser = GUSerializer(instance=rec)
             ret.append(ser.data)
         return ret
@@ -331,6 +335,9 @@ class GU11View(BaseGUView):
     def get_category(self) -> str:
         return 'gu11'
 
+    def get_caption(self) -> str:
+        return 'ГУ-11'
+
 
 class GU12View(BaseGUView):
 
@@ -339,6 +346,9 @@ class GU12View(BaseGUView):
 
     def get_category(self) -> str:
         return 'gu12'
+
+    def get_caption(self) -> str:
+        return 'ГУ-12'
 
 
 class CredentialsView(APIView):
