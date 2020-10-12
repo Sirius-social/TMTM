@@ -1,5 +1,6 @@
 import copy
 import logging
+from typing import List, Dict
 from urllib.parse import urlsplit
 
 import requests
@@ -18,7 +19,7 @@ from django.http.response import HttpResponseRedirect
 from sirius_sdk import Agent, P2PConnection
 from sirius_sdk.agent.aries_rfc.feature_0160_connection_protocol import Invitation
 
-from wrapper.models import Ledger, Token, UserEntityBind
+from wrapper.models import Ledger, Token, UserEntityBind, GURecord
 from wrapper.websockets import get_connection
 from ui.models import QRCode, CredentialQR, AuthRef
 from .utils import run_async
@@ -279,6 +280,13 @@ class UserCreationView(APIView):
         return Response(data=data)
 
 
+class GUSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = GURecord
+        fields = '__all__'
+
+
 class BaseGUView(APIView):
     template_name = 'gu.html'
     renderer_classes = [TemplateHTMLRenderer]
@@ -293,11 +301,26 @@ class BaseGUView(APIView):
         return Response(data={
             'menu': menu,
             'active_menu_index': self.get_active_menu_index(),
-            'title': MENU[self.get_active_menu_index()]['caption']
+            'title': MENU[self.get_active_menu_index()]['caption'],
+            'category': self.get_category(),
+            'records': self.load_from_db()
         })
 
     def get_active_menu_index(self):
         raise NotImplemented
+
+    def get_category(self) -> str:
+        raise NotImplemented
+
+    def load_from_db(self) -> List[Dict]:
+        ret = []
+        for rec in GURecord.objects.filter(
+            entity=settings.AGENT['entity'],
+            category=self.get_category()
+        ).all():
+            ser = GUSerializer(instance=rec)
+            ret.append(ser.data)
+        return ret
 
 
 class GU11View(BaseGUView):
@@ -305,11 +328,17 @@ class GU11View(BaseGUView):
     def get_active_menu_index(self):
         return 1
 
+    def get_category(self) -> str:
+        return 'gu11'
+
 
 class GU12View(BaseGUView):
 
     def get_active_menu_index(self):
         return 2
+
+    def get_category(self) -> str:
+        return 'gu12'
 
 
 class CredentialsView(APIView):
