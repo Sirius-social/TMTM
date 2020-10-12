@@ -188,11 +188,46 @@
                 <!-- ============================================================== -->
                 <!-- Start Page Content -->
                 <!-- ============================================================== -->
-                <div class="row">
+                <div class="row" >
                     <!-- Column -->
-                    <div class="col-sm-4">
-                        <div class="card">
-                            XXX
+                    <div class="col-sm-12">
+                        <div class="card" style="padding-left: 10px; padding-right: 10px;">
+                            <table class="table table-striped">
+                              <thead>
+                                <tr>
+                                  <th scope="col">No</th>
+                                  <th scope="col">Date</th>
+                                  <th scope="col">Cargo name</th>
+                                  <th scope="col">Depart Station</th>
+                                  <th scope="col">Arrival Station</th>
+                                  <th scope="col">Month</th>
+                                  <th scope="col">Year</th>
+                                  {% if category == "gu11" %}
+                                  <th scope="col">Decade</th>
+                                  {% endif %}
+                                  <th scope="col">Tonnage</th>
+                                  <th scope="col">Shipper</th>
+                                  <th scope="col">Attachments</th>
+                                </tr>
+                              </thead>
+                              <tbody >
+                                <tr v-for="record in records">
+                                    <td>[[ record.no ]]</td>
+                                    <td>[[ record.date ]]</td>
+                                    <td>[[ record.cargo_name ]]</td>
+                                    <td>[[ record.depart_station ]]</td>
+                                    <td>[[ record.arrival_station ]]</td>
+                                    <td>[[ record.month ]]</td>
+                                    <td>[[ record.year ]]</td>
+                                    {% if category == "gu11" %}
+                                    <td>[[ record.decade ]]</td>
+                                    {% endif %}
+                                    <td>[[ record.tonnage ]]</td>
+                                    <td>[[ record.shipper ]]</td>
+                                    <td>[[ record.attachments ]]</td>
+                                </tr>
+                              </tbody>
+                            </table>
                         </div>
                     </div>
                     <!-- Column -->
@@ -254,9 +289,11 @@
 
     {{ ledgers|json_script:"ledgers-data" }}
     {{ menu|json_script:"menu-data" }}
+    {{ records|json_script:"records-data" }}
 
     <script>
         var token = '{{csrf_token}}';
+        var records_data = JSON.parse(document.getElementById('records-data').textContent);
         var ws_transactions = null;
         var menu_data = JSON.parse(document.getElementById('menu-data').textContent);
 
@@ -267,6 +304,7 @@
                 scanning: false,
                 left_menu: menu_data,
                 active_menu: {{ active_menu_index }},
+                records: records_data
             },
             computed: {
                 breadcrumb: function(){
