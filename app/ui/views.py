@@ -1,3 +1,4 @@
+import json
 import copy
 import logging
 from typing import List, Dict
@@ -281,10 +282,37 @@ class UserCreationView(APIView):
 
 
 class GUSerializer(serializers.ModelSerializer):
+    attachments = serializers.SerializerMethodField('get_attachments')
+
+    def get_attachments(self, obj: GURecord):
+        collection = obj.attachments
+        return collection
 
     class Meta:
         model = GURecord
         fields = '__all__'
+
+
+class GUCreateSerializer(serializers.Serializer):
+
+    no = serializers.CharField(max_length=128)
+    date = serializers.CharField(max_length=128)
+    cargo_name = serializers.CharField(max_length=128)
+    depart_station = serializers.CharField(max_length=128)
+    arrival_station = serializers.CharField(max_length=128)
+    month = serializers.CharField(max_length=128)
+    year = serializers.CharField(max_length=128)
+    decade = serializers.CharField(max_length=128)
+    tonnage = serializers.CharField(max_length=128)
+    shipper = serializers.CharField(max_length=128)
+    attachments = serializers.CharField(allow_null=True, max_length=20000)
+
+    def update(self, instance, validated_data):
+        return dict(**instance, **validated_data)
+
+    def create(self, validated_data):
+        data = dict(validated_data)
+        return data
 
 
 class BaseGUView(APIView):
@@ -297,15 +325,51 @@ class BaseGUView(APIView):
         if not (request.user and request.user.is_authenticated):
             return HttpResponseRedirect(redirect_to=reverse('auth'))
         menu = copy.copy(MENU)
-        menu[-1]['enabled'] = request.user.is_superuser
+
+        month_default = 'Январь'
         return Response(data={
             'menu': menu,
             'active_menu_index': self.get_active_menu_index(),
             'title': MENU[self.get_active_menu_index()]['caption'],
             'category': self.get_category(),
             'records': self.load_from_db(),
-            'caption': self.get_caption()
+            'caption': self.get_caption(),
+            'months': [
+                month_default, 'Февраль', 'Март', 'Апрель', 'Май',
+                'Июнь', 'Июль',
+                'Август', 'Сентябрь', 'Октябрь',
+                'Ноябрь', 'Декабрь'
+            ],
+            'month_default': month_default,
+            'upload_url': str(reverse('upload')),
+            'reload_url': self.reload_url(),
+            'create_url': self.create_url()
         })
+
+    def post(self, request, *args, **kwargs):
+        ser = GUCreateSerializer(data=request.data)
+        errors = None
+        try:
+            ser.is_valid(raise_exception=True)
+            fields = ser.create(ser.validated_data)
+            attachments = fields.get('attachments', None)
+            if attachments:
+                fields['attachments'] = json.loads(attachments)
+            else:
+                fields['attachments'] = []
+            record = GURecord.objects.create(
+                entity=settings.AGENT['entity'],
+                category=self.get_category(),
+                **fields
+            )
+        except serializers.ValidationError as e:
+            errors = {}
+            for k, v in e.get_full_details().items():
+                errors[k] = str(v[0]['message'])
+        if errors:
+            return Response({'success': False, 'errors': errors})
+        else:
+            return Response({'success': True, 'errors': errors})
 
     def get_active_menu_index(self):
         raise NotImplemented
@@ -314,6 +378,12 @@ class BaseGUView(APIView):
         raise NotImplemented
 
     def get_caption(self) -> str:
+        raise NotImplemented
+
+    def reload_url(self) -> str:
+        raise NotImplemented
+
+    def create_url(self) -> str:
         raise NotImplemented
 
     def load_from_db(self) -> List[Dict]:
@@ -338,6 +408,16 @@ class GU11View(BaseGUView):
     def get_caption(self) -> str:
         return 'ГУ-11'
 
+    def reload_url(self) -> str:
+        return str(reverse('gu-11-list'))
+
+    def create_url(self) -> str:
+        return str(reverse('create-gu11'))
+
+
+class CreateGU11View(GU11View):
+    renderer_classes = [JSONRenderer]
+
 
 class GU12View(BaseGUView):
 
@@ -349,6 +429,16 @@ class GU12View(BaseGUView):
 
     def get_caption(self) -> str:
         return 'ГУ-12'
+
+    def reload_url(self) -> str:
+        return str(reverse('gu-12-list'))
+
+    def create_url(self) -> str:
+        return str(reverse('create-gu12'))
+
+
+class CreateGU12View(GU12View):
+    renderer_classes = [JSONRenderer]
 
 
 class CredentialsView(APIView):

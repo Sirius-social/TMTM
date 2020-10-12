@@ -17,8 +17,9 @@ from django.urls import path
 from django.conf.urls import url, include
 from django.conf import settings
 from ui.views import TransactionsView, IndexView, SmartContractInitLedgerView, SmartContractCommitView, \
-    AuthView, LogoutView, AdminView, GU11View, GU12View, UserCreationView, CredentialsView, AuthByRefView
-from wrapper.views import MaintenanceRouter, LedgersRouter, UploadView, ContentView
+    AuthView, LogoutView, AdminView, GU11View, GU12View, UserCreationView, CredentialsView, AuthByRefView, \
+    CreateGU11View, CreateGU12View
+from wrapper.views import MaintenanceRouter, LedgersRouter, UploadView, ContentView, GU11Router, GU12Router
 
 
 CONTENT_URL = settings.MEDIA_URL
@@ -35,6 +36,8 @@ urlpatterns = [
     path('user-create/', UserCreationView.as_view(), name='user-create'),
     path('gu11/', GU11View.as_view(), name='gu11'),
     path('gu12/', GU12View.as_view(), name='gu12'),
+    path('create-gu11/', CreateGU11View.as_view(), name='create-gu11'),
+    path('create-gu12/', CreateGU12View.as_view(), name='create-gu12'),
     path('credentials/', CredentialsView.as_view(), name='credentials'),
     path('auth-ref/<str:uid>', AuthByRefView.as_view(), name='auth-ref'),
     path('smart_contract_init_ledger/', SmartContractInitLedgerView.as_view(), name='smart-contract-init-ledger'),
@@ -46,4 +49,6 @@ urlpatterns = [
     # Maintenance
     url(r'^', include(MaintenanceRouter.urls)),
     url(r'^', include(LedgersRouter.urls)),
+    url(r'^', include(GU11Router.urls)),
+    url(r'^', include(GU12Router.urls))
 ]

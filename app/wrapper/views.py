@@ -19,7 +19,7 @@ from sirius_sdk import Agent, P2PConnection
 from sirius_sdk.agent.aries_rfc.feature_0048_trust_ping import Ping
 
 from ui.utils import run_async
-from .models import Ledger, Transaction, Content, Token
+from .models import Ledger, Transaction, Content, Token, GURecord
 from .decorators import cross_domain
 from .mixins import ExtendViewSetMixin
 
@@ -146,6 +146,71 @@ class TransactionViewSet(
         return self.get_parents_query_dict().get('ledger', None)
 
 
+class BaseGUSerializer(serializers.ModelSerializer):
+    attachments = serializers.SerializerMethodField('get_attachments')
+
+    def get_attachments(self, obj: GURecord):
+        collection = obj.attachments
+        return collection
+
+    class Meta:
+        model = GURecord
+        fields = (
+            'no', 'date', 'cargo_name', 'depart_station', 'arrival_station',
+            'month', 'year', 'tonnage', 'shipper', 'attachments'
+        )
+        read_only_fields = fields
+
+
+class GU11Serializer(BaseGUSerializer):
+
+    class Meta(BaseGUSerializer.Meta):
+        fields = list(BaseGUSerializer.Meta.fields) + ['decade']
+        read_only_fields = fields
+
+
+class GU12Serializer(BaseGUSerializer):
+
+    class Meta(BaseGUSerializer.Meta):
+        pass
+
+
+class GU11ViewSet(
+            PaginateByMaxMixin, NestedViewSetMixin,
+            viewsets.mixins.RetrieveModelMixin,
+            viewsets.mixins.ListModelMixin,
+            viewsets.GenericViewSet
+        ):
+    lookup_field = 'id'
+    renderer_classes = [JSONRenderer]
+    permission_classes = [IsAuthenticated]
+    serializer_class = GU11Serializer
+
+    def get_queryset(self):
+        return GURecord.objects.filter(
+            entity=settings.AGENT['entity'],
+            category='gu11'
+        ).order_by('-id')
+
+
+class GU12ViewSet(
+            PaginateByMaxMixin, NestedViewSetMixin,
+            viewsets.mixins.RetrieveModelMixin,
+            viewsets.mixins.ListModelMixin,
+            viewsets.GenericViewSet
+        ):
+    lookup_field = 'id'
+    renderer_classes = [JSONRenderer]
+    permission_classes = [IsAuthenticated]
+    serializer_class = GU12Serializer
+
+    def get_queryset(self):
+        return GURecord.objects.filter(
+            entity=settings.AGENT['entity'],
+            category='gu12'
+        ).order_by('-id')
+
+
 class UploadView(ExtendViewSetMixin, APIView):
 
     renderer_classes = [JSONRenderer]
@@ -199,3 +264,9 @@ LedgersRouter = ExtendedDefaultRouter()
 ledgers_router = LedgersRouter.register(r'ledgers', LedgerViewSet, 'ledgers')
 # URL pattern: /ledgers/transactions
 ledgers_router.register(r'transactions', TransactionViewSet, 'ledger-txns', parents_query_lookups=['ledger'])
+
+# GU-11 & GU-12
+GU11Router = ExtendedDefaultRouter()
+GU11Router.register(r'gu-11', GU11ViewSet, 'gu-11')
+GU12Router = ExtendedDefaultRouter()
+GU12Router.register(r'gu-12', GU12ViewSet, 'gu-12')

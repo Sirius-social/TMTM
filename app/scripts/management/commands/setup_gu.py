@@ -26,5 +26,5 @@ class Command(BaseCommand):
                     cargo_name='Tomato', depart_station='Depart', arrival_station='Arrival',
                     month=random.choice(['nov', 'sep', 'aug', 'jan']),
                     year='2020', decade=random.choice(['1', '2', '3']),
-                    tonnage=f'{no}', shipper='Shipper', attachments={}
+                    tonnage=f'{no}', shipper='Shipper', attachments=[]
                 )

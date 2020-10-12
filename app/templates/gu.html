@@ -52,17 +52,109 @@
         <!-- ============================================================== -->
         <!-- Modal Txn details -->
         <!-- ============================================================== -->
-        <div id="modal-txn-detail" class="modal" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.2);overflow-y: auto;">
+        <div id="modal-form" class="modal" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.2);overflow-y: auto;">
           <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
               <div class="modal-header">
-                <h3 class="modal-title">Transaction details</h3>
+                <h3 class="modal-title">{{ caption }}</h3>
                 <button @click.prevent="close_modal_forms" type="button" class="close" data-dismiss="modal" aria-label="Close" id="btn-modal-close">
                   <span aria-hidden="true">&times;</span>
                 </button>
               </div>
               <div class="modal-body">
-                  <div id="dev-txn-detail" style="white-space: pre-wrap;border:lightgray dotted 1px;padding:5px;width: 100%; height: 100%;">
+                  <div style="width: 100%;">
+                      <form id="form">
+                          <div class="row" >
+                                <div class="col">
+                                  <label for="i-no" v-bind:class="{ 'text-danger': errors.no }">[[ errors.no || "No" ]]</label><br/>
+                                  <input v-model="form.no" id="i-no" name="no" type="text" class="form-control-sm" placeholder="20-001-0000002">
+                                </div>
+                                <div class="col">
+                                  <label for="i-date" v-bind:class="{ 'text-danger': errors.date }">[[ errors.date || "Date"]]</label><br/>
+                                  <input v-model="form.date" id="i-date" name="date" type="text" class="form-control-sm" placeholder="{{ cur_date }}">
+                                </div>
+                                <div class="col">
+                                  <label for="i-cargo_name" v-bind:class="{ 'text-danger': errors.cargo_name }">[[ errors.cargo_name || "Cargo" ]]</label><br/>
+                                  <input v-model="form.cargo_name" id="i-cargo_name" name="cargo_name" type="text" class="form-control-sm" placeholder="">
+                                </div>
+                                <div class="col">
+                                  <label for="i-depart-station" v-bind:class="{ 'text-danger': errors.depart_station }">[[ errors.depart_station || "Departure station" ]]</label><br/>
+                                  <input v-model="form.depart_station" id="i-departure-station" name="depart-station" type="text" class="form-control-sm" placeholder="673702 Караганды">
+                                </div>
+                                <div class="col">
+                                  <label for="i-arrival-station" v-bind:class="{ 'text-danger': errors.arrival_station }">[[ errors.arrival_station || "Arrival station" ]]</label><br/>
+                                  <input v-model="form.arrival_station" id="i-arrival-station" name="arrival-station" type="text" class="form-control-sm" placeholder="572107 Поти">
+                                </div>
+                          </div>
+                          <div class="row" style="margin-top: 20px;">
+                              <div class="col">
+                                  <label for="i-month" v-bind:class="{ 'text-danger': errors.month }">[[ errors.month || "Месяц" ]]</label> <br/>
+                                  <select v-model="form.month" id="i-month" class="custom-select custom-select-sm">
+                                      {% for item in months %}
+                                          <option value="{{ item }}" {% if forloop.counter0 == 0 %} selected {% endif %}>{{ item }}</option>
+                                      {% endfor %}
+                                  </select>
+                              </div>
+                              <div class="col">
+                                  <label for="i-year" v-bind:class="{ 'text-danger': errors.year }">[[ errors.year || "Год" ]]</label><br/>
+                                  <input v-model="form.year" id="i-year" name="year" type="text" class="form-control-sm" placeholder="">
+                              </div>
+                              {% if category == 'gu11' %}
+                                  <div class="col">
+                                      <label for="i-decade" v-bind:class="{ 'text-danger': errors.decade }">[[ errors.decade || "Декада" ]]</label><br/>
+                                      <input v-model="form.decade" id="i-decade" name="decade" type="text" class="form-control-sm" placeholder="">
+                                  </div>
+                              {% endif %}
+                              <div class="col">
+                                  <label for="i-tonnage" v-bind:class="{ 'text-danger': errors.tonnage }">[[ errors.tonnage || "Тоннаж" ]]</label><br/>
+                                  <input v-model="form.tonnage" id="i-tonnage" name="tonnage" type="text" class="form-control-sm" placeholder="">
+                              </div>
+                              <div class="col">
+                                  <label for="i-shipper" v-bind:class="{ 'text-danger': errors.shipper }">[[ errors.shipper || "Грузоотправитель" ]]</label><br/>
+                                  <input v-model="form.shipper" id="i-shipper" name="shipper" type="text" class="form-control-sm" placeholder="">
+                              </div>
+                          </div>
+                      </form>
+                      <div class="row" style="margin-top: 10px;">
+                        <div class="col" >
+                            <label for="i-attachments">Attachments</label>
+                            <a @click.prevent="upload_attachment()" class="srh-btn" title="Attach document" style="margin-left: 20px;cursor:pointer;"><i class="ti-plus"></i></a>
+                            <br/>
+                            <ul id="i-attachments">
+                                <li v-for="attach in form.attachments">
+                                    <a @click.prevent="" :href="attach.url">[[ attach.filename ]]</a>
+                                    <div class="progress" v-if="!attach.done" style="max-width: 30%;">
+                                        <div class="progress-bar progress-bar-striped" role="progressbar" :aria-valuenow="attach.progress" aria-valuemin="0" aria-valuemax="100" :style="{'width': `${attach.progress}%`}">
+                                          [[ attach.progress ]]%
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                      </div>
+                      <button @click.prevent="create_new_record()" type="button" class="btn btn-primary" >Submit</button>
+                  </div>
+              </div>
+              <div class="modal-footer">
+                <button @click.prevent="close_modal_forms" type="button" class="btn btn-secondary" >Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- ============================================================== -->
+        <!-- Modal Docs Viewer -->
+        <!-- ============================================================== -->
+        <div id="modal-doc-viewer" class="modal" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.2);overflow-y: auto;">
+          <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h3 id="title-doc-viewer" class="modal-title"></h3>
+                <button @click.prevent="close_modal_forms" type="button" class="close" data-dismiss="modal" aria-label="Close" id="btn-modal-close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                  <div id="div-doc-viewer" style="white-space: pre-wrap;border:lightgray dotted 1px;padding:5px;width: 100%; height: 100%;min-height:500px;">
                   </div>
               </div>
               <div class="modal-footer">
@@ -189,14 +281,16 @@
                 <!-- Start Page Content -->
                 <!-- ============================================================== -->
                 <div class="row" >
+                    <input id="i-attach-file" type="file" hidden/>
                     <!-- Column -->
                     <div class="col-sm-12">
                         <div class="card" style="padding-left: 10px; padding-right: 10px;">
                             <div class="row" style="margin-top: 15px;">
                                 <h4 style="margin-left: 35px;">{{ caption }}</h4>
-                                <a @click.prevent="" class="srh-btn" title="Add" style="margin-left: 20px;cursor:pointer;"><i class="ti-plus"></i></a>
+                                <a @click.prevent="open_modal_form" class="srh-btn" title="Add" style="margin-left: 20px;cursor:pointer;"><i class="ti-plus"></i></a>
+                                <a @click.prevent="reload()" class="srh-btn" title="Reload" style="margin-left: 15px;cursor:pointer;"><i class="ti-reload"></i></a>
                             </div>
-                            <table class="table table-striped">
+                            <table class="table table-striped" v-if="!is_loading">
                               <thead>
                                 <tr>
                                   <th scope="col">No</th>
@@ -228,10 +322,22 @@
                                     {% endif %}
                                     <td>[[ record.tonnage ]]</td>
                                     <td>[[ record.shipper ]]</td>
-                                    <td>[[ record.attachments ]]</td>
+                                    <td>
+                                        <ul>
+                                              <li v-for="attachment in record.attachments">
+                                                  <a @click.prevent="show_doc_viewer(attachment.url, attachment.filename, attachment.md5)" href="">[[ attachment.filename ]]</a>
+                                                  <svg @click.prevent="open_link_in_tab(attachment.url)" style="cursor: pointer; margin-left: 10px;" title="Download" width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-download" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                      <path fill-rule="evenodd" d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                                                      <path fill-rule="evenodd" d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                                                  </svg>
+                                              </li>
+                                        </ul>
+                                    </td>
                                 </tr>
                               </tbody>
                             </table>
+                            <scroll-loader :loader-method="get_loader_list" :loader-disable="!is_loading" :loader-size="200">
+                            </scroll-loader>
                         </div>
                     </div>
                     <!-- Column -->
@@ -308,7 +414,34 @@
                 scanning: false,
                 left_menu: menu_data,
                 active_menu: {{ active_menu_index }},
-                records: records_data
+                records: records_data,
+                is_loading: false,
+                form: {
+                    no: null,
+                    date: null,
+                    cargo_name: null,
+                    depart_station: null,
+                    arrival_station: null,
+                    month: null,
+                    year: null,
+                    decade: null,
+                    tonnage: null,
+                    shipper: null,
+                    attachments: null
+                },
+                errors: {
+                    no: null,
+                    date: null,
+                    cargo_name: null,
+                    depart_station: null,
+                    arrival_station: null,
+                    month: null,
+                    year: null,
+                    decade: null,
+                    tonnage: null,
+                    shipper: null,
+                    attachments: null
+                }
             },
             computed: {
                 breadcrumb: function(){
@@ -320,8 +453,177 @@
 
             },
             methods: {
+                close_modal_forms: function(){
+                    $('#modal-form').hide();
+                    $("#modal-doc-viewer").hide();
+                    for (var fld in this.form) {
+                        this.form[fld] = null;
+                    }
+                    for (var fld in this.errors) {
+                        this.errors[fld] = null;
+                    }
+                    this.form.attachments = [];
+                },
+                open_link_in_tab: function(link) {
+                    if (link) {
+                        console.log(link);
+                        window.open(link, '_blank');
+                    }
+                },
+                open_modal_form: function(){
+                    this.form.month = "{{ month_default }}";
+                    $('#modal-form').show();
+                },
+                upload_attachment: function (){
+                    $("#i-attach-file").trigger("click");
+                },
+                show_doc_viewer: function (url, filename, md5) {''
+                    var html = '<iframe style="width:100%;height:600px;" src="https://docs.google.com/gview?url='+url+'&embedded=true"></iframe>';
+                    var div$ = $("#div-doc-viewer");
+                    div$.children().remove();
+                    div$.html(html);
+                    $("#title-doc-viewer").html(filename + '  (md5: ' + md5 + ')');
+                    $("#modal-doc-viewer").show();
+                },
+                reload: function(){
+                    this.is_loading = true;
+                    this.transactions = [];
+                    var url = "{{ reload_url }}"
+                    var self = this;
+                    $.get(
+                        url,
+                        function(resp){
+                            //console.log(resp);
+                            self.records = resp.results;
+                            self.is_loading = false;
+                        }
+                    );
+                },
+                get_loader_list: function(){
+                    return [];
+                },
+                create_new_record: function(){
+                    var formData = new FormData();
+                    formData.append('no', this.form.no || '');
+                    formData.append('date', this.form.date || '');
+                    formData.append('cargo_name', this.form.cargo_name || '');
+                    formData.append('depart_station', this.form.depart_station || '');
+                    formData.append('arrival_station', this.form.arrival_station || '');
+                    formData.append('month', this.form.month || '');
+                    formData.append('year', this.form.year || '');
+                    formData.append('decade', this.form.decade || '');
+                    formData.append('tonnage', this.form.tonnage || '');
+                    formData.append('shipper', this.form.shipper || '');
 
+                    var attachments = [];
+                    for (var index in this.form.attachments) {
+                        var o = this.form.attachments[index];
+                        var a = {
+                            no: o.no,
+                            md5: o.md5,
+                            url: o.url,
+                            filename: o.filename
+                        }
+                        attachments.push(a);
+                    }
+                    var s = JSON.stringify(attachments)
+                    formData.append('attachments', s);
+
+
+                    var self = this;
+                    $.ajax({
+                        headers: { "X-CSRFToken": token },
+                        url: "{{ create_url }}",
+                        type: 'POST',
+                        data: formData,
+                        success: function (data) {
+                            //self.is_loading = false;
+                            console.log(data);
+                            if (data.success) {
+                                self.reload();
+                                self.close_modal_forms();
+                            }
+                            else {
+                                for (var fld in self.errors) {
+                                    self.errors[fld] = null;
+                                }
+                                for (var fld in data.errors) {
+                                    self.errors[fld] = data.errors[fld];
+                                }
+                            }
+                        },
+                        error: function(){
+                            //self.is_loading = false;
+                        },
+                        cache: false,
+                        contentType: false,
+                        processData: false,
+                    });
+                }
             }
+        });
+
+        $(function(){
+            $("#i-attach-file").change(function(e){
+                e.preventDefault();
+                var file = e.target.files[0];
+                var attachment = {
+                    'filename': file.name,
+                    'md5': null,
+                    'url': null,
+                    'progress': 0,
+                    'done': false,
+                    'canceled': false,
+                    'mime_type': file.type
+                }
+                if (app.$data.form.attachments == null) {
+                    app.$data.form.attachments = [];
+                }
+                app.$data.form.attachments.push(attachment);
+                attachment = app.$data.form.attachments[app.$data.form.attachments.length-1];
+                var formData = new FormData();
+                formData.append('file', file);
+                var url = "{{ upload_url }}";
+                $.ajax({
+                    headers: { "X-CSRFToken": token },
+                    url: url,
+                    type: 'POST',
+                    data: formData,
+                    success: function (data) {
+                        attachment.md5 = data.md5;
+                        attachment.url = data.url;
+                        attachment.done = true;
+                    },
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    xhr: function(){
+                        var jqXHR = null;
+                        if ( window.ActiveXObject )
+                        {
+                            jqXHR = new window.ActiveXObject( "Microsoft.XMLHTTP" );
+                        }
+                        else
+                        {
+                            jqXHR = new window.XMLHttpRequest();
+                        }
+
+                        //Upload progress
+                        jqXHR.upload.addEventListener( "progress", function ( evt )
+                        {
+                            if (attachment.canceled) {
+                                xhr.abort();
+                            }
+                            if ( evt.lengthComputable )
+                            {
+                                var percent = Math.round( (evt.loaded * 100) / evt.total );
+                                attachment.progress = percent;
+                            }
+                        }, false );
+                        return jqXHR;
+                    }
+                });
+            });
         });
 
 
