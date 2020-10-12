@@ -18,6 +18,8 @@ Start Guide: step-by-step
 
     - **<your_domain>/ledgers/**: get list of all ledgers on your side
     - **<your_domain>/ledgers/<ledger-id>/transactions/**: get list of all blockchain transactions that mapped to specific ledger
+    - **<your_domain>/gu-11/**: fetch all received ГУ-11 transactons
+    - **<your_domain>/gu-12/**: fetch all received ГУ-12 transactons
     - **<your_domain>/maintenance/check_health/**: check your service health - script will ping all participants via P2P connections to check pongs from all of them
     - **<your_domain>/maintenance/allocate_token/**: allocate secret token to get access to transactions request service via websocket
 
