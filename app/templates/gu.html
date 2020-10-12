@@ -70,19 +70,19 @@
                                   <input v-model="form.no" id="i-no" name="no" type="text" class="form-control-sm" placeholder="20-001-0000002">
                                 </div>
                                 <div class="col">
-                                  <label for="i-date" v-bind:class="{ 'text-danger': errors.date }">[[ errors.date || "Date"]]</label><br/>
+                                  <label for="i-date" v-bind:class="{ 'text-danger': errors.date }">[[ errors.date || "Дата"]]</label><br/>
                                   <input v-model="form.date" id="i-date" name="date" type="text" class="form-control-sm" placeholder="{{ cur_date }}">
                                 </div>
                                 <div class="col">
-                                  <label for="i-cargo_name" v-bind:class="{ 'text-danger': errors.cargo_name }">[[ errors.cargo_name || "Cargo" ]]</label><br/>
+                                  <label for="i-cargo_name" v-bind:class="{ 'text-danger': errors.cargo_name }">[[ errors.cargo_name || "Наименование груза" ]]</label><br/>
                                   <input v-model="form.cargo_name" id="i-cargo_name" name="cargo_name" type="text" class="form-control-sm" placeholder="">
                                 </div>
                                 <div class="col">
-                                  <label for="i-depart-station" v-bind:class="{ 'text-danger': errors.depart_station }">[[ errors.depart_station || "Departure station" ]]</label><br/>
+                                  <label for="i-depart-station" v-bind:class="{ 'text-danger': errors.depart_station }">[[ errors.depart_station || "Станция отправления" ]]</label><br/>
                                   <input v-model="form.depart_station" id="i-departure-station" name="depart-station" type="text" class="form-control-sm" placeholder="673702 Караганды">
                                 </div>
                                 <div class="col">
-                                  <label for="i-arrival-station" v-bind:class="{ 'text-danger': errors.arrival_station }">[[ errors.arrival_station || "Arrival station" ]]</label><br/>
+                                  <label for="i-arrival-station" v-bind:class="{ 'text-danger': errors.arrival_station }">[[ errors.arrival_station || "Станция назначения" ]]</label><br/>
                                   <input v-model="form.arrival_station" id="i-arrival-station" name="arrival-station" type="text" class="form-control-sm" placeholder="572107 Поти">
                                 </div>
                           </div>
@@ -294,18 +294,18 @@
                               <thead>
                                 <tr>
                                   <th scope="col">No</th>
-                                  <th scope="col">Date</th>
-                                  <th scope="col">Cargo name</th>
-                                  <th scope="col">Depart Station</th>
-                                  <th scope="col">Arrival Station</th>
-                                  <th scope="col">Month</th>
-                                  <th scope="col">Year</th>
+                                  <th scope="col">Дата</th>
+                                  <th scope="col">Наименование груза</th>
+                                  <th scope="col">Станция отправления</th>
+                                  <th scope="col">Станция назначения</th>
+                                  <th scope="col">Месяц</th>
+                                  <th scope="col">Год</th>
                                   {% if category == "gu11" %}
-                                  <th scope="col">Decade</th>
+                                    <th scope="col">Декада</th>
                                   {% endif %}
-                                  <th scope="col">Tonnage</th>
-                                  <th scope="col">Shipper</th>
-                                  <th scope="col">Attachments</th>
+                                  <th scope="col">Тоннаж</th>
+                                  <th scope="col">Грузоотправитель</th>
+                                  <th scope="col">Документы</th>
                                 </tr>
                               </thead>
                               <tbody >
