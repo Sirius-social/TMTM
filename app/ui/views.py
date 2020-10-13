@@ -29,13 +29,13 @@ from .utils import run_async
 
 
 MENU = [
-    {'caption': 'Transactions', 'class': 'fa fa-columns m-r-10', 'enabled': True, 'link': reverse_lazy('transactions')},
+    {'caption': 'Контейнеры', 'class': 'fa fa-columns m-r-10', 'enabled': True, 'link': reverse_lazy('transactions')},
     {'caption': 'ГУ-11', 'class': 'fa fa-table m-r-10', 'enabled': True, 'link': reverse_lazy('gu11')},
     {'caption': 'ГУ-12', 'class': 'fa fa-table m-r-10', 'enabled': True, 'link': reverse_lazy('gu12')},
     {'caption': 'Грузоперевозки', 'class': 'fa fa-globe m-r-10', 'enabled': False, 'link': None},
     {'caption': 'Морские документы', 'class': 'fa fa-globe m-r-10', 'enabled': False, 'link': None},
-    {'caption': 'Credentials', 'class': 'fa fa-globe m-r-10', 'enabled': True, 'link': reverse_lazy('credentials')},
-    {'caption': 'Admin', 'class': 'fa fa-globe m-r-10', 'enabled': False, 'link': reverse_lazy('admin')},
+    {'caption': 'Личный кабинет', 'class': 'fa fa-globe m-r-10', 'enabled': True, 'link': reverse_lazy('credentials')},
+    {'caption': 'Администратор', 'class': 'fa fa-globe m-r-10', 'enabled': False, 'link': reverse_lazy('admin')},
 ]
 
 

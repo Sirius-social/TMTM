@@ -172,26 +172,26 @@
                                       <input v-model="form.no" id="i-no" name="no" type="text" class="form-control-sm" placeholder="20-001-0000002">
                                     </div>
                                     <div class="col">
-                                      <label for="i-date">Date</label><br/>
+                                      <label for="i-date">Дата</label><br/>
                                       <input v-model="form.date" id="i-date" name="date" type="text" class="form-control-sm" placeholder="{{ cur_date }}">
                                     </div>
                                     <div class="col">
-                                      <label for="i-cargo">Cargo</label><br/>
+                                      <label for="i-cargo">Наименование груза</label><br/>
                                       <input v-model="form.cargo" id="i-cargo" name="cargo" type="text" class="form-control-sm" placeholder="Арбузы">
                                     </div>
                                     <div class="col">
-                                      <label for="i-departure-station">Departure station</label><br/>
+                                      <label for="i-departure-station">Станция отправление</label><br/>
                                       <input v-model="form.departure_station" id="i-departure-station" name="departure-station" type="text" class="form-control-sm" placeholder="673702 Караганды">
                                     </div>
                                     <div class="col">
-                                      <label for="i-arrival-station">Arrival station</label><br/>
+                                      <label for="i-arrival-station">Станция прибытия</label><br/>
                                       <input v-model="form.arrival_station" id="i-arrival-station" name="arrival-station" type="text" class="form-control-sm" placeholder="572107 Поти">
                                     </div>
                                 </div>
                                 <hr/>
                                 <div class="row">
                                     <div class="col">
-                                      <label for="i-doc-type">Doc Type</label> <br/>
+                                      <label for="i-doc-type">Тип документа</label> <br/>
                                       <select v-model="form.doc_type" id="i-doc-type" class="custom-select custom-select-sm">
                                           {% for item in doc_types.values %}
                                               <option value="{{ item.id }}" {% if item.id == doc_types.default %} selected {% endif %}>{{ item.caption}}</option>
@@ -203,7 +203,7 @@
                                         <input v-model="form.waybill_no" id="i-waybill-no" name="waybill-no" type="text" class="form-control-sm" placeholder="11282656">
                                     </div>
                                     <div class="col" v-if="form_waybill_enabled">
-                                        <label for="i-wagon-no">Wagon</label> <br/>
+                                        <label for="i-wagon-no">Вагон</label> <br/>
                                         <input v-model="form.waybill_wagon_no" id="i-wagon-no" name="wagon-no" type="text" class="form-control-sm" placeholder="1221230">
                                     </div>
                                     <div class="col">
@@ -214,7 +214,7 @@
                                 <div class="row" style="margin-top: 10px;">
                                     <div class="col" >
 
-                                        <label for="i-attachments">Attachments</label>
+                                        <label for="i-attachments">Документы</label>
                                         <a @click.prevent="upload_attachment()" class="srh-btn" title="Attach screen" style="margin-left: 20px;cursor:pointer;"><i class="ti-plus"></i></a>
                                         <br/>
                                         <ul id="i-attachments">
@@ -233,7 +233,7 @@
                           </div>
                       </form>
                       <div v-if="form_step == 1" style="width: 90%; height: 500px;">
-                          <h5 style="margin-left: 20px;" class="text-primary">Send command to websocket endpoint <span class="btn btn-primary">{{ ws_url }}</span></h5>
+                          <h5 style="margin-left: 20px;" class="text-primary">Отправляй команды на websocket endpoint <span class="btn btn-primary">{{ ws_url }}</span></h5>
                           <h4 v-if="error_json_editor" style="margin-left: 20px;" class="btn btn-danger">[[ error_json_editor ]]</h4>
                           <pre id="json-editor" style="width: 100%; height: 90%;"></pre>
                       </div>
@@ -428,10 +428,10 @@
                                     <tr>
                                       <th scope="col"># seq_no</th>
                                       <th scope="col">No</th>
-                                      <th scope="col">Metadata</th>
-                                      <th scope="col">Signer</th>
-                                      <th scope="col">Attachments</th>
-                                      <th scope="col">Details...</th>
+                                      <th scope="col">Метаданные</th>
+                                      <th scope="col">Подпись</th>
+                                      <th scope="col">Документы</th>
+                                      <th scope="col">Детально...</th>
                                     </tr>
                                   </thead>
                                   <tbody style="font-size: 75%;">
