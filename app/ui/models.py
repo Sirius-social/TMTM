@@ -14,6 +14,7 @@ class PairwiseRecord(models.Model):
     their_did = models.CharField(max_length=64, db_index=True)
     metadata = JSONField()
     username = models.CharField(max_length=128, null=True, db_index=True)
+    subscribe = models.BooleanField(default=True)
 
 
 class AuthRef(models.Model):
