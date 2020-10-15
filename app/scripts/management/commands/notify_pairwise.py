@@ -43,8 +43,9 @@ class Command(BaseCommand):
             coros = [process_pairwise(did) for did in theirs]
             await asyncio.wait(coros, timeout=120, return_when=asyncio.ALL_COMPLETED)
 
-        dids = [rec.their_did for rec in PairwiseRecord.objects.filter()]
-        asyncio.get_event_loop().run_until_complete(run(dids))
+        dids = [rec.their_did for rec in PairwiseRecord.objects.filter(subscribe=True).all()]
+        if dids:
+            asyncio.get_event_loop().run_until_complete(run(dids))
 
     @classmethod
     async def process_answer(cls, answer: sirius_sdk.aries_rfc.Answer, their: sirius_sdk.Pairwise):
