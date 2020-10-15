@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 import logging
+import sirius_sdk
+
 
 logging.getLogger().setLevel(logging.WARNING)
 
@@ -166,6 +168,18 @@ AGENT = {
     'is_sea': os.getenv('AGENT_IS_SEA', False) in ['1', 'on', 'yes'],
     'ledger': 'staging'
 }
+if AGENT['credentials'] and AGENT['server_address']:
+    sirius_sdk.init(
+        server_uri=AGENT['server_address'],
+        credentials=AGENT['credentials'].encode('ascii'),
+        p2p=sirius_sdk.P2PConnection(
+            my_keys=(
+                AGENT['my_verkey'],
+                AGENT['my_secret_key']
+            ),
+            their_verkey=AGENT['agent_verkey']
+        )
+    )
 
 
 PARTICIPANTS_META = {

@@ -1,3 +1,4 @@
+import os
 import json
 import uuid
 import logging
@@ -246,6 +247,8 @@ class WsTransactions(AsyncJsonWebsocketConsumer):
                     }
                     await self.send_json(msg)
                     await self.close()
+                    message = 'В системе зарегистрирован новый контейнер %s' % payload['name']
+                    os.system('python /app/manage.py notify_pairwise "%s"' % message)
                 except Exception as e:
                     if isinstance(e, SiriusPromiseContextException):
                         explain = e.printable
@@ -279,6 +282,8 @@ class WsTransactions(AsyncJsonWebsocketConsumer):
                     }
                     await self.send_json(msg)
                     await self.close()
+                    message = 'Для контейнера %s зарегистрирована новая операция' % txn['ledger']['name']
+                    os.system('python /app/manage.py notify_pairwise "%s"' % message)
                 except Exception as e:
                     if isinstance(e, SiriusPromiseContextException):
                         explain = e.printable
