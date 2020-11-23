@@ -199,14 +199,14 @@ Example
       "no": "100000-03",
       "date": "01/01/2020",
       "cargo_name": "Сборный контейнер",
-	  "depart_station": "Karagandi",
-	  "arrival_station": "Poti",
-	  "month": "Май",
-	  "year": "2020",
-	  "decade": "2",
-	  "tonnage": "10",
-	  "shipper": "ООО ТревелСейл",
-	  "~attach": [
+      "depart_station": "Karagandi",
+      "arrival_station": "Poti",
+      "month": "Май",
+      "year": "2020",
+      "decade": "2",
+      "tonnage": "10",
+      "shipper": "ООО ТревелСейл",
+      "~attach": [
          {
             "@id": "document-1",
             "mime_type": "application/pdf",
@@ -246,13 +246,13 @@ Example
       "no": "100000-03",
       "date": "01/01/2020",
       "cargo_name": "Сборный контейнер",
-	  "depart_station": "Karagandi",
-	  "arrival_station": "Poti",
-	  "month": "Май",
-	  "year": "2020",
-	  "tonnage": "10",
-	  "shipper": "ООО ТревелСейл",
-	  "~attach": [
+      "depart_station": "Karagandi",
+      "arrival_station": "Poti",
+      "month": "Май",
+      "year": "2020",
+      "tonnage": "10",
+      "shipper": "ООО ТревелСейл",
+      "~attach": [
          {
             "@id": "document-1",
             "mime_type": "application/pdf",
