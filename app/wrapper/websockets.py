@@ -9,6 +9,7 @@ from typing import List, Dict
 from contextlib import asynccontextmanager
 from django.conf import settings
 from django.urls import reverse
+from sirius_sdk.messaging import Message
 from django.contrib.auth.models import User as UserModel
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
@@ -195,6 +196,8 @@ class WsTransactions(AsyncJsonWebsocketConsumer):
     TYP_CREATE_LEDGER = 'https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/create-ledger'
     TYP_ISSUE_TXN = 'https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/issue-transaction'
     TYP_PROGRESS = 'https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/progress'
+    TYP_GU11 = 'https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/gu-11'
+    TYP_GU12 = 'https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/gu-12'
 
     @sentry_capture_exceptions
     async def connect(self):
@@ -293,6 +296,10 @@ class WsTransactions(AsyncJsonWebsocketConsumer):
                         REQUEST_PROCESSING_ERROR, explain
                     )
                     return
+            elif payload['@type'] in [self.TYP_GU11, self.TYP_GU12]:
+                txn = payload
+                await self._validate_txn(txn)
+                await self.broadcast_for_all_participants(txn)
             else:
                 await self.send_problem_report_and_close(
                     REQUEST_ERROR, 'Unexpected @type = "%s"' % payload['@type']
@@ -328,37 +335,64 @@ class WsTransactions(AsyncJsonWebsocketConsumer):
                 msg['message'] = message
             await self.send_json(msg)
 
+    @staticmethod
+    async def broadcast_for_all_participants(txn: dict):
+        async with get_connection() as agent:
+            entity = settings.AGENT['entity']
+            participants_dids = [did for did in settings.PARTICIPANTS_META.keys() if did != entity]
+            for did in participants_dids:
+                to = await agent.pairwise_list.load_for_did(did)
+                if to:
+                    msg = Message(txn)
+                    print(f'============ SEND message to DID: {did}  =======')
+                    print(json.dumps(msg, indent=2, sort_keys=True))
+                    print('================================================')
+                    await agent.send_to(msg, to)
+                else:
+                    print('Empty pairwise for DID: ' + did)
+
     async def _validate_txn(self, txn: dict):
-        for attr in ['@type', '@id', 'no', 'date', 'cargo', 'departure_station', 'arrival_station', 'doc_type', 'ledger']:
-            if attr not in txn:
-                await self.send_problem_report_and_close(REQUEST_ERROR, f'Transaction: missing [{attr}] attribute')
-                raise ValueError
-            if not txn.get(attr, None):
-                await self.send_problem_report_and_close(REQUEST_ERROR, f'Transaction: [{attr}] attribute is empty')
-                raise ValueError
-            ledger_name = txn.get('ledger', {}).get('name')
-            if not ledger_name:
-                await self.send_problem_report_and_close(REQUEST_ERROR, 'Transaction: ledger.name is empty')
-                raise ValueError
-            waybill = txn.get('waybill', {})
-            if waybill:
-                waybill_no = waybill.get('no', None)
-                wagon_no = waybill.get('wagon_no', None)
-                if not (waybill_no or wagon_no):
-                    await self.send_problem_report_and_close(REQUEST_ERROR, 'Transaction: you should fill [waybill] attributes')
+        if txn.get('@type', None) in [self.TYP_GU11, self.TYP_GU12]:
+            for attr in ['@type', '@id', 'no', 'date', 'cargo_name', 'depart_station', 'arrival_station', 'month', 'year', 'tonnage', 'shipper']:
+                if attr not in txn:
+                    await self.send_problem_report_and_close(REQUEST_ERROR, f'Missing [{attr}] attribute')
                     raise ValueError
-            attachments = txn.get('~attach', [])
-            for attach in attachments:
-                for fld in ['mime_type', '@id', 'filename', 'data']:
-                    val = attach.get(fld, None)
-                    if not val:
-                        await self.send_problem_report_and_close(REQUEST_ERROR, f'Transaction attachment: missing [{fld}] attribute')
+            if txn['@type'] == self.TYP_GU11:
+                decade = txn.get('decade', None)
+                if decade is None:
+                    await self.send_problem_report_and_close(REQUEST_ERROR, f'Missing decade attribute for "ГУ-11"')
+                    raise ValueError
+        else:
+            for attr in ['@type', '@id', 'no', 'date', 'cargo', 'departure_station', 'arrival_station', 'doc_type', 'ledger']:
+                if attr not in txn:
+                    await self.send_problem_report_and_close(REQUEST_ERROR, f'Transaction: missing [{attr}] attribute')
+                    raise ValueError
+                if not txn.get(attr, None):
+                    await self.send_problem_report_and_close(REQUEST_ERROR, f'Transaction: [{attr}] attribute is empty')
+                    raise ValueError
+                ledger_name = txn.get('ledger', {}).get('name')
+                if not ledger_name:
+                    await self.send_problem_report_and_close(REQUEST_ERROR, 'Transaction: ledger.name is empty')
+                    raise ValueError
+                waybill = txn.get('waybill', {})
+                if waybill:
+                    waybill_no = waybill.get('no', None)
+                    wagon_no = waybill.get('wagon_no', None)
+                    if not (waybill_no or wagon_no):
+                        await self.send_problem_report_and_close(REQUEST_ERROR, 'Transaction: you should fill [waybill] attributes')
                         raise ValueError
-                url = attach.get('data', {}).get('json', {}).get('url', None)
-                md5 = attach.get('data', {}).get('json', {}).get('md5', None)
-                if not (url and md5):
-                    await self.send_problem_report_and_close(REQUEST_ERROR, f'Transaction attachment: [url] and [md5] should be set')
-                    raise ValueError
+                attachments = txn.get('~attach', [])
+                for attach in attachments:
+                    for fld in ['mime_type', '@id', 'filename', 'data']:
+                        val = attach.get(fld, None)
+                        if not val:
+                            await self.send_problem_report_and_close(REQUEST_ERROR, f'Transaction attachment: missing [{fld}] attribute')
+                            raise ValueError
+                    url = attach.get('data', {}).get('json', {}).get('url', None)
+                    md5 = attach.get('data', {}).get('json', {}).get('md5', None)
+                    if not (url and md5):
+                        await self.send_problem_report_and_close(REQUEST_ERROR, f'Transaction attachment: [url] and [md5] should be set')
+                        raise ValueError
 
     async def disconnect(self, code):
         pass
