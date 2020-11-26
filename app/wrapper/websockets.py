@@ -29,6 +29,7 @@ from sirius_sdk.agent.aries_rfc.feature_0037_present_proof import Verifier, \
 from scripts.management.commands.decorators import sentry_capture_exceptions
 from scripts.management.commands.logger import StreamLogger
 from scripts.management.commands import orm
+from scripts.management.commands.run_smart_contracts import parse_and_store_gu
 from ui.models import QRCode, PairwiseRecord, CredentialQR, AuthRef
 from wrapper.models import UserEntityBind
 from .models import Token
@@ -298,8 +299,28 @@ class WsTransactions(AsyncJsonWebsocketConsumer):
                     return
             elif payload['@type'] in [self.TYP_GU11, self.TYP_GU12]:
                 txn = payload
-                await self._validate_txn(txn)
-                await self.broadcast_for_all_participants(txn)
+                try:
+                    await self._validate_txn(txn)
+                    category = 'gu11' if payload['@type'] == self.TYP_GU11 else 'gu12'
+                    await database_sync_to_async(parse_and_store_gu)(txn, category)
+                    await self.broadcast_for_all_participants(txn)
+                    await self.route_event_to_client(
+                        event={
+                            'payload': {
+                                'progress': 100,
+                                'message': 'Transaction successfully accepted and was broadcast for all participants'
+                            }
+                        }
+                    )
+                except Exception as e:
+                    if isinstance(e, SiriusPromiseContextException):
+                        explain = e.printable
+                    else:
+                        explain = str(e)
+                    await self.send_problem_report_and_close(
+                        REQUEST_PROCESSING_ERROR, explain
+                    )
+                    return
             else:
                 await self.send_problem_report_and_close(
                     REQUEST_ERROR, 'Unexpected @type = "%s"' % payload['@type']
