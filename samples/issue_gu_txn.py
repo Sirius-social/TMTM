@@ -27,6 +27,15 @@ def run():
     print('login: %s' % login)
     print('password: %s' % password)
 
+    # Load GU transactions
+    print('======== GU 11/12 before =============')
+    for service in ['gu-11/', 'gu-12/']:
+        url = urljoin(base_url, service)
+        resp = requests.get(url, auth=HTTPBasicAuth(login, password))
+        assert resp.status_code == 200
+        txn_cnt = resp.json()['count']
+        print('%s service retrieved count: %d' % (service, txn_cnt))
+
     # Step-1: Allocate Token
     url = urljoin(base_url, '/maintenance/allocate_token/')
     resp = requests.get(url, auth=HTTPBasicAuth(login, password))
@@ -85,6 +94,14 @@ def run():
         print('Success')
     else:
         print('Something wrong!!!')
+
+    print('========GU 11/12 after ========')
+    for service in ['gu-11/', 'gu-12/']:
+        url = urljoin(base_url, service)
+        resp = requests.get(url, auth=HTTPBasicAuth(login, password))
+        assert resp.status_code == 200
+        txn_cnt = resp.json()['count']
+        print('%s service retrieved count: %d' % (service, txn_cnt))
 
 
 if __name__ == '__main__':
