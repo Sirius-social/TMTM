@@ -80,11 +80,37 @@ class MaintenanceViewSet(viewsets.GenericViewSet):
                 await agent.close()
 
 
+def get_txn_date(txn: Transaction) -> int:
+    d = txn.txn.get('date')
+    if d:
+        try:
+            parts = d.split('.')
+            if len(parts) == 3:
+                for item in parts:
+                    if not item.isdigit():
+                        d = None
+                        break
+                if d:
+                    day, month, year = parts
+                    day = int(day)
+                    month = int(month)
+                    if len(year) == 2:
+                        year = 2000 + int(year)
+                    else:
+                        year = int(year)
+                    d = datetime(day=day, month=month, year=year)
+            else:
+                d = None
+        except:
+            d = None
+    return d
+
+
 class LedgerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ledger
-        fields = ('id', 'name', 'metadata')
+        fields = ('id', 'name', 'metadata', 'days_in_way')
         read_only_fields = fields
 
 
@@ -93,6 +119,8 @@ class TransactionSerializer(serializers.ModelSerializer):
     attachments = serializers.SerializerMethodField('get_attachments')
     signer_icon = serializers.SerializerMethodField('get_signer_icon')
     signer_label = serializers.SerializerMethodField('get_signer_label')
+    date = serializers.SerializerMethodField('get_date')
+    status = serializers.SerializerMethodField('get_status')
 
     def get_attachments(self, obj):
         collection = obj.txn['~attach']
@@ -110,6 +138,18 @@ class TransactionSerializer(serializers.ModelSerializer):
         else:
             return None
 
+    def get_status(self, obj):
+        signer_verkey = obj.txn.get('msg~sig', {}).get('signer', None)
+        if signer_verkey:
+            if signer_verkey == settings.PARTICIPANTS_META['U9A6U7LZQe4dCh84t3fpTK']['verkey']:
+                return 'started'
+            elif signer_verkey == settings.PARTICIPANTS_META['6jzbnVE5S6j15afcpC9yhF']['verkey']:
+                return 'finished'
+            else:
+                return 'in_way'
+        else:
+            return None
+
     def get_signer_label(self, obj):
         signer_verkey = obj.txn.get('msg~sig', {}).get('signer', None)
         if signer_verkey:
@@ -121,9 +161,12 @@ class TransactionSerializer(serializers.ModelSerializer):
         else:
             return None
 
+    def get_date(self, obj):
+        return obj.txn.get('date')
+
     class Meta:
         model = Transaction
-        fields = ('txn', 'seq_no', 'metadata', 'attachments', 'signer_icon', 'signer_label')
+        fields = ('txn', 'seq_no', 'metadata', 'attachments', 'signer_icon', 'signer_label', 'date', 'status')
         read_only_fields = fields
 
 
@@ -156,6 +199,32 @@ class TransactionViewSet(
 
     def get_ledger(self) -> Optional[Ledger]:
         return self.get_parents_query_dict().get('ledger', None)
+
+    @action(methods=['GET', 'POST'], detail=False)
+    def list_with_meta(self, request, *args, **kwargs):
+        ledger = Ledger.objects.get(id=self.get_ledger())
+        queryset = ledger.transaction_set.order_by('-seq_no').all()
+        serializer = self.get_serializer(queryset, many=True)
+        txn_first = ledger.transaction_set.first()
+        txn_last = ledger.transaction_set.last()
+        try:
+            if txn_first and txn_last:
+                date_start = get_txn_date(txn_first)
+                date_stop = get_txn_date(txn_last)
+                if date_start and date_stop:
+                    delta = date_stop - date_start
+                    days_in_way = delta.days
+                else:
+                    days_in_way = None
+            else:
+                days_in_way = None
+        except:
+            days_in_way = None
+        data = {
+            'results': serializer.data,
+            'days_in_way': days_in_way
+        }
+        return Response(data)
 
 
 class BaseGUSerializer(serializers.ModelSerializer):

@@ -428,18 +428,23 @@
                                     <tr>
                                       <th scope="col"># seq_no</th>
                                       <th scope="col">No</th>
+                                      <th scope="col">Дата</th>
                                       <!--
                                       <th scope="col">Метаданные</th>
                                       -->
                                       <th scope="col">Подпись</th>
                                       <th scope="col">Документы</th>
+                                      <!--
                                       <th scope="col">Детально...</th>
+                                      -->
+                                      <th scope="col">Статус</th>
                                     </tr>
                                   </thead>
                                   <tbody style="font-size: 75%;">
                                     <tr v-for="txn in transactions">
                                       <th scope="row">[[txn.seq_no]]</th>
                                       <td>[[txn.txn.no]]</td>
+                                      <td>[[ txn.date ]]</td>
                                       <!--
                                       <td style="max-width: 150px;">[[txn.metadata]]</td>
                                       -->
@@ -462,10 +467,16 @@
                                               </li>
                                           </ul>
                                       </td>
+                                      <!--
                                       <td><button @click.prevent="show_txn_details(txn.txn);" style="cursor: pointer;" class="btn-primary">Details</button></td>
+                                      -->
+                                        <td> <span style="font-weight: bold;" class="text-primary">[[ status_code_2_text(txn.status) ]]</span></td>
                                     </tr>
                                   </tbody>
                                 </table>
+                                <div>
+                                    <h2 class="text-danger" v-if="days_in_way">Общее время в пути: [[ days_in_way ]] дней</h2>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -554,6 +565,7 @@
                 active_menu: {{ active_menu_index }},
                 loader_enable: false,
                 transactions: [],
+                days_in_way: null,
                 // Forms
                 attachments: [
                     //{'filename': 'file1.png', 'md5': 'xxx', 'url': 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', 'progress': 50, 'done': true, 'canceled': false, 'mime_type': null},
@@ -563,7 +575,7 @@
                 op_code: null,
                 form: {
                     "no": null,
-                    "date": null,
+                    "date": "{{ cur_date }}",
                     "cargo": null,
                     "departure_station": null,
                     "arrival_station": null,
@@ -646,6 +658,20 @@
                 }
             },
             methods: {
+                status_code_2_text: function(code){
+                    if (code == 'started') {
+                        return "Принято";
+                    }
+                    else if (code == 'finished') {
+                        return "Прибыло";
+                    }
+                    else if (code == "in_way") {
+                        return "В пути";
+                    }
+                    else {
+                        return code;
+                    }
+                },
                 ledger_selected: function(ledger){
                     this.selected_ledger = ledger;
                     this.load_transactions(ledger.id);
@@ -656,13 +682,15 @@
                 load_transactions: function(ledger_id){
                     this.loader_enable = true;
                     this.transactions = [];
-                    var url = "/ledgers/" + ledger_id + "/transactions"
+                    this.days_in_way = null;
+                    var url = "/ledgers/" + ledger_id + "/transactions/list_with_meta"
                     var self = this;
                     $.get(
                         url,
                         function(resp){
-                            //console.log(resp);
+                            console.log(resp);
                             self.transactions = resp.results;
+                            self.days_in_way = resp.days_in_way;
                             self.loader_enable = false;
                         }
                     );
@@ -681,9 +709,11 @@
                         var a = this.attachments[index];
                         a.canceled = true;
                     }
+                    let cur_date = this.form.date;
                     for (var fld in this.form) {
                         this.form[fld] = null;
                     }
+                    this.form.date = cur_date;
                     this.form.doc_type = "{{ doc_types.default }}";
                     this.attachments = [];
                     this.error_json_editor = null;

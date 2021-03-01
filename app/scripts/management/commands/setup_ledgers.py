@@ -1,6 +1,6 @@
 import uuid
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -32,8 +32,13 @@ class Command(BaseCommand):
             ledger = Ledger.objects.create(
                 entity=entity, name='Container-' + str(ledger_cnt), metadata={'debug': True}
             )
+            today = datetime.today()
+            start_date = today - timedelta(days=self.TXN_COUNT+3)
             for txn_cnt in range(self.TXN_COUNT):
                 seq_no = txn_cnt + 1
+                date = start_date + timedelta(days=seq_no)
+                date = '%2d.%2d.%2d' % (date.day, date.month, date.year)
+                date = date.replace(' ', '0')
                 stamp = datetime.now()
                 txn = Transaction.objects.create(
                     ledger=ledger, seq_no=seq_no,
@@ -41,7 +46,7 @@ class Command(BaseCommand):
                         "@type": "https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/issue-transaction",
                         "@id": uuid.uuid4().hex,
                         "no": "20-001-0000002-" + str(seq_no),
-                        "date": "14.09.20",
+                        "date": date,
                         "cargo": "Kids toys",
                         "departure_station": "Караганда",
                         "arrival_station": "Актау",
