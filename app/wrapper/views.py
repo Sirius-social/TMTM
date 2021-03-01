@@ -92,6 +92,7 @@ class TransactionSerializer(serializers.ModelSerializer):
 
     attachments = serializers.SerializerMethodField('get_attachments')
     signer_icon = serializers.SerializerMethodField('get_signer_icon')
+    signer_label = serializers.SerializerMethodField('get_signer_label')
 
     def get_attachments(self, obj):
         collection = obj.txn['~attach']
@@ -109,9 +110,20 @@ class TransactionSerializer(serializers.ModelSerializer):
         else:
             return None
 
+    def get_signer_label(self, obj):
+        signer_verkey = obj.txn.get('msg~sig', {}).get('signer', None)
+        if signer_verkey:
+            for did, item in settings.PARTICIPANTS_META.items():
+                verkey = item['verkey']
+                if verkey == signer_verkey:
+                    return item['label']
+            return None
+        else:
+            return None
+
     class Meta:
         model = Transaction
-        fields = ('txn', 'seq_no', 'metadata', 'attachments', 'signer_icon')
+        fields = ('txn', 'seq_no', 'metadata', 'attachments', 'signer_icon', 'signer_label')
         read_only_fields = fields
 
 

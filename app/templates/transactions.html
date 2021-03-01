@@ -428,7 +428,9 @@
                                     <tr>
                                       <th scope="col"># seq_no</th>
                                       <th scope="col">No</th>
+                                      <!--
                                       <th scope="col">Метаданные</th>
+                                      -->
                                       <th scope="col">Подпись</th>
                                       <th scope="col">Документы</th>
                                       <th scope="col">Детально...</th>
@@ -438,16 +440,25 @@
                                     <tr v-for="txn in transactions">
                                       <th scope="row">[[txn.seq_no]]</th>
                                       <td>[[txn.txn.no]]</td>
+                                      <!--
                                       <td style="max-width: 150px;">[[txn.metadata]]</td>
-                                      <td><img style="max-height: 32px;" :src="txn.signer_icon"/></td>
+                                      -->
+                                      <td>
+                                          <img style="max-height: 32px;" :src="txn.signer_icon"/>
+                                          <br/>
+                                          <span class="text-secondary">[[ txn.signer_label ]]</span>
+                                      </td>
                                       <td>
                                           <ul>
                                               <li v-for="attachment in txn.attachments">
+                                                  <!--
                                                   <a @click.prevent="show_doc_viewer(attachment.data.json.url, attachment.filename, attachment.data.json.md5)" href="">[[ attachment.filename ]]</a>
                                                   <svg @click.prevent="open_link_in_tab(attachment.data.json.url)" style="cursor: pointer; margin-left: 10px;" title="Download" width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-download" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                                       <path fill-rule="evenodd" d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
                                                       <path fill-rule="evenodd" d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
                                                   </svg>
+                                                  -->
+                                                  <a @click.prevent="open_link_in_tab(attachment.data.json.url)" href="">[[ attachment.filename ]]</a>
                                               </li>
                                           </ul>
                                       </td>
