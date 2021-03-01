@@ -475,7 +475,8 @@
                                   </tbody>
                                 </table>
                                 <div>
-                                    <h2 class="text-danger" v-if="days_in_way">Общее время в пути: [[ days_in_way ]] дней</h2>
+                                    <h2 v-if="days_in_way && (days_in_way >= 0)" class="text-danger">Общее время в пути: [[ days_in_way ]] дней</h2>
+                                    <h2 v-if="days_in_way && (days_in_way == -1)" class="text-danger">Груз прибыл</h2>
                                 </div>
                             </div>
                         </div>

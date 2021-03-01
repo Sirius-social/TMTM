@@ -212,8 +212,11 @@ class TransactionViewSet(
                 date_start = get_txn_date(txn_first)
                 date_stop = get_txn_date(txn_last)
                 if date_start and date_stop:
-                    delta = date_stop - date_start
+                    delta = datetime.today() - date_start
                     days_in_way = delta.days
+                    ser = TransactionSerializer(txn_last)
+                    if ser.data['status'] == 'finished':
+                        days_in_way = -1
                 else:
                     days_in_way = None
             else:
@@ -222,7 +225,7 @@ class TransactionViewSet(
             days_in_way = None
         data = {
             'results': serializer.data,
-            'days_in_way': days_in_way
+            'days_in_way': days_in_way,
         }
         return Response(data)
 
