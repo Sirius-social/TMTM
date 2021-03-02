@@ -174,7 +174,36 @@
                             <div class="row" style="margin-top: 15px;">
                                 <h4 style="margin-left: 35px;">{{ title }}</h4>
                             </div>
-
+                            <!--  TABLE -->
+                            <table class="table table-striped">
+                              <thead>
+                                <tr>
+                                    <th scope="col">Контиейнер</th>
+                                    <th scope="col">Дата</th>
+                                    <th scope="col">Направляется из</th>
+                                    <th scope="col">Наименование груза</th>
+                                    <th scope="col">Тип документа</th>
+                                    <th scope="col">Документы</th>
+                                </tr>
+                              </thead>
+                              <tbody >
+                                <tr v-for="record in records">
+                                    <td>[[ record.ledger.name ]]</td>
+                                    <td>[[ record.txn.txn.date ]]</td>
+                                    <td>[[ record.txn.txn.arrival_station ]]</td>
+                                    <td>[[ record.txn.txn.cargo ]]</td>
+                                    <td>[[ record.txn.txn.doc_type ]]</td>
+                                    <td>
+                                        <ul>
+                                              <li v-for="attachment in record.txn.attachments">
+                                                  <a v-bind:href="attachment.data.json.url" target="_blank">[[ attachment.filename ]]</a>
+                                              </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                            <!------------->
                         </div>
                     </div>
                     <!-- Column -->
@@ -235,16 +264,19 @@
     <script type="text/javascript" src="/static/js/jquery.tagcanvas.min.js"></script>
 
     {{ menu|json_script:"menu-data" }}
+    {{ ledgers|json_script:"ledgers-data" }}
 
     <script>
         var token = '{{csrf_token}}';
         var menu_data = JSON.parse(document.getElementById('menu-data').textContent);
+        var ledgers_data = JSON.parse(document.getElementById('ledgers-data').textContent);
 
         var app = new Vue({
             el: '#main-wrapper',
             delimiters: ['[[', ']]'],
             data: {
                 left_menu: menu_data,
+                records: ledgers_data,
                 active_menu: {{ active_menu_index }},
             },
             computed: {
@@ -257,7 +289,12 @@
 
             },
             methods: {
-
+                open_link_in_tab: function(link) {
+                    if (link) {
+                        console.log(link);
+                        window.open(link, '_blank');
+                    }
+                }
             }
         });
 

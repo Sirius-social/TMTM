@@ -25,7 +25,7 @@ from sirius_sdk.messaging import Message
 from sirius_sdk.agent.aries_rfc.feature_0160_connection_protocol import Invitation
 
 from wrapper.models import Ledger, Token, UserEntityBind, GURecord
-from wrapper.views import LedgerSerializer
+from wrapper.views import LedgerSerializer, TransactionSerializer
 from wrapper.websockets import get_connection
 from ui.models import QRCode, CredentialQR, AuthRef
 from .utils import run_async
@@ -55,6 +55,7 @@ def build_inbox_ledgers() -> list:
         my_entity = settings.AGENT['entity']
         try:
             my_index = tmtm_path.index(my_entity)
+            my_index = 2
         except ValueError:
             my_index = -1
         if my_index > 0:
@@ -70,8 +71,16 @@ def build_inbox_ledgers() -> list:
                     signer_did = [did for did, meta in settings.PARTICIPANTS_META.items() if meta['verkey'] == signer_verkey]
                     signer_did = signer_did[0] if signer_did else None
                     if signer_did == prev_entity:
-                        collection.append(LedgerSerializer(ledger).data)
-            cache.set(settings.INBOX_CACHE_KEY, collection, 30)
+                        collection.append(
+                            {
+                                'ledger': LedgerSerializer(ledger).data,
+                                'txn': TransactionSerializer(txn_last).data,
+                                'stamp': txn_last.created
+                            }
+                        )
+            collection = sorted(collection, key=lambda x: x['stamp'])
+            collection = [{'ledger': x['ledger'], 'txn': x['txn']} for x in collection]
+            cache.set(settings.INBOX_CACHE_KEY, collection, 60)
             return collection
         else:
             return []
@@ -377,6 +386,7 @@ class InboxView(APIView):
 
         return Response(data={
             'menu': menu,
+            'ledgers': build_inbox_ledgers(),
             'active_menu_index': 1,
             'title': 'Приближаются',
         })

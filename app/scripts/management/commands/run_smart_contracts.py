@@ -294,7 +294,10 @@ class Command(BaseCommand):
                     transactions=propose.transactions,
                     their_did=p2p.their.did
                 )
-                cache.delete(settings.INBOX_CACHE_KEY)
+                try:
+                    cache.delete(settings.INBOX_CACHE_KEY)
+                except:
+                    pass
             else:
                 if state_machine.problem_report:
                     explain = state_machine.problem_report.explain
