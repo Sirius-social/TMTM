@@ -38,7 +38,7 @@ async def reset_ledger(name: str):
     await database_sync_to_async(sync)(name)
 
 
-async def store_transactions(ledger: str, transactions: List[dict]):
+async def store_transactions(ledger: str, transactions: List[dict], their_did: str = None):
 
     def sync(ledger_: str, transactions_: List[dict]):
         ledger_model = Ledger.objects.get(name=ledger_, entity=settings.AGENT['entity'])
@@ -50,7 +50,7 @@ async def store_transactions(ledger: str, transactions: List[dict]):
                     txn=txn,
                     seq_no=m.get('seqNo'),
                     metadata=m,
-                    actor_entity=settings.AGENT['entity']
+                    actor_entity=their_did
                 )
 
     await database_sync_to_async(sync)(ledger, transactions)

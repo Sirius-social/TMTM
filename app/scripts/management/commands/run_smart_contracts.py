@@ -290,7 +290,8 @@ class Command(BaseCommand):
             if success:
                 await orm.store_transactions(
                     ledger=propose.state.name,
-                    transactions=propose.transactions
+                    transactions=propose.transactions,
+                    their_did=p2p.their.did
                 )
             else:
                 if state_machine.problem_report:
