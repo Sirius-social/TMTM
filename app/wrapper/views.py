@@ -110,7 +110,7 @@ class LedgerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ledger
-        fields = ('id', 'name', 'metadata', 'days_in_way')
+        fields = ('id', 'name', 'metadata')
         read_only_fields = fields
 
 

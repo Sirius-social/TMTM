@@ -18,7 +18,7 @@ from django.conf.urls import url, include
 from django.conf import settings
 from ui.views import TransactionsView, IndexView, SmartContractInitLedgerView, SmartContractCommitView, \
     AuthView, LogoutView, AdminView, GU11View, GU12View, UserCreationView, CredentialsView, AuthByRefView, \
-    CreateGU11View, CreateGU12View
+    CreateGU11View, CreateGU12View, InboxView
 from wrapper.views import MaintenanceRouter, LedgersRouter, UploadView, ContentView, GU11Router, GU12Router
 
 
@@ -32,6 +32,7 @@ urlpatterns = [
     path('auth/', AuthView.as_view(), name='auth'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('transactions/', TransactionsView.as_view(), name='transactions'),
+    path('inbox/', InboxView.as_view(), name='inbox'),
     path('admin/', AdminView.as_view(), name='admin'),
     path('user-create/', UserCreationView.as_view(), name='user-create'),
     path('gu11/', GU11View.as_view(), name='gu11'),

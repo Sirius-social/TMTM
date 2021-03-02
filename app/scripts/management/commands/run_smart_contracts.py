@@ -7,6 +7,7 @@ from datetime import datetime
 from channels.db import database_sync_to_async
 from django.core.management.base import BaseCommand
 from django.conf import settings
+from django.core.cache import cache
 from sirius_sdk import Agent, P2PConnection, Pairwise
 from sirius_sdk.agent.listener import Event
 from sirius_sdk.agent.ledger import CredentialDefinition
@@ -293,6 +294,7 @@ class Command(BaseCommand):
                     transactions=propose.transactions,
                     their_did=p2p.their.did
                 )
+                cache.delete(settings.INBOX_CACHE_KEY)
             else:
                 if state_machine.problem_report:
                     explain = state_machine.problem_report.explain

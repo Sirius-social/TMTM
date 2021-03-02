@@ -235,3 +235,16 @@ PARTICIPANTS = [
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', None)
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', None)
 REDIS = os.getenv('REDIS', None)
+
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{REDIS}",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient"
+        },
+        "KEY_PREFIX": os.getenv('AGENT_ENTITY', 'default')
+    }
+}
+INBOX_CACHE_KEY = 'inbox'

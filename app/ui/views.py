@@ -15,6 +15,7 @@ from rest_framework.permissions import BasePermission
 from rest_framework import serializers
 from django.utils import timezone
 from django.conf import settings
+from django.core.cache import cache
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.models import User
 from django.contrib.auth import login, logout
@@ -24,6 +25,7 @@ from sirius_sdk.messaging import Message
 from sirius_sdk.agent.aries_rfc.feature_0160_connection_protocol import Invitation
 
 from wrapper.models import Ledger, Token, UserEntityBind, GURecord
+from wrapper.views import LedgerSerializer
 from wrapper.websockets import get_connection
 from ui.models import QRCode, CredentialQR, AuthRef
 from .utils import run_async
@@ -31,6 +33,7 @@ from .utils import run_async
 
 MENU = [
     {'caption': 'Контейнеры', 'class': 'fa fa-columns m-r-10', 'enabled': True, 'link': reverse_lazy('transactions')},
+    {'caption': 'Приближаются', 'class': 'fa fa-columns m-r-10', 'enabled': True, 'link': reverse_lazy('inbox')},
     {'caption': 'ГУ-11', 'class': 'fa fa-table m-r-10', 'enabled': True, 'link': reverse_lazy('gu11')},
     {'caption': 'ГУ-12', 'class': 'fa fa-table m-r-10', 'enabled': True, 'link': reverse_lazy('gu12')},
     {'caption': 'Грузоперевозки', 'class': 'fa fa-globe m-r-10', 'enabled': False, 'link': None},
@@ -38,6 +41,50 @@ MENU = [
     {'caption': 'Личный кабинет', 'class': 'fa fa-globe m-r-10', 'enabled': True, 'link': reverse_lazy('credentials')},
     {'caption': 'Администратор', 'class': 'fa fa-globe m-r-10', 'enabled': False, 'link': reverse_lazy('admin')},
 ]
+
+
+def build_inbox_ledgers() -> list:
+    tmtm_path = [
+        'U9A6U7LZQe4dCh84t3fpTK',  # DKR
+        'VU7c9jvBqLee9NkChXU1Kn',  # Port Aktau
+        'Ch4eVSWf7KXRubk5to6WFC',  # Port Baku
+        '4vEF4eHwQ1GB5s766rAYAe',  # ADI Smart
+        '6jzbnVE5S6j15afcpC9yhF',  # GR Logistics
+    ]
+    if settings.AGENT['entity']:
+        my_entity = settings.AGENT['entity']
+        try:
+            my_index = tmtm_path.index(my_entity)
+        except ValueError:
+            my_index = -1
+        if my_index > 0:
+            cached = cache.get(settings.INBOX_CACHE_KEY)
+            if cached:
+                return cached
+            collection = []
+            prev_entity = tmtm_path[my_index-1]
+            for ledger in Ledger.objects.filter(entity=my_entity).all():
+                txn_last = ledger.transaction_set.last()
+                if txn_last:
+                    signer_verkey = txn_last.txn.get('msg~sig', {}).get('signer', None)
+                    signer_did = [did for did, meta in settings.PARTICIPANTS_META.items() if meta['verkey'] == signer_verkey]
+                    signer_did = signer_did[0] if signer_did else None
+                    if signer_did == prev_entity:
+                        collection.append(LedgerSerializer(ledger).data)
+            cache.set(settings.INBOX_CACHE_KEY, collection, 30)
+            return collection
+        else:
+            return []
+    else:
+        return []
+
+
+def calc_menu(request=None):
+    menu = copy.deepcopy(MENU)
+    inbox = build_inbox_ledgers()
+    menu[1]['caption'] = menu[1]['caption'] + ' [%d]' % len(inbox)
+    menu[-1]['enabled'] = request.user.is_superuser
+    return menu
 
 
 class AgentCredentialsSerializer(serializers.Serializer):
@@ -126,7 +173,7 @@ class TransactionsView(APIView):
             ws_url += parts.netloc + '/transactions'
             token = Token.allocate(request.user).value
             ws_url += '?token=%s' % token
-            menu = copy.copy(MENU)
+            menu = calc_menu(request)
             menu[-1]['enabled'] = request.user.is_superuser
             return Response(data={
                 'menu': menu,
@@ -187,8 +234,7 @@ class AdminView(APIView):
             return HttpResponseRedirect(redirect_to=reverse('auth'))
         if not request.user.is_superuser:
             return Response(status=403)
-        menu = copy.copy(MENU)
-        menu[-1]['enabled'] = request.user.is_superuser
+        menu = calc_menu(request)
         accounts = []
         for user in User.objects.filter(entities__entity=settings.AGENT['entity']).all():
             if user.username != request.user.username:
@@ -318,6 +364,24 @@ class GUCreateSerializer(serializers.Serializer):
         return data
 
 
+class InboxView(APIView):
+    template_name = 'inbox.html'
+    renderer_classes = [TemplateHTMLRenderer]
+    authentication_classes = [SessionAuthentication]
+    permission_classes = []
+
+    def get(self, request, *args, **kwargs):
+        if not (request.user and request.user.is_authenticated):
+            return HttpResponseRedirect(redirect_to=reverse('auth'))
+        menu = calc_menu(request)
+
+        return Response(data={
+            'menu': menu,
+            'active_menu_index': 1,
+            'title': 'Приближаются',
+        })
+
+
 class BaseGUView(APIView):
     template_name = 'gu.html'
     renderer_classes = [TemplateHTMLRenderer]
@@ -327,13 +391,13 @@ class BaseGUView(APIView):
     def get(self, request, *args, **kwargs):
         if not (request.user and request.user.is_authenticated):
             return HttpResponseRedirect(redirect_to=reverse('auth'))
-        menu = copy.copy(MENU)
+        menu = calc_menu(request)
 
         month_default = 'Январь'
         return Response(data={
             'menu': menu,
             'active_menu_index': self.get_active_menu_index(),
-            'title': MENU[self.get_active_menu_index()]['caption'],
+            'title': menu[self.get_active_menu_index()]['caption'],
             'category': self.get_category(),
             'records': self.load_from_db(),
             'caption': self.get_caption(),
@@ -455,7 +519,7 @@ class BaseGUView(APIView):
 class GU11View(BaseGUView):
 
     def get_active_menu_index(self):
-        return 1
+        return 2
 
     def get_category(self) -> str:
         return 'gu11'
@@ -477,7 +541,7 @@ class CreateGU11View(GU11View):
 class GU12View(BaseGUView):
 
     def get_active_menu_index(self):
-        return 2
+        return 3
 
     def get_category(self) -> str:
         return 'gu12'
@@ -505,8 +569,7 @@ class CredentialsView(APIView):
     def get(self, request, *args, **kwargs):
         if not (request.user and request.user.is_authenticated):
             return HttpResponseRedirect(redirect_to=reverse('auth'))
-        menu = copy.copy(MENU)
-        menu[-1]['enabled'] = request.user.is_superuser
+        menu = calc_menu(request)
         cred_qr = CredentialQR.objects.filter(username=request.user.username).first()
         if cred_qr is None:
             run_async(UserCreationView.create_cred_issue_qr(request.user.username))
@@ -520,7 +583,7 @@ class CredentialsView(APIView):
 
         resp = Response(data={
             'menu': menu,
-            'active_menu_index': 5,
+            'active_menu_index': 6,
             'qr': cred_qr.qr.url,
             'ws_url': ws_url
         })
