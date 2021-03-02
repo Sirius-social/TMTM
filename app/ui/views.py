@@ -55,7 +55,6 @@ def build_inbox_ledgers() -> list:
         my_entity = settings.AGENT['entity']
         try:
             my_index = tmtm_path.index(my_entity)
-            my_index = 2
         except ValueError:
             my_index = -1
         if my_index > 0:
