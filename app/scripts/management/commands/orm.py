@@ -49,7 +49,8 @@ async def store_transactions(ledger: str, transactions: List[dict]):
                     ledger=ledger_model,
                     txn=txn,
                     seq_no=m.get('seqNo'),
-                    metadata=m
+                    metadata=m,
+                    actor_entity=settings.AGENT['entity']
                 )
 
     await database_sync_to_async(sync)(ledger, transactions)
