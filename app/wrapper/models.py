@@ -40,6 +40,7 @@ class Transaction(models.Model):
     seq_no = models.IntegerField(null=True)
     metadata = JSONField(null=True, default=None)
     created = models.DateTimeField(auto_now_add=True, db_index=True, null=True)
+    actor_entity = models.CharField(max_length=64, db_index=True, null=True)
 
     class Meta:
         unique_together = ('seq_no', 'ledger')
