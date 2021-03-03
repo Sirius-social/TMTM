@@ -21,6 +21,7 @@ services:
       - ADMIN_USERNAME=test
       - ADMIN_PASSWORD=test
       - REDIS=redis
+      - PATH_INDEX=1
     depends_on:
       - db
       - redis

@@ -156,7 +156,7 @@ class TransactionSerializer(serializers.ModelSerializer):
             for did, item in settings.PARTICIPANTS_META.items():
                 verkey = item['verkey']
                 if verkey == signer_verkey:
-                    return item['label']
+                    return item['organization']
             return None
         else:
             return None

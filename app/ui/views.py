@@ -6,7 +6,7 @@ import datetime
 from typing import List, Dict
 from urllib.parse import urlsplit
 
-import requests
+from requests import get as request_get
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
@@ -55,6 +55,8 @@ def build_inbox_ledgers() -> list:
         my_entity = settings.AGENT['entity']
         try:
             my_index = tmtm_path.index(my_entity)
+            if settings.PATH_INDEX is not None:
+                my_index = settings.PATH_INDEX
         except ValueError:
             my_index = -1
         if my_index > 0:
@@ -641,7 +643,7 @@ class AuthView(APIView):
             return HttpResponseRedirect(redirect_to=reverse('transactions'))
         qr = request.COOKIES.get('qr', None)
         if qr:
-            resp = requests.get(qr)
+            resp = request_get(qr)
             if resp.status_code != 200:
                 QRCode.objects.filter(url=qr).all().delete()
                 qr = None

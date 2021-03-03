@@ -188,42 +188,48 @@ PARTICIPANTS_META = {
         'logo': 'ady_container.png',
         'icon': 'ady_smart.jpg',
         'url': 'https://ady.socialsirius.com',
-        'verkey': '38r8qU19FRYqqRQVtaWyoNP55wBJUZfBiAKBd7z9y1Qv'
+        'verkey': '38r8qU19FRYqqRQVtaWyoNP55wBJUZfBiAKBd7z9y1Qv',
+        'organization': 'Azerbaijan Railways'
     },
     'U9A6U7LZQe4dCh84t3fpTK': {
         'label': 'DKR',
         'logo': 'ktz_express.svg',
         'icon': 'dkr.png',
         'url': 'https://dkr.socialsirius.com',
-        'verkey': 'FnyCacPf4R128ZwZnzzqStSwaUF54FXmhSL2ycy9aYG5'
+        'verkey': 'FnyCacPf4R128ZwZnzzqStSwaUF54FXmhSL2ycy9aYG5',
+        'organization': 'KTZ Express'
     },
     '6jzbnVE5S6j15afcpC9yhF': {
         'label': 'GR Logistics & Terminals',
         'logo': 'gr_logistics.png',
         'icon': 'gr.jpg',
         'url': 'https://gr.socialsirius.com',
-        'verkey': '48VZxo8boPPikNPGEEHfLoCtUN8g1n6veYwndRDpW9BD'
+        'verkey': '48VZxo8boPPikNPGEEHfLoCtUN8g1n6veYwndRDpW9BD',
+        'organization': 'Georgian Railway'
     },
     'D96GgE1PVtWeSfuAQZ9neY': {
         'label': 'KAZMORTRANSFLOT',
         'logo': 'kazmortransflot.jpg',
         'icon': 'kazmortransflot.jpg',
         'url': 'https://kazmortransflot.socialsirius.com',
-        'verkey': '7ckhcwQCMV9RpYC4RQ3EgXEn4nbjgumGLL9CyWtqf5es'
+        'verkey': '7ckhcwQCMV9RpYC4RQ3EgXEn4nbjgumGLL9CyWtqf5es',
+        'organization': 'KAZMORTRANSFLOT'
     },
     'Ch4eVSWf7KXRubk5to6WFC': {
         'label': 'PMIS - PORT OF BAKU',
         'logo': 'port_of_baku.jpg',
         'icon': 'pmis_port_baku.png',
         'url': 'https://pmis.socialsirius.com',
-        'verkey': '7NZuS52TEAnrD5VTme3JHbyXQHQtbstTUpdgBGxhZkMp'
+        'verkey': '7NZuS52TEAnrD5VTme3JHbyXQHQtbstTUpdgBGxhZkMp',
+        'organization': 'Port of Baku'
     },
     'VU7c9jvBqLee9NkChXU1Kn': {
         'label': 'Solvo.tos - PORT AKTAU',
         'logo': 'port_aktau.png',
         'icon': 'solvo.tos.png',
         'url': 'https://solvotos.socialsirius.com',
-        'verkey': 'GWuxzCXX3ddX9R6bX1if1Me7wz1WiiyKEdzsdB7X5npG'
+        'verkey': 'GWuxzCXX3ddX9R6bX1if1Me7wz1WiiyKEdzsdB7X5npG',
+        'organization': 'Port Aktau'
     }
 }
 PARTICIPANTS = [
@@ -248,3 +254,8 @@ CACHES = {
     }
 }
 INBOX_CACHE_KEY = 'inbox'
+PATH_INDEX = os.getenv('PATH_INDEX', '')
+if PATH_INDEX.isdigit():
+    PATH_INDEX = int(PATH_INDEX)
+else:
+    PATH_INDEX = None
