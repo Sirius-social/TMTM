@@ -413,7 +413,15 @@
                                         <a @click.prevent="open_smart_contract_init_ledger_form()" class="srh-btn" title="Smart contract source code" style="margin-left: 5px;cursor:pointer;"><i class="ti-link"></i></a>
                                     </div>
                                 </div>
-                                <div class="row" style="padding: 5px; margin-left: 30px;">
+                                <ul class="nav nav-tabs" style="margin: 10px auto;">
+                                  <li class="nav-item">
+                                    <a v-bind:class="{ active: filters.current_tab === 1 }" @click.prevent="change_tab(1)" class="nav-link" href="#">Все контейнеры</a>
+                                  </li>
+                                  <li class="nav-item">
+                                    <a v-bind:class="{ active: filters.current_tab === 2 }" @click.prevent="change_tab(2)" class="nav-link" href="#">Приближаются [{{ approaching_num }}]</a>
+                                  </li>
+                                </ul>
+                                <div class="row" style="padding: 5px; margin-left: 30px;" v-if="filters.current_tab === 1">
                                       <input v-model="filters.status" checked type="radio" id="all" name="status" value="all" style="margin: auto 0px;">
                                       <label for="all" style="margin: auto 15px auto 5px;">Все</label>
                                       <input v-model="filters.status" type="radio" id="in_way" name="status" value="in_way" style="margin: auto 0px;">
@@ -669,7 +677,8 @@
                     pages: null,
                     cur_page: 1,
                     tags: [],
-                    status: 'all'
+                    status: 'all',
+                    current_tab: 1
                 }
             },
             computed: {
@@ -715,6 +724,11 @@
                         }
                         if (!status_ok) {
                             continue;
+                        }
+                        if (this.filters.current_tab === 2) {
+                            if (!ledgers_data[i].approaching) {
+                                continue;
+                            }
                         }
                         let obj = {
                             'id': ledgers_data[i].id,
@@ -844,6 +858,13 @@
                 }
             },
             methods: {
+                change_tab: function(index) {
+                    this.filters.current_tab = index;
+                    this.filters.status = "all";
+                    this.filters.tags = [];
+                    this.search_ledger = null;
+                    $("#tagBox").tagging("reset");
+                },
                 status_code_2_text: function(code){
                     if (code == 'started') {
                         return "Принято";
