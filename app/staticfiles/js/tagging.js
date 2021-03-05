@@ -62,7 +62,7 @@
             "close-char": "&times;",                        // Single Tag close char
             "close-class": "tag-i",                         // Single Tag close class
             "edit-on-delete": true,                         // True to edit tag that has just been removed from tag box
-            "forbidden-chars": [ ".", "_", "?" ],           // Array of forbidden characters
+            "forbidden-chars": [], //[ ".", "_", "?" ],           // Array of forbidden characters
             "forbidden-chars-callback": window.alert,       // Function to call when there is a forbidden chars
             "forbidden-chars-text": "Forbidden character:", // Basic text passed to forbidden-chars callback
             "forbidden-words": [],                          // Array of forbidden words
