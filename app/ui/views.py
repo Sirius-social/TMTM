@@ -33,7 +33,7 @@ from .utils import run_async
 
 MENU = [
     {'caption': 'Контейнеры', 'class': 'fa fa-columns m-r-10', 'enabled': True, 'link': reverse_lazy('transactions')},
-    {'caption': 'Приближаются', 'class': 'fa fa-columns m-r-10', 'enabled': True, 'link': reverse_lazy('inbox')},
+    {'caption': 'Приближаются', 'class': 'fa fa-columns m-r-10', 'enabled': False, 'link': reverse_lazy('inbox')},
     {'caption': 'ГУ-11', 'class': 'fa fa-table m-r-10', 'enabled': True, 'link': reverse_lazy('gu11')},
     {'caption': 'ГУ-12', 'class': 'fa fa-table m-r-10', 'enabled': True, 'link': reverse_lazy('gu12')},
     {'caption': 'Грузоперевозки', 'class': 'fa fa-globe m-r-10', 'enabled': False, 'link': None},
