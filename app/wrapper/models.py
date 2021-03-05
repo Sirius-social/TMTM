@@ -3,6 +3,8 @@ import hashlib
 import secrets
 
 from django.db import models
+from django.core.cache import cache
+from django.db.models.signals import pre_save, pre_delete, post_migrate
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField, ArrayField
@@ -128,3 +130,16 @@ class Token(models.Model):
             entity=settings.AGENT['entity']
         )
         return inst
+
+
+def clear_txn_caches(instance, *args, **kwargs):
+    cache.delete(settings.INBOX_CACHE_KEY)
+    cache.delete(settings.LEDGERS_CACHE_KEY)
+
+
+pre_save.connect(clear_txn_caches, sender=Ledger)
+pre_save.connect(clear_txn_caches, sender=Transaction)
+pre_delete.connect(clear_txn_caches, sender=Ledger)
+pre_delete.connect(clear_txn_caches, sender=Transaction)
+post_migrate.connect(clear_txn_caches, sender=Ledger)
+post_migrate.connect(clear_txn_caches, sender=Transaction)
