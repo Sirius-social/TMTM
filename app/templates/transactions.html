@@ -20,6 +20,7 @@
     <link href="/static/css/style.css" rel="stylesheet">
     <!-- You can change the theme colors from here -->
     <link href="/static/css/colors/blue.css" id="theme" rel="stylesheet">
+    <link href="/static/css/tag-basic-style.css" id="theme" rel="stylesheet">
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -391,12 +392,27 @@
                     <div class="col-sm-5">
                         <div class="card">
                             <div class="card-block">
+                                <!--
                                 <form class="app-search p-l-20">
-                                    <input v-model="search_ledger" style="width: 350px;" type="text" class="form-control" placeholder="фильтр ...">
+                                    <input id="tags" v-model="search_ledger" style="width: 350px;" type="text" class="form-control" placeholder="фильтр ...">
                                     <a class="srh-btn" style="margin-left: -30px;"><i class="ti-search"></i></a>
                                     <a @click.prevent="open_transaction_form(1)" class="srh-btn" title="Добавить новый Ledger" style="margin-left: 20px;cursor:pointer;"><i class="ti-plus"></i></a>
                                     <a @click.prevent="open_smart_contract_init_ledger_form()" class="srh-btn" title="Smart contract source code" style="margin-left: 5px;cursor:pointer;"><i class="ti-link"></i></a>
                                 </form>
+                                -->
+                                <span class="text-secondary" style="margin: auto 20px;">
+                                    Создавайте фильтры нажатием <b>Enter</b>
+                                </span>
+                                <div class="row app-search p-l-20">
+                                    <div data-tags-input-name="tag" id="tagBox" class="col">
+
+                                    </div>
+                                    <a class="srh-btn" style="margin:auto -30px;"><i class="ti-search"></i></a>
+                                    <div class="col-3" style="margin:auto 30px;">
+                                        <a @click.prevent="open_transaction_form(1)" class="srh-btn" title="Добавить новый Ledger" style="margin-left: 20px;cursor:pointer;"><i class="ti-plus"></i></a>
+                                        <a @click.prevent="open_smart_contract_init_ledger_form()" class="srh-btn" title="Smart contract source code" style="margin-left: 5px;cursor:pointer;"><i class="ti-link"></i></a>
+                                    </div>
+                                </div>
                                 <table class="table table-striped ledgers">
                                   <thead style="margin-left: auto;margin-right: auto;">
                                     <tr>
@@ -416,10 +432,10 @@
                                           [[ledger.date.caption]]
                                       </td>
                                       <td>
-                                          <span>[[ledger.name.match_pre]]</span>
-                                          <span v-if="ledger.name.match_pre || ledger.name.match_post" class="text-success" style="font-weight: bold;">[[ledger.name.caption]]</span>
-                                          <span v-if="!(ledger.name.match_pre || ledger.name.match_post)">[[ledger.name.caption]]</span>
-                                          <span>[[ledger.name.match_post]]</span>
+                                          <span>[[ledger.name_filtered.match_pre]]</span>
+                                          <span v-if="ledger.name_filtered.match_pre || ledger.name_filtered.match_post" class="text-success" style="font-weight: bold;">[[ledger.name_filtered.caption]]</span>
+                                          <span v-if="!(ledger.name_filtered.match_pre || ledger.name_filtered.match_post)">[[ledger.name_filtered.caption]]</span>
+                                          <span>[[ledger.name_filtered.match_post]]</span>
                                       </td>
                                       <td>[[ledger.status.caption]]</td>
                                       <td>
@@ -571,6 +587,7 @@
     <!-- ============================================================== -->
     <script src="/static/assets/plugins/styleswitcher/jQuery.style.switcher.js"></script>
     <script type="text/javascript" src="/static/js/jquery.tagcanvas.min.js"></script>
+    <script type="text/javascript" src="/static/js/tagging.js"></script>
 
     {{ ledgers|json_script:"ledgers-data" }}
     {{ menu|json_script:"menu-data" }}
@@ -628,7 +645,8 @@
                 },
                 filters: {
                     pages: null,
-                    cur_page: 1
+                    cur_page: 1,
+                    tags: []
                 }
             },
             computed: {
@@ -656,15 +674,24 @@
                 },
                 filtered_ledgers_adv: function(){
                     let ret = [];
+                    let filters = [];
+                    for (let i = 0; i < this.filters.tags.length; i++) {
+                        let tag = this.filters.tags[i];
+                        filters.push(tag);
+                    }
+                    if (this.search_ledger && this.search_ledger.length > 1) {
+                        filters.push(this.search_ledger);
+                    }
                     for (let i = 0; i < ledgers_data.length; i++) {
                         let obj = {
                             'id': ledgers_data[i].id,
                             'seq_id': ledgers_data[i].seq_id,
+                            'name': ledgers_data[i].name,
                             'date': {
                                 'match': null,
                                 'caption': ledgers_data[i].last_txn.date
                             },
-                            'name': {
+                            'name_filtered': {
                                 'match_pre': null,
                                 'caption': ledgers_data[i].name,
                                 'match_post': null,
@@ -682,51 +709,45 @@
                                 'caption': ledgers_data[i].last_txn.txn.departure_station
                             }
                         }
-                        if (this.search_ledger && this.search_ledger.length > 1) {
-                            let exists_in_ret = false;
-                            // filter for date
-                            let index = obj['date']['caption'].indexOf(this.search_ledger);
-                            if (index === 0) {
-                                obj['date']['match'] = this.search_ledger;
-                                obj['date']['caption'] = obj['date']['caption'].slice(this.search_ledger.length);
-                                if (!exists_in_ret) {
-                                    ret.push(obj);
-                                    exists_in_ret = true;
+                        if (filters.length > 0) {
+                            let match_count = 0;
+                            for (let i = 0; i < filters.length; i++) {
+                                let searching = filters[i];
+                                // filter for date
+                                let index = obj['date']['caption'].indexOf(searching);
+                                if (index === 0) {
+                                    obj['date']['match'] = searching;
+                                    obj['date']['caption'] = obj['date']['caption'].slice(searching.length);
+                                    match_count += 1;
+                                }
+                                // filter for name_filtered
+                                index = obj['name_filtered']['caption'].toLowerCase().indexOf(searching.toLowerCase());
+                                if (index >= 0) {
+                                    var s = obj['name_filtered']['caption'];
+                                    obj['name_filtered']['match_pre'] = s.slice(0, index);
+                                    obj['name_filtered']['match_post'] = s.slice(index + searching.length);
+                                    obj['name_filtered']['caption'] = s.slice(index, index + searching.length);
+                                    match_count += 1;
+                                }
+                                // filter for arrival
+                                index = obj['arrival']['caption'].toLowerCase().indexOf(searching.toLowerCase());
+                                if (index === 0) {
+                                    let s = obj['arrival']['caption'];
+                                    obj['arrival']['match'] = s.slice(0, searching.length);
+                                    obj['arrival']['caption'] = s.slice(index + searching.length);
+                                    match_count += 1;
+                                }
+                                // filter for departure
+                                index = obj['departure']['caption'].toLowerCase().indexOf(searching.toLowerCase());
+                                if (index === 0) {
+                                    let s = obj['departure']['caption'];
+                                    obj['departure']['match'] = s.slice(0, searching.length);
+                                    obj['departure']['caption'] = s.slice(index + searching.length);
+                                    match_count += 1;
                                 }
                             }
-                            // filter for name
-                            index = obj['name']['caption'].toLowerCase().indexOf(this.search_ledger.toLowerCase());
-                            if (index >= 0) {
-                                var s = obj['name']['caption'];
-                                obj['name']['match_pre'] = s.slice(0, index);
-                                obj['name']['match_post'] = s.slice(index + this.search_ledger.length);
-                                obj['name']['caption'] = s.slice(index, index + this.search_ledger.length);
-                                if (!exists_in_ret) {
-                                    ret.push(obj);
-                                    exists_in_ret = true;
-                                }
-                            }
-                            // filter for arrival
-                            index = obj['arrival']['caption'].toLowerCase().indexOf(this.search_ledger.toLowerCase());
-                            if (index === 0) {
-                                let s = obj['arrival']['caption'];
-                                obj['arrival']['match'] = s.slice(0, this.search_ledger.length);
-                                obj['arrival']['caption'] = s.slice(index + this.search_ledger.length);
-                                if (!exists_in_ret) {
-                                    ret.push(obj);
-                                    exists_in_ret = true;
-                                }
-                            }
-                            // filter for departure
-                            index = obj['departure']['caption'].toLowerCase().indexOf(this.search_ledger.toLowerCase());
-                            if (index === 0) {
-                                let s = obj['departure']['caption'];
-                                obj['departure']['match'] = s.slice(0, this.search_ledger.length);
-                                obj['departure']['caption'] = s.slice(index + this.search_ledger.length);
-                                if (!exists_in_ret) {
-                                    ret.push(obj);
-                                    exists_in_ret = true;
-                                }
+                            if (match_count === filters.length) {
+                                ret.push(obj);
                             }
                         }
                         else {
@@ -1033,6 +1054,17 @@
         });
 
         $(function(){
+            $("#tagBox").tagging();
+            $("#tagBox").find('.type-zone').keyup(function(){
+                app.$data.search_ledger = this.value;
+            });
+            $("#tagBox").on( "add:after", function ( el, text, tagging ) {
+              app.$data.filters.tags = $("#tagBox").tagging( "getTags" );
+            });
+            $("#tagBox").on( "remove:after", function ( el, text, tagging ) {
+              app.$data.filters.tags = $("#tagBox").tagging( "getTags" );
+            });
+
             if( ! $('#tagsCanvas').tagcanvas({
                  textColour : 'black',
                  outlineThickness : 1,
