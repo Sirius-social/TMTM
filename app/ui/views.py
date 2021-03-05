@@ -43,6 +43,28 @@ MENU = [
 ]
 
 
+def build_all_ledgers(limit: int = 200, offset: int = 0) -> list:
+    cached = cache.get(settings.LEDGERS_CACHE_KEY)
+    if cached:
+        return cached
+    queryset = Ledger.objects.filter(entity=settings.AGENT['entity']).all()
+    collection = []
+    seq_id = 1
+    for ledger in queryset[offset:limit]:
+        last_txn = ledger.transaction_set.last()
+        if last_txn:
+            obj = {
+                'seq_id': seq_id,
+                'id': ledger.id,
+                'name': ledger.name,
+                'last_txn': TransactionSerializer(last_txn).data
+            }
+            collection.append(obj)
+            seq_id += 1
+    cache.set(settings.LEDGERS_CACHE_KEY, collection, 60)
+    return collection
+
+
 def build_inbox_ledgers() -> list:
     tmtm_path = [
         'U9A6U7LZQe4dCh84t3fpTK',  # DKR
@@ -188,7 +210,7 @@ class TransactionsView(APIView):
             return Response(data={
                 'menu': menu,
                 'active_menu_index': 0,
-                'ledgers': [{'name': ledger.name, 'id': ledger.id} for ledger in Ledger.objects.filter(entity=entity).all()[:200]],
+                'ledgers': build_all_ledgers(),
                 'logo': '/static/logos/%s' % settings.PARTICIPANTS_META[entity]['logo'],
                 'label': settings.PARTICIPANTS_META[entity]['label'],
                 'cur_date': str(timezone.datetime.now().strftime('%d.%m.%Y')),
