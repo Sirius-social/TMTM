@@ -34,11 +34,11 @@
         .modal-lg {
             max-width:70%;
         }
-        table tr:hover {
+        table.ledgers tr:hover {
             background-color: #ae81ff;
             color: white;
         }
-        .table-striped tbody tr:nth-of-type(odd):hover {
+        .ledgers .table-striped tbody tr:nth-of-type(odd):hover {
             background-color: #ae81ff;
             color: white;
         }
@@ -397,7 +397,7 @@
                                     <a @click.prevent="open_transaction_form(1)" class="srh-btn" title="Добавить новый Ledger" style="margin-left: 20px;cursor:pointer;"><i class="ti-plus"></i></a>
                                     <a @click.prevent="open_smart_contract_init_ledger_form()" class="srh-btn" title="Smart contract source code" style="margin-left: 5px;cursor:pointer;"><i class="ti-link"></i></a>
                                 </form>
-                                <table class="table table-striped">
+                                <table class="table table-striped ledgers">
                                   <thead style="margin-left: auto;margin-right: auto;">
                                     <tr>
                                       <th scope="col">#</th>
@@ -517,58 +517,6 @@
                     <!-- Column -->
                 </div>
 
-                <div class="row" v-if="false">
-                    <input id="i-attach-file" type="file" hidden/>
-                    <!-- Column -->
-                    <div class="col-sm-5">
-                        <div class="card">
-                            <div class="card-block">
-                                <form class="app-search p-l-20">
-                                    <input v-model="search_ledger" style="width: 350px;" type="text" class="form-control" placeholder="фильтр ...">
-                                    <a class="srh-btn" style="margin-left: -30px;"><i class="ti-search"></i></a>
-                                    <a @click.prevent="open_transaction_form(1)" class="srh-btn" title="Добавить новый Ledger" style="margin-left: 20px;cursor:pointer;"><i class="ti-plus"></i></a>
-                                    <a @click.prevent="open_smart_contract_init_ledger_form()" class="srh-btn" title="Smart contract source code" style="margin-left: 5px;cursor:pointer;"><i class="ti-link"></i></a>
-                                </form>
-                                <table class="table table-striped">
-                                  <thead style="margin-left: auto;margin-right: auto;">
-                                    <tr>
-                                      <th scope="col">#</th>
-                                      <th scope="col">Date</th>
-                                      <th scope="col">Ledger</th>
-                                      <th scope="col">Status</th>
-                                      <th scope="col">Place of departure</th>
-                                      <th scope="col">Destination</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody style="font-size: 75%;">
-                                    <tr v-for="ledger in filtered_ledgers_adv" style="cursor: pointer;" @click.prevent="ledger_selected(ledger)">
-                                      <th scope="row">[[ledger.seq_id]]</th>
-                                      <td>
-                                          <span class="text-success" style="font-weight: bold;">[[ledger.date.match]]</span>
-                                          [[ledger.date.caption]]
-                                      </td>
-                                      <td>
-                                          <span>[[ledger.name.match_pre]]</span>
-                                          <span v-if="ledger.name.match_pre || ledger.name.match_post" class="text-success" style="font-weight: bold;">[[ledger.name.caption]]</span>
-                                          <span v-if="!(ledger.name.match_pre || ledger.name.match_post)">[[ledger.name.caption]]</span>
-                                          <span>[[ledger.name.match_post]]</span>
-                                      </td>
-                                      <td>[[ledger.status.caption]]</td>
-                                      <td>
-                                          <span class="text-success" style="font-weight: bold;">[[ledger.arrival.match]]</span>
-                                          [[ledger.arrival.caption]]
-                                      </td>
-                                      <td>
-                                          <span class="text-success" style="font-weight: bold;">[[ledger.departure.match]]</span>
-                                          [[ledger.departure.caption]]
-                                      </td>
-                                    </tr>
-                                  </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
                 <!-- ============================================================== -->
                 <!-- End Page Content -->
                 <!-- ============================================================== -->
