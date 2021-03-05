@@ -254,6 +254,7 @@ CACHES = {
     }
 }
 INBOX_CACHE_KEY = 'inbox'
+LEDGERS_CACHE_KEY = 'ledgers'
 PATH_INDEX = os.getenv('PATH_INDEX', '')
 if PATH_INDEX.isdigit():
     PATH_INDEX = int(PATH_INDEX)
