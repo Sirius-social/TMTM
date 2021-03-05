@@ -413,6 +413,16 @@
                                         <a @click.prevent="open_smart_contract_init_ledger_form()" class="srh-btn" title="Smart contract source code" style="margin-left: 5px;cursor:pointer;"><i class="ti-link"></i></a>
                                     </div>
                                 </div>
+                                <div class="row" style="padding: 5px; margin-left: 30px;">
+                                      <input v-model="filters.status" checked type="radio" id="all" name="status" value="all" style="margin: auto 0px;">
+                                      <label for="all" style="margin: auto 15px auto 5px;">Все</label>
+                                      <input v-model="filters.status" type="radio" id="in_way" name="status" value="in_way" style="margin: auto 0px;">
+                                      <label for="in_way" style="margin: auto 15px auto 5px;">В пути</label>
+                                      <input v-model="filters.status" type="radio" id="started" name="status" value="started" style="margin: auto 0px;">
+                                      <label for="started" style="margin: auto 15px auto 5px;">Принято</label>
+                                      <input v-model="filters.status" type="radio" id="finished" name="status" value="finished" style="margin: auto 0px;">
+                                      <label for="finished" style="margin: auto 15px auto 5px;">Прибыло</label>
+                                </div>
                                 <table class="table table-striped ledgers">
                                   <thead style="margin-left: auto;margin-right: auto;">
                                     <tr>
@@ -428,23 +438,35 @@
                                     <tr v-for="ledger in filtered_ledgers_adv" style="cursor: pointer;" @click.prevent="ledger_selected(ledger)">
                                       <th scope="row">[[ledger.seq_id]]</th>
                                       <td>
-                                          <span class="text-success" style="font-weight: bold;">[[ledger.date.match]]</span>
-                                          [[ledger.date.caption]]
+                                          <div class="row">
+                                              <span class="text-success" style="font-weight: bold;">[[ledger.date.match]]</span>
+                                              [[ledger.date.caption]]
+                                          </div>
                                       </td>
                                       <td>
-                                          <span>[[ledger.name_filtered.match_pre]]</span>
-                                          <span v-if="ledger.name_filtered.match_pre || ledger.name_filtered.match_post" class="text-success" style="font-weight: bold;">[[ledger.name_filtered.caption]]</span>
-                                          <span v-if="!(ledger.name_filtered.match_pre || ledger.name_filtered.match_post)">[[ledger.name_filtered.caption]]</span>
-                                          <span>[[ledger.name_filtered.match_post]]</span>
+                                          <div class="row">
+                                              <span>[[ledger.name_filtered.match_pre]]</span>
+                                              <span v-if="ledger.name_filtered.match_pre || ledger.name_filtered.match_post" class="text-success" style="font-weight: bold;">[[ledger.name_filtered.caption]]</span>
+                                              <span v-if="!(ledger.name_filtered.match_pre || ledger.name_filtered.match_post)">[[ledger.name_filtered.caption]]</span>
+                                              <span>[[ledger.name_filtered.match_post]]</span>
+                                          </div>
                                       </td>
                                       <td>[[ledger.status.caption]]</td>
                                       <td>
-                                          <span class="text-success" style="font-weight: bold;">[[ledger.arrival.match]]</span>
-                                          [[ledger.arrival.caption]]
+                                          <div class="row">
+                                              <span>[[ledger.arrival.match_pre]]</span>
+                                              <span v-if="ledger.arrival.match_pre || ledger.arrival.match_post" class="text-success" style="font-weight: bold;">[[ledger.arrival.caption]]</span>
+                                              <span v-if="!(ledger.arrival.match_pre || ledger.arrival.match_post)">[[ledger.arrival.caption]]</span>
+                                              <span>[[ledger.arrival.match_post]]</span>
+                                          </div>
                                       </td>
                                       <td>
-                                          <span class="text-success" style="font-weight: bold;">[[ledger.departure.match]]</span>
-                                          [[ledger.departure.caption]]
+                                          <div class="row">
+                                              <span>[[ledger.departure.match_pre]]</span>
+                                              <span v-if="ledger.departure.match_pre || ledger.departure.match_post" class="text-success" style="font-weight: bold;">[[ledger.departure.caption]]</span>
+                                              <span v-if="!(ledger.departure.match_pre || ledger.departure.match_post)">[[ledger.departure.caption]]</span>
+                                              <span>[[ledger.departure.match_post]]</span>
+                                          </div>
                                       </td>
                                     </tr>
                                   </tbody>
@@ -646,7 +668,8 @@
                 filters: {
                     pages: null,
                     cur_page: 1,
-                    tags: []
+                    tags: [],
+                    status: 'all'
                 }
             },
             computed: {
@@ -683,6 +706,16 @@
                         filters.push(this.search_ledger);
                     }
                     for (let i = 0; i < ledgers_data.length; i++) {
+                        let status_ok = false;
+                        if (this.filters.status === 'all') {
+                            status_ok = true;
+                        }
+                        else {
+                            status_ok = ledgers_data[i].last_txn.status === this.filters.status;
+                        }
+                        if (!status_ok) {
+                            continue;
+                        }
                         let obj = {
                             'id': ledgers_data[i].id,
                             'seq_id': ledgers_data[i].seq_id,
@@ -701,12 +734,14 @@
                                 'caption': this.status_code_2_text(ledgers_data[i].last_txn.status)
                             },
                             'arrival': {
-                                'match': null,
-                                'caption': ledgers_data[i].last_txn.txn.arrival_station
+                                'match_pre': null,
+                                'caption': ledgers_data[i].last_txn.txn.arrival_station,
+                                'match_post': null,
                             },
                             'departure': {
-                                'match': null,
-                                'caption': ledgers_data[i].last_txn.txn.departure_station
+                                'match_pre': null,
+                                'caption': ledgers_data[i].last_txn.txn.departure_station,
+                                'match_post': null,
                             }
                         }
                         if (filters.length > 0) {
@@ -731,18 +766,20 @@
                                 }
                                 // filter for arrival
                                 index = obj['arrival']['caption'].toLowerCase().indexOf(searching.toLowerCase());
-                                if (index === 0) {
+                                if (index >= 0) {
                                     let s = obj['arrival']['caption'];
-                                    obj['arrival']['match'] = s.slice(0, searching.length);
-                                    obj['arrival']['caption'] = s.slice(index + searching.length);
+                                    obj['arrival']['match_pre'] = s.slice(0, index);
+                                    obj['arrival']['match_post'] = s.slice(index + searching.length);
+                                    obj['arrival']['caption'] = s.slice(index, index + searching.length);
                                     match_count += 1;
                                 }
                                 // filter for departure
                                 index = obj['departure']['caption'].toLowerCase().indexOf(searching.toLowerCase());
-                                if (index === 0) {
+                                if (index >= 0) {
                                     let s = obj['departure']['caption'];
-                                    obj['departure']['match'] = s.slice(0, searching.length);
-                                    obj['departure']['caption'] = s.slice(index + searching.length);
+                                    obj['departure']['match_pre'] = s.slice(0, index);
+                                    obj['departure']['match_post'] = s.slice(index + searching.length);
+                                    obj['departure']['caption'] = s.slice(index, index + searching.length);
                                     match_count += 1;
                                 }
                             }
