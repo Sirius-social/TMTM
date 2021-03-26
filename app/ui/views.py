@@ -245,6 +245,7 @@ class TransactionsView(APIView):
                 'ws_url': ws_url,
                 'smart_contract_init_ledger_url': str(reverse('smart-contract-init-ledger')),
                 'smart_contract_commit_txns_url': str(reverse('smart-contract-commit-txns')),
+                'enable_parallel_txns':  True  # settings.ENABLE_PARALLEL_TXNS
             })
 
     @staticmethod

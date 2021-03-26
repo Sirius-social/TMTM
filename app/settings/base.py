@@ -260,3 +260,4 @@ if PATH_INDEX.isdigit():
     PATH_INDEX = int(PATH_INDEX)
 else:
     PATH_INDEX = None
+ENABLE_PARALLEL_TXNS = (os.getenv('ENABLE_PARALLEL_TXNS', 'off') == 'on') or (AGENT['is_sea'] is True)

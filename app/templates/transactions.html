@@ -39,9 +39,15 @@
             background-color: #ae81ff;
             color: white;
         }
+        .multi-select :hover {
+            background-color: red;
+        }
         .ledgers .table-striped tbody tr:nth-of-type(odd):hover {
             background-color: #ae81ff;
             color: white;
+        }
+        .hoverable :hover {
+            color: #ae81ff;
         }
     </style>
 </head>
@@ -422,15 +428,31 @@
                                   </li>
                                 </ul>
                                 <div class="row" style="padding: 5px; margin-left: 30px;" v-if="filters.current_tab === 1">
-                                      <input v-model="filters.status" checked type="radio" id="all" name="status" value="all" style="margin: auto 0px;">
+                                      <input @click.self="clear_multi_selection()" v-model="filters.status" checked type="radio" id="all" name="status" value="all" style="margin: auto 0px;">
                                       <label for="all" style="margin: auto 15px auto 5px;">Все</label>
-                                      <input v-model="filters.status" type="radio" id="in_way" name="status" value="in_way" style="margin: auto 0px;">
+                                      <input @click.self="clear_multi_selection()" v-model="filters.status" type="radio" id="in_way" name="status" value="in_way" style="margin: auto 0px;">
                                       <label for="in_way" style="margin: auto 15px auto 5px;">В пути</label>
-                                      <input v-model="filters.status" type="radio" id="started" name="status" value="started" style="margin: auto 0px;">
+                                      <input @click.self="clear_multi_selection()" v-model="filters.status" type="radio" id="started" name="status" value="started" style="margin: auto 0px;">
                                       <label for="started" style="margin: auto 15px auto 5px;">Принято</label>
-                                      <input v-model="filters.status" type="radio" id="finished" name="status" value="finished" style="margin: auto 0px;">
+                                      <input @click.self="clear_multi_selection()"  v-model="filters.status" type="radio" id="finished" name="status" value="finished" style="margin: auto 0px;">
                                       <label for="finished" style="margin: auto 15px auto 5px;">Прибыло</label>
                                 </div>
+                                {% if enable_parallel_txns %}
+                                    <div class="row" style="margin-right: 10px; float: right;">
+                                        <span class="text-primary" style="margin-right: 8px;">Выбрать все</span>
+                                        <input v-model="ledgers_multi_selection_all" type="checkbox" style="margin-top: 5px; transform: scale(1.5);">
+                                        <div style="width: 30px;">
+                                            <i
+                                                    v-if="multi_select_enable"
+                                                    style="color: black;font-size: 120%;margin-left: 5px;cursor:pointer;color: blue;font-weight: bold;"
+                                                    class="ti-arrow-right"
+                                                    title="Добавьте выбранные контейнеры в пакет"
+                                            >
+
+                                            </i>
+                                        </div>
+                                    </div>
+                                {% endif %}
                                 <table class="table table-striped ledgers">
                                   <thead style="margin-left: auto;margin-right: auto;">
                                     <tr>
@@ -440,18 +462,21 @@
                                       <th scope="col">Status</th>
                                       <th scope="col">Place of departure</th>
                                       <th scope="col">Destination</th>
+                                      {% if enable_parallel_txns %}
+                                        <th scope="col">Multi</th>
+                                      {% endif %}
                                     </tr>
                                   </thead>
                                   <tbody style="font-size: 75%;">
-                                    <tr v-for="ledger in filtered_ledgers_adv" style="cursor: pointer;" @click.prevent="ledger_selected(ledger)">
+                                    <tr v-for="ledger in filtered_ledgers_adv" style="cursor: pointer;">
                                       <th scope="row">[[ledger.seq_id]]</th>
-                                      <td>
+                                      <td @click.prevent="ledger_selected(ledger)">
                                           <div class="row">
                                               <span class="text-success" style="font-weight: bold;">[[ledger.date.match]]</span>
                                               [[ledger.date.caption]]
                                           </div>
                                       </td>
-                                      <td>
+                                      <td @click.prevent="ledger_selected(ledger)">
                                           <div class="row">
                                               <span>[[ledger.name_filtered.match_pre]]</span>
                                               <span v-if="ledger.name_filtered.match_pre || ledger.name_filtered.match_post" class="text-success" style="font-weight: bold;">[[ledger.name_filtered.caption]]</span>
@@ -459,8 +484,8 @@
                                               <span>[[ledger.name_filtered.match_post]]</span>
                                           </div>
                                       </td>
-                                      <td>[[ledger.status.caption]]</td>
-                                      <td>
+                                      <td @click.prevent="ledger_selected(ledger)">[[ledger.status.caption]]</td>
+                                      <td @click.prevent="ledger_selected(ledger)">
                                           <div class="row">
                                               <span>[[ledger.arrival.match_pre]]</span>
                                               <span v-if="ledger.arrival.match_pre || ledger.arrival.match_post" class="text-success" style="font-weight: bold;">[[ledger.arrival.caption]]</span>
@@ -468,7 +493,7 @@
                                               <span>[[ledger.arrival.match_post]]</span>
                                           </div>
                                       </td>
-                                      <td>
+                                      <td @click.prevent="ledger_selected(ledger)">
                                           <div class="row">
                                               <span>[[ledger.departure.match_pre]]</span>
                                               <span v-if="ledger.departure.match_pre || ledger.departure.match_post" class="text-success" style="font-weight: bold;">[[ledger.departure.caption]]</span>
@@ -476,6 +501,11 @@
                                               <span>[[ledger.departure.match_post]]</span>
                                           </div>
                                       </td>
+                                      {% if enable_parallel_txns %}
+                                      <td class="multi-select" @click.self="ledger_selected(ledger)">
+                                          <input @click="rebuild_selections(ledger.id)" v-model="ledgers_multi_selection[ledger.id]" type="checkbox" style="margin: auto; transform: scale(1.5);">
+                                      </td>
+                                      {% endif %}
                                     </tr>
                                   </tbody>
                                 </table>
@@ -487,75 +517,88 @@
                     <div class="col-sm-7">
                         <div class="card">
                             <div class="card-block">
-                                <h4 v-if="!selected_ledger" class="text-danger">Выберите Ledger для работы с транзакциями</h4>
-                                <h4 v-if="selected_ledger" class="card-title text-primary">
-                                    Ledger: [[selected_ledger.name]]
-                                    <a @click.prevent="open_transaction_form(2)" class="srh-btn" title="Add transactions" style="margin-left: 20px;cursor:pointer;"><i class="ti-plus"></i></a>
-                                    <a @click.prevent="open_smart_contract_commit_txns_form()" class="srh-btn" title="Smart contract source code" style="margin-left: 5px;cursor:pointer;"><i class="ti-link"></i></a>
-                                    <a @click.prevent="load_transactions(selected_ledger.id)" class="srh-btn" title="Reload transactions" style="margin-left: 5px;cursor:pointer;"><i class="ti-reload"></i></a>
-                                </h4>
+                                <!--- TABS  -->
+                                <ul class="nav nav-tabs" style="margin: 10px auto;">
+                                  <li class="nav-item">
+                                    <a v-bind:class="{ active: txn_filters.current_tab === 1 }" @click.prevent="change_txn_tab(1)" class="nav-link" href="#">Отдельный контейнер</a>
+                                  </li>
+                                  <li class="nav-item">
+                                    <a v-bind:class="{ active: txn_filters.current_tab === 2 }" @click.prevent="change_txn_tab(2)" class="nav-link" href="#">Группа контейнеров</a>
+                                  </li>
+                                </ul>
+                                <!------------------------->
 
-                                <scroll-loader :loader-method="get_loader_list" :loader-disable="!loader_enable" :loader-size="300">
-                                </scroll-loader>
+                                <div v-if="txn_filters.current_tab === 1" style="margin: 0; height: 100%; width:100%;">
+                                    <h4 v-if="!selected_ledger" class="text-danger">Выберите Ledger для работы с транзакциями</h4>
+                                    <h4 v-if="selected_ledger" class="card-title text-primary">
+                                        Ledger: [[selected_ledger.name]]
+                                        <a @click.prevent="open_transaction_form(2)" class="srh-btn" title="Add transactions" style="margin-left: 20px;cursor:pointer;"><i class="ti-plus"></i></a>
+                                        <a @click.prevent="open_smart_contract_commit_txns_form()" class="srh-btn" title="Smart contract source code" style="margin-left: 5px;cursor:pointer;"><i class="ti-link"></i></a>
+                                        <a @click.prevent="load_transactions(selected_ledger.id)" class="srh-btn" title="Reload transactions" style="margin-left: 5px;cursor:pointer;"><i class="ti-reload"></i></a>
+                                    </h4>
 
-                                <!--
-                                <iframe src="https://docs.google.com/gview?url=https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf&embedded=true"></iframe>
-                                -->
+                                    <scroll-loader :loader-method="get_loader_list" :loader-disable="!loader_enable" :loader-size="300">
+                                    </scroll-loader>
 
-                                <table v-if="!loader_enable" class="table table-striped">
-                                  <thead>
-                                    <tr>
-                                      <th scope="col"># seq_no</th>
-                                      <th scope="col">No</th>
-                                      <th scope="col">Дата</th>
-                                      <!--
-                                      <th scope="col">Метаданные</th>
-                                      -->
-                                      <th scope="col">Подпись</th>
-                                      <th scope="col">Документы</th>
-                                      <!--
-                                      <th scope="col">Детально...</th>
-                                      -->
-                                      <th scope="col">Статус</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody style="font-size: 75%;">
-                                    <tr v-for="txn in transactions">
-                                      <th scope="row">[[txn.seq_no]]</th>
-                                      <td>[[txn.txn.no]]</td>
-                                      <td>[[ txn.date ]]</td>
-                                      <!--
-                                      <td style="max-width: 150px;">[[txn.metadata]]</td>
-                                      -->
-                                      <td>
-                                          <img style="max-height: 32px;" :src="txn.signer_icon"/>
-                                          <br/>
-                                          <span class="text-secondary">[[ txn.signer_label ]]</span>
-                                      </td>
-                                      <td>
-                                          <ul>
-                                              <li v-for="attachment in txn.attachments">
-                                                  <!--
-                                                  <a @click.prevent="show_doc_viewer(attachment.data.json.url, attachment.filename, attachment.data.json.md5)" href="">[[ attachment.filename ]]</a>
-                                                  <svg @click.prevent="open_link_in_tab(attachment.data.json.url)" style="cursor: pointer; margin-left: 10px;" title="Download" width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-download" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                                      <path fill-rule="evenodd" d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-                                                      <path fill-rule="evenodd" d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
-                                                  </svg>
-                                                  -->
-                                                  <a @click.prevent="open_link_in_tab(attachment.data.json.url)" href="">[[ attachment.filename ]]</a>
-                                              </li>
-                                          </ul>
-                                      </td>
-                                      <!--
-                                      <td><button @click.prevent="show_txn_details(txn.txn);" style="cursor: pointer;" class="btn-primary">Details</button></td>
-                                      -->
-                                        <td> <span style="font-weight: bold;" class="text-primary">[[ status_code_2_text(txn.status) ]]</span></td>
-                                    </tr>
-                                  </tbody>
-                                </table>
-                                <div>
-                                    <h2 v-if="days_in_way && (days_in_way >= 0)" class="text-danger">Общее время в пути: [[ days_in_way ]] дней</h2>
-                                    <h2 v-if="days_in_way && (days_in_way == -1)" class="text-danger">Груз прибыл</h2>
+                                    <!--
+                                    <iframe src="https://docs.google.com/gview?url=https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf&embedded=true"></iframe>
+                                    -->
+
+                                    <table v-if="!loader_enable" class="table table-striped">
+                                      <thead>
+                                        <tr>
+                                          <th scope="col"># seq_no</th>
+                                          <th scope="col">No</th>
+                                          <th scope="col">Дата</th>
+                                          <!--
+                                          <th scope="col">Метаданные</th>
+                                          -->
+                                          <th scope="col">Подпись</th>
+                                          <th scope="col">Документы</th>
+                                          <!--
+                                          <th scope="col">Детально...</th>
+                                          -->
+                                          <th scope="col">Статус</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody style="font-size: 75%;">
+                                        <tr v-for="txn in transactions">
+                                          <th scope="row">[[txn.seq_no]]</th>
+                                          <td>[[txn.txn.no]]</td>
+                                          <td>[[ txn.date ]]</td>
+                                          <!--
+                                          <td style="max-width: 150px;">[[txn.metadata]]</td>
+                                          -->
+                                          <td>
+                                              <img style="max-height: 32px;" :src="txn.signer_icon"/>
+                                              <br/>
+                                              <span class="text-secondary">[[ txn.signer_label ]]</span>
+                                          </td>
+                                          <td>
+                                              <ul>
+                                                  <li v-for="attachment in txn.attachments">
+                                                      <!--
+                                                      <a @click.prevent="show_doc_viewer(attachment.data.json.url, attachment.filename, attachment.data.json.md5)" href="">[[ attachment.filename ]]</a>
+                                                      <svg @click.prevent="open_link_in_tab(attachment.data.json.url)" style="cursor: pointer; margin-left: 10px;" title="Download" width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-download" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                          <path fill-rule="evenodd" d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                                                          <path fill-rule="evenodd" d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                                                      </svg>
+                                                      -->
+                                                      <a @click.prevent="open_link_in_tab(attachment.data.json.url)" href="">[[ attachment.filename ]]</a>
+                                                  </li>
+                                              </ul>
+                                          </td>
+                                          <!--
+                                          <td><button @click.prevent="show_txn_details(txn.txn);" style="cursor: pointer;" class="btn-primary">Details</button></td>
+                                          -->
+                                            <td> <span style="font-weight: bold;" class="text-primary">[[ status_code_2_text(txn.status) ]]</span></td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                    <div>
+                                        <h2 v-if="days_in_way && (days_in_way >= 0)" class="text-danger">Общее время в пути: [[ days_in_way ]] дней</h2>
+                                        <h2 v-if="days_in_way && (days_in_way == -1)" class="text-danger">Груз прибыл</h2>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -641,6 +684,12 @@
             data: {
                 scanning: false,
                 ledgers: ledgers_data,
+
+                ledgers_bucket: {},
+                ledgers_multi_selection: {},
+                ledgers_multi_selection_all: false,
+                multi_select_enable: false,
+
                 search_ledger: null,
                 selected_ledger: null,
                 left_menu: menu_data,
@@ -678,6 +727,9 @@
                     cur_page: 1,
                     tags: [],
                     status: 'all',
+                    current_tab: 1
+                },
+                txn_filters: {
                     current_tab: 1
                 }
             },
@@ -855,7 +907,21 @@
                         this.txn_processing.progress = 0;
                         this.start_transaction();
                     }
-                }
+                },
+                ledgers_multi_selection_all: function(new_value, old_value){
+                    if (new_value) {
+                        for (let index in this.ledgers) {
+                            let ledger = this.ledgers[index];
+                            this.ledgers_multi_selection[ledger.id] = true;
+                        }
+                    }
+                    else {
+                        for (let attr in this.ledgers_multi_selection) {
+                            this.ledgers_multi_selection[attr] = false;
+                        }
+                    }
+                    this.multi_select_enable = new_value;
+                },
             },
             methods: {
                 change_tab: function(index) {
@@ -863,7 +929,11 @@
                     this.filters.status = "all";
                     this.filters.tags = [];
                     this.search_ledger = null;
+                    this.clear_multi_selection();
                     $("#tagBox").tagging("reset");
+                },
+                change_txn_tab: function(index) {
+                    this.txn_filters.current_tab = index;
                 },
                 status_code_2_text: function(code){
                     if (code == 'started') {
@@ -1107,6 +1177,29 @@
                         return txn;
                     }
 
+                },
+                clear_multi_selection: function(){
+                    this.ledgers_multi_selection = {};
+                    this.ledgers_multi_selection_all = false;
+                    this.multi_select_enable = false;
+                },
+                rebuild_selections: function(ledger_id){
+                    let checked = false;
+                    let cur_check = this.ledgers_multi_selection[ledger_id];
+                    if (!cur_check) {
+                        checked = true;
+                    }
+                    let keys = Object.keys(this.ledgers_multi_selection);
+                    for (let i in keys) {
+                        let key = keys[i];
+                        if (key != ledger_id) {
+                            if (this.ledgers_multi_selection[key]) {
+                                checked = true;
+                                break;
+                            }
+                        }
+                    }
+                    this.multi_select_enable = checked;
                 }
             }
         });
