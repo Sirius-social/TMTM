@@ -306,3 +306,52 @@ class Command(BaseCommand):
                 raise RuntimeError(f'Accepting of new transactions was terminated with error: \n"{explain}"')
         finally:
             await agent.close()
+
+    @sentry_capture_exceptions
+    async def accept_transactions_parallel(self, propose: simple_consensus.messages.ProposeParallelTransactionsMessage, p2p: Pairwise):
+        """Smart-Contract that implements logic of accepting for new transactions in parallel mode.
+
+        :param propose: propose message,
+            see details here https://github.com/Sirius-social/sirius-sdk-python/tree/master/sirius_sdk/agent/consensus/simple#stage-1-propose-transactions-block-stage-propose
+        :param p2p: pairwise that was established earlier statically or via Aries 0160 protocol https://github.com/hyperledger/aries-rfcs/tree/master/features/0160-connection-protocol
+        """
+        # allocate connection to Agent services
+        agent = self.alloc_agent_connection()
+        await agent.open()
+        try:
+            # initialize state-machine
+            logger = await StreamLogger.create('transactions')
+            state_machine = simple_consensus.state_machines.MicroLedgerSimpleConsensus(
+                crypto=agent.wallet.crypto,
+                me=p2p.me,
+                pairwise_list=agent.pairwise_list,
+                microledgers=agent.microledgers,
+                transports=agent,
+                logger=logger,
+                locks=agent.locks
+            )
+            # Run state-machine. State progress is described here:
+            # https://github.com/Sirius-social/sirius-sdk-python/tree/master/sirius_sdk/agent/consensus/simple#use-case-2-accept-transaction-to-existing-ledger-by-all-dealers-in-microledger-space
+            success = await state_machine.accept_commit_parallel(
+                actor=p2p,
+                propose=propose
+            )
+            if success:
+                for batch in propose.transactions:
+                    await orm.store_transactions(
+                        ledger=batch.ledger_name,
+                        transactions=batch.transactions,
+                        their_did=p2p.their.did
+                    )
+                try:
+                    cache.delete(settings.INBOX_CACHE_KEY)
+                except:
+                    pass
+            else:
+                if state_machine.problem_report:
+                    explain = state_machine.problem_report.explain
+                else:
+                    explain = ''
+                raise RuntimeError(f'Accepting of new transactions was terminated with error: \n"{explain}"')
+        finally:
+            await agent.close()

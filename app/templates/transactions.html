@@ -175,9 +175,19 @@
               <div class="modal-body" style="min-height: 600px;">
                   <div style="width: 100%;">
                       <form id="form-txn" v-if="form_step == 0">
-                          <div class="row col-sm-3 my-1" >
-                              <label for="i-ledger-name">Ledger name</label>
-                              <input v-model="txn_master_ledger_names" id="i-ledger-name" name="ledger-name" type="text" class="form-control" placeholder="container ID" :readonly="op_code != 1">
+                          <div class="row col-sm-8 my-1" >
+                              <label v-if="form.ledger_name" for="i-ledger-name">Ledger name</label>
+                              <input v-if="form.ledger_name" v-model="form.ledger_name" id="i-ledger-name" name="ledger-name" type="text" class="form-control" placeholder="container ID" :readonly="op_code != 1">
+
+                              <label v-if="form.ledger_names" for="i-ledger-names">Ledger names</label>
+                              <span
+                                      v-if="form.ledger_names"
+                                      id="i-ledger-names"
+                                      class="form-control"
+                                      style="width: 100%;"
+                              >
+                                  [[ form.ledger_names ]]
+                              </span>
                           </div>
                           <h6 style="margin-top: 30px;" class="text-secondary">[[txn_op_code_title]]</h6>
                           <div style="width: 100%; padding: 10px; margin: 5px; border-color: #79aec8;border-width: 1px;border-style: dashed;border-radius: 5px;">
@@ -605,7 +615,8 @@
                                 </div>
 
                                 <div v-if="txn_filters.current_tab === 2" style="margin: 0; height: 100%; width:100%;">
-                                    <h4 class="card-title text-primary">
+                                    <h4 v-if="ledgers_bucket_is_empty" class="text-danger">Выберите набор Ledgers для добавления транзакции</h4>
+                                    <h4 v-if="!ledgers_bucket_is_empty" class="card-title text-primary">
                                         Работа с набором контейнеров
                                         <a @click.prevent="open_transaction_form(3)" class="srh-btn" title="Add transactions" style="margin-left: 20px;cursor:pointer;">
                                             <i class="ti-plus"></i>
@@ -613,51 +624,51 @@
                                         <a @click.prevent="clear_ledgers_bucket()" class="srh-btn" title="Очистить Все" style="margin-left: 20px;cursor:pointer;">
                                             <i class="ti-face-sad"></i>
                                         </a>
-                                        <table class="table table-striped">
-                                          <thead style="margin-left: auto;margin-right: auto;">
-                                            <tr>
-                                              <th scope="col"></th>
-                                              <th scope="col">#</th>
-                                              <th scope="col">Date</th>
-                                              <th scope="col">Ledger</th>
-                                              <th scope="col">Status</th>
-                                              <th scope="col">Place of departure</th>
-                                              <th scope="col">Destination</th>
-                                            </tr>
-                                          </thead>
-                                          <tbody style="font-size: 75%;">
-                                            <tr v-for="ledger in bucket_ledgers" style="cursor: pointer;">
-                                              <td>
-                                                  <a @click.prevent="remove_ledger_from_bucket(ledger.id)" class="srh-btn" title="Удалить из списка" style="margin-left: 5px;cursor:pointer;">
-                                                        <i class="ti-arrow-circle-left"></i>
-                                                  </a>
-                                              </td>
-                                              <th scope="row">[[ledger.seq_id]]</th>
-                                              <td>
-                                                  <div class="row">
-                                                      [[ledger.date]]
-                                                  </div>
-                                              </td>
-                                              <td>
-                                                  <div class="row">
-                                                      <span>[[ledger.name]]</span>
-                                                  </div>
-                                              </td>
-                                              <td>[[ledger.status]]</td>
-                                              <td>
-                                                  <div class="row">
-                                                      <span>[[ledger.arrival]]</span>
-                                                  </div>
-                                              </td>
-                                              <td>
-                                                  <div class="row">
-                                                      <span>[[ledger.departure]]</span>
-                                                  </div>
-                                              </td>
-                                            </tr>
-                                          </tbody>
-                                        </table>
                                     </h4>
+                                    <table class="table table-striped">
+                                      <thead style="margin-left: auto;margin-right: auto;">
+                                        <tr>
+                                          <th scope="col"></th>
+                                          <th scope="col">#</th>
+                                          <th scope="col">Date</th>
+                                          <th scope="col">Ledger</th>
+                                          <th scope="col">Status</th>
+                                          <th scope="col">Place of departure</th>
+                                          <th scope="col">Destination</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody style="font-size: 75%;">
+                                        <tr v-for="ledger in bucket_ledgers" style="cursor: pointer;">
+                                          <td>
+                                              <a @click.prevent="remove_ledger_from_bucket(ledger.id)" class="srh-btn" title="Удалить из списка" style="margin-left: 5px;cursor:pointer;">
+                                                    <i class="ti-arrow-circle-left"></i>
+                                              </a>
+                                          </td>
+                                          <th scope="row">[[ledger.seq_id]]</th>
+                                          <td>
+                                              <div class="row">
+                                                  [[ledger.date]]
+                                              </div>
+                                          </td>
+                                          <td>
+                                              <div class="row">
+                                                  <span>[[ledger.name]]</span>
+                                              </div>
+                                          </td>
+                                          <td>[[ledger.status]]</td>
+                                          <td>
+                                              <div class="row">
+                                                  <span>[[ledger.arrival]]</span>
+                                              </div>
+                                          </td>
+                                          <td>
+                                              <div class="row">
+                                                  <span>[[ledger.departure]]</span>
+                                              </div>
+                                          </td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -747,6 +758,7 @@
                 ledgers: ledgers_data,
 
                 ledgers_bucket: {},
+                ledgers_bucket_is_empty: true,
                 ledgers_bucket_commit: 0,
                 ledgers_multi_selection: {},
                 ledgers_multi_selection_all: false,
@@ -1036,6 +1048,7 @@
                     this.ledgers_multi_selection = {};
                     this.ledgers_bucket_commit += 1;
                     this.multi_select_enable = false;
+                    this.ledgers_bucket_is_empty = false;
                 },
                 change_tab: function(index) {
                     this.filters.current_tab = index;
@@ -1065,6 +1078,7 @@
                 ledger_selected: function(ledger){
                     this.selected_ledger = ledger;
                     this.load_transactions(ledger.id);
+                    this.txn_filters.current_tab = 1;
                 },
                 get_loader_list: function(){
                     return [];
@@ -1295,6 +1309,13 @@
                             );
                         }
                     }
+                    let ledger_name_value = null;
+                    if (this.form.ledger_name) {
+                        ledger_name_value = this.form.ledger_name;
+                    }
+                    else if (this.form.ledger_names) {
+                        ledger_name_value = this.form.ledger_names.split(",");
+                    }
                     var txn = library.transactions.build_txn_ledger(
                         uuid4(),
                         this.form.no,
@@ -1303,7 +1324,7 @@
                         this.form.departure_station,
                         this.form.arrival_station,
                         this.form.doc_type,
-                        this.form.ledger_name,
+                        ledger_name_value,
                         this.form.waybill_no,
                         this.form.waybill_wagon_no,
                         attachments
@@ -1315,6 +1336,10 @@
                         )
                     }
                     else if (this.op_code === 2) {
+                        txn.time_to_live = 40;
+                        return txn;
+                    }
+                    else if (this.op_code === 3) {
                         txn.time_to_live = 40;
                         return txn;
                     }
@@ -1346,6 +1371,7 @@
                 clear_ledgers_bucket: function() {
                     this.ledgers_bucket = {};
                     this.ledgers_bucket_commit += 1;
+                    this.ledgers_bucket_is_empty = true;
                 },
                 remove_ledger_from_bucket: function(ledger_id){
                     delete this.ledgers_bucket[ledger_id];

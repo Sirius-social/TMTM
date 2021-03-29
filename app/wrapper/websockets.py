@@ -3,7 +3,7 @@ import json
 import uuid
 import logging
 import asyncio
-from typing import Optional
+from typing import Optional, Union
 from datetime import datetime
 from typing import List, Dict
 from contextlib import asynccontextmanager
@@ -149,7 +149,7 @@ async def create_new_ledger(
 
 
 async def commit_transactions(
-        my_did: str, ledger_name: str, transactions: List[Transaction], ttl: int, stream_id: str, handler=None
+        my_did: str, ledger_name: Union[str, list], transactions: List[Transaction], ttl: int, stream_id: str, handler=None
 ):
     async with get_connection() as agent:
         my_verkey = await agent.wallet.did.key_for_local_did(my_did)
@@ -161,7 +161,8 @@ async def commit_transactions(
             microledgers=agent.microledgers,
             transports=agent,
             logger=logger,
-            time_to_live=ttl
+            time_to_live=ttl,
+            locks=agent.locks
         )
         # Add signature to transactions
         signed_transactions = []
@@ -173,12 +174,25 @@ async def commit_transactions(
             txn['msg~sig'] = signature
             signed_transactions.append(Transaction.create(txn))
         # FIRE !!!
-        ledger = await agent.microledgers.ledger(ledger_name)
-        success, txns_committed = await state_machine.commit(
-            ledger=ledger,
-            participants=settings.PARTICIPANTS,
-            transactions=signed_transactions
-        )
+        if isinstance(ledger_name, str):
+            ledger = await agent.microledgers.ledger(ledger_name)
+            success, txns_committed = await state_machine.commit(
+                ledger=ledger,
+                participants=settings.PARTICIPANTS,
+                transactions=signed_transactions
+            )
+        elif isinstance(ledger_name, list):
+            ledgers = []
+            for name in ledger_name:
+                ledger = await agent.microledgers.ledger(name)
+                ledgers.append(ledger)
+            success, txns_committed = await state_machine.commit_in_parallel(
+                ledgers=ledgers,
+                participants=settings.PARTICIPANTS,
+                transactions=signed_transactions
+            )
+        else:
+            raise RuntimeError('Unexpected ledger_name type: ' + str(type(ledger_name)))
         if success:
             await orm.store_transactions(
                 ledger=ledger_name,
