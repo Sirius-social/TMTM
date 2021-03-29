@@ -201,6 +201,13 @@ class Command(BaseCommand):
                             p2p=event.pairwise
                         )
                         asyncio.ensure_future(fut)
+                    elif isinstance(event.message, simple_consensus.messages.ProposeParallelTransactionsMessage):
+                        logging.error('* accept_transactions')
+                        fut = self.accept_transactions_parallel(
+                            propose=event.message,
+                            p2p=event.pairwise
+                        )
+                        asyncio.ensure_future(fut)
                     elif event.message.type == 'https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/gu-11':
                         await database_sync_to_async(parse_and_store_gu)(event.message, 'gu11')
                     elif event.message.type == 'https://github.com/Sirius-social/TMTM/tree/master/transactions/1.0/gu-12':
