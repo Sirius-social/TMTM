@@ -227,6 +227,7 @@ class TransactionsView(APIView):
             menu[-1]['enabled'] = request.user.is_superuser
 
             ledgers = build_all_ledgers()
+            map_ledgers = {item['id']: item for item in ledgers}
             approaching_num = 0
             for ledger in ledgers:
                 if ledger['approaching']:
@@ -236,6 +237,7 @@ class TransactionsView(APIView):
                 'menu': menu,
                 'active_menu_index': 0,
                 'ledgers': ledgers,
+                'map_ledgers': map_ledgers,
                 'approaching_num': approaching_num,
                 'logo': '/static/logos/%s' % settings.PARTICIPANTS_META[entity]['logo'],
                 'label': settings.PARTICIPANTS_META[entity]['label'],

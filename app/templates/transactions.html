@@ -177,7 +177,7 @@
                       <form id="form-txn" v-if="form_step == 0">
                           <div class="row col-sm-3 my-1" >
                               <label for="i-ledger-name">Ledger name</label>
-                              <input v-model="form.ledger_name" id="i-ledger-name" name="ledger-name" type="text" class="form-control" placeholder="container ID" :readonly="op_code != 1">
+                              <input v-model="txn_master_ledger_names" id="i-ledger-name" name="ledger-name" type="text" class="form-control" placeholder="container ID" :readonly="op_code != 1">
                           </div>
                           <h6 style="margin-top: 30px;" class="text-secondary">[[txn_op_code_title]]</h6>
                           <div style="width: 100%; padding: 10px; margin: 5px; border-color: #79aec8;border-width: 1px;border-style: dashed;border-radius: 5px;">
@@ -443,6 +443,7 @@
                                         <input v-model="ledgers_multi_selection_all" type="checkbox" style="margin-top: 5px; transform: scale(1.5);">
                                         <div style="width: 30px;">
                                             <i
+                                                    @click="add_selected_ledgers_to_bucket()"
                                                     v-if="multi_select_enable"
                                                     style="color: black;font-size: 120%;margin-left: 5px;cursor:pointer;color: blue;font-weight: bold;"
                                                     class="ti-arrow-right"
@@ -518,6 +519,7 @@
                         <div class="card">
                             <div class="card-block">
                                 <!--- TABS  -->
+                                {% if enable_parallel_txns %}
                                 <ul class="nav nav-tabs" style="margin: 10px auto;">
                                   <li class="nav-item">
                                     <a v-bind:class="{ active: txn_filters.current_tab === 1 }" @click.prevent="change_txn_tab(1)" class="nav-link" href="#">Отдельный контейнер</a>
@@ -526,6 +528,7 @@
                                     <a v-bind:class="{ active: txn_filters.current_tab === 2 }" @click.prevent="change_txn_tab(2)" class="nav-link" href="#">Группа контейнеров</a>
                                   </li>
                                 </ul>
+                                {% endif %}
                                 <!------------------------->
 
                                 <div v-if="txn_filters.current_tab === 1" style="margin: 0; height: 100%; width:100%;">
@@ -600,6 +603,62 @@
                                         <h2 v-if="days_in_way && (days_in_way == -1)" class="text-danger">Груз прибыл</h2>
                                     </div>
                                 </div>
+
+                                <div v-if="txn_filters.current_tab === 2" style="margin: 0; height: 100%; width:100%;">
+                                    <h4 class="card-title text-primary">
+                                        Работа с набором контейнеров
+                                        <a @click.prevent="open_transaction_form(3)" class="srh-btn" title="Add transactions" style="margin-left: 20px;cursor:pointer;">
+                                            <i class="ti-plus"></i>
+                                        </a>
+                                        <a @click.prevent="clear_ledgers_bucket()" class="srh-btn" title="Очистить Все" style="margin-left: 20px;cursor:pointer;">
+                                            <i class="ti-face-sad"></i>
+                                        </a>
+                                        <table class="table table-striped">
+                                          <thead style="margin-left: auto;margin-right: auto;">
+                                            <tr>
+                                              <th scope="col"></th>
+                                              <th scope="col">#</th>
+                                              <th scope="col">Date</th>
+                                              <th scope="col">Ledger</th>
+                                              <th scope="col">Status</th>
+                                              <th scope="col">Place of departure</th>
+                                              <th scope="col">Destination</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody style="font-size: 75%;">
+                                            <tr v-for="ledger in bucket_ledgers" style="cursor: pointer;">
+                                              <td>
+                                                  <a @click.prevent="remove_ledger_from_bucket(ledger.id)" class="srh-btn" title="Удалить из списка" style="margin-left: 5px;cursor:pointer;">
+                                                        <i class="ti-arrow-circle-left"></i>
+                                                  </a>
+                                              </td>
+                                              <th scope="row">[[ledger.seq_id]]</th>
+                                              <td>
+                                                  <div class="row">
+                                                      [[ledger.date]]
+                                                  </div>
+                                              </td>
+                                              <td>
+                                                  <div class="row">
+                                                      <span>[[ledger.name]]</span>
+                                                  </div>
+                                              </td>
+                                              <td>[[ledger.status]]</td>
+                                              <td>
+                                                  <div class="row">
+                                                      <span>[[ledger.arrival]]</span>
+                                                  </div>
+                                              </td>
+                                              <td>
+                                                  <div class="row">
+                                                      <span>[[ledger.departure]]</span>
+                                                  </div>
+                                              </td>
+                                            </tr>
+                                          </tbody>
+                                        </table>
+                                    </h4>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -663,6 +722,7 @@
     <script type="text/javascript" src="/static/js/tagging.js"></script>
 
     {{ ledgers|json_script:"ledgers-data" }}
+    {{ map_ledgers|json_script:"map_ledgers-data" }}
     {{ menu|json_script:"menu-data" }}
 
     <script>
@@ -670,6 +730,7 @@
         var ws_transactions = null;
         var json_editor = null;
         var ledgers_data = JSON.parse(document.getElementById('ledgers-data').textContent);
+        var map_ledgers_data = JSON.parse(document.getElementById('map_ledgers-data').textContent);
         var menu_data = JSON.parse(document.getElementById('menu-data').textContent);
         function uuid4() {
           return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -686,6 +747,7 @@
                 ledgers: ledgers_data,
 
                 ledgers_bucket: {},
+                ledgers_bucket_commit: 0,
                 ledgers_multi_selection: {},
                 ledgers_multi_selection_all: false,
                 multi_select_enable: false,
@@ -712,6 +774,7 @@
                     "arrival_station": null,
                     "doc_type": "{{ doc_types.default }}",
                     "ledger_name": null,
+                    "ledger_names": null,
                     "waybill_no": null,
                     "waybill_wagon_no": null
                 },
@@ -756,6 +819,28 @@
                         return ledgers_data;
                     }
                 },
+                bucket_ledgers: function(){
+                    let ret = [];
+                    let keys = Object.keys(this.ledgers_bucket);
+                    if (this.ledgers_bucket_commit) {
+
+                    }
+                    for (let i in keys) {
+                        let ledger_id = keys[i];
+                        let ledger = map_ledgers_data[ledger_id];
+                        let obj = {
+                            'id': ledger.id,
+                            'seq_id': ledger.seq_id,
+                            'name': ledger.name,
+                            'date': ledger.last_txn.date,
+                            'status': this.status_code_2_text(ledger.last_txn.status),
+                            'arrival': ledger.last_txn.txn.arrival_station,
+                            'departure': ledger.last_txn.txn.departure_station,
+                        }
+                        ret.push(obj);
+                    }
+                    return ret;
+                },
                 filtered_ledgers_adv: function(){
                     let ret = [];
                     let filters = [];
@@ -775,6 +860,12 @@
                             status_ok = ledgers_data[i].last_txn.status === this.filters.status;
                         }
                         if (!status_ok) {
+                            continue;
+                        }
+                        if (this.ledgers_bucket_commit) {
+
+                        }
+                        if (this.ledgers_bucket[ledgers_data[i].id]) {
                             continue;
                         }
                         if (this.filters.current_tab === 2) {
@@ -872,6 +963,14 @@
                 },
                 form_waybill_enabled: function(){
                     return ["WayBill", "Сonnaissement", "Manifest", "CargoPlan", "LogisticInfo"].includes(this.form.doc_type);
+                },
+                txn_master_ledger_names: function(){
+                    if (this.form.ledger_name) {
+                        return this.form.ledger_name;
+                    }
+                    else {
+                        return this.form.ledger_names;
+                    }
                 }
             },
             watch: {
@@ -924,6 +1023,20 @@
                 },
             },
             methods: {
+                add_selected_ledgers_to_bucket: function() {
+                    this.txn_filters.current_tab = 2;
+                    let keys = Object.keys(this.ledgers_multi_selection);
+                    for (let i in keys) {
+                        let key = keys[i];
+                        let flag = this.ledgers_multi_selection[key];
+                        if (flag) {
+                            this.ledgers_bucket[key] = true;
+                        }
+                    }
+                    this.ledgers_multi_selection = {};
+                    this.ledgers_bucket_commit += 1;
+                    this.multi_select_enable = false;
+                },
                 change_tab: function(index) {
                     this.filters.current_tab = index;
                     this.filters.status = "all";
@@ -1102,6 +1215,35 @@
 
                         this.op_code = op_code;
                         this.form.ledger_name = this.selected_ledger.name;
+                        this.form.ledger_names = null;
+                        if (this.transactions.length > 0) {
+                            var first_txn = this.transactions[this.transactions.length - 1].txn;
+                            console.log(first_txn);
+                            this.form.no = first_txn.no;
+                            this.form.date = first_txn.date;
+                            this.form.cargo = first_txn.cargo
+                            this.form.departure_station = first_txn.departure_station;
+                            this.form.arrival_station = first_txn.arrival_station;
+                            this.form.doc_type = first_txn.doc_type;
+                            if (first_txn.waybill) {
+                                this.form.waybill_no = first_txn.waybill.no || null;
+                                this.form.waybill_wagon_no = first_txn.waybill.wagon_no || null;
+                            }
+                        }
+                    }
+                    else if (op_code === 3) {
+                        this.op_code = op_code;
+                        this.form.ledger_name = null;
+
+                        let names = [];
+                        let keys = Object.keys(this.ledgers_bucket);
+                        for (let i in keys) {
+                            let ledger_id = keys[i];
+                            let ledger = map_ledgers_data[ledger_id];
+                            names.push(ledger.name);
+                        }
+
+                        this.form.ledger_names = names.join(',');
                         if (this.transactions.length > 0) {
                             var first_txn = this.transactions[this.transactions.length - 1].txn;
                             console.log(first_txn);
@@ -1200,6 +1342,14 @@
                         }
                     }
                     this.multi_select_enable = checked;
+                },
+                clear_ledgers_bucket: function() {
+                    this.ledgers_bucket = {};
+                    this.ledgers_bucket_commit += 1;
+                },
+                remove_ledger_from_bucket: function(ledger_id){
+                    delete this.ledgers_bucket[ledger_id];
+                    this.ledgers_bucket_commit += 1;
                 }
             }
         });
