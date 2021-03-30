@@ -174,6 +174,7 @@ async def commit_transactions(
             txn['msg~sig'] = signature
             signed_transactions.append(Transaction.create(txn))
         # FIRE !!!
+        ledger_txns = {}
         if isinstance(ledger_name, str):
             ledger = await agent.microledgers.ledger(ledger_name)
             success, txns_committed = await state_machine.commit(
@@ -186,7 +187,8 @@ async def commit_transactions(
             for name in ledger_name:
                 ledger = await agent.microledgers.ledger(name)
                 ledgers.append(ledger)
-            success, txns_committed = await state_machine.commit_in_parallel(
+                ledger_txns[name] = await ledger.get_all_transactions()
+            success = await state_machine.commit_in_parallel(
                 ledgers=ledgers,
                 participants=settings.PARTICIPANTS,
                 transactions=signed_transactions
@@ -201,6 +203,10 @@ async def commit_transactions(
                 )
             elif isinstance(ledger_name, list):
                 for name in ledger_name:
+                    ledger = await agent.microledgers.ledger(name)
+                    pred_txn_count = len(ledger_txns[name])
+                    all_txns = await ledger.get_all_transactions()
+                    txns_committed = all_txns[pred_txn_count:]
                     await orm.store_transactions(
                         ledger=name,
                         transactions=txns_committed
