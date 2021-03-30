@@ -611,6 +611,10 @@
                                     <div>
                                         <h2 v-if="days_in_way && (days_in_way >= 0)" class="text-danger">Общее время в пути: [[ days_in_way ]] дней</h2>
                                         <h2 v-if="days_in_way && (days_in_way == -1)" class="text-danger">Груз прибыл</h2>
+                                        <br/>
+                                        <h2 v-if="approaching_days && (approaching_days > 0)" class="text-danger">Ожидается прибытие через: [[ approaching_days ]] дней</h2>
+                                        <h2 v-if="approaching_days && (approaching_days == 0)" class="text-danger">Груз прибывает сегодня</h2>
+                                        <h2 v-if="approaching_days && (approaching_days < 0)" class="text-danger">Груз должен был прибыть [[-approaching_days]] дней назад</h2>
                                     </div>
                                 </div>
 
@@ -771,6 +775,7 @@
                 loader_enable: false,
                 transactions: [],
                 days_in_way: null,
+                approaching_days: null,
                 // Forms
                 attachments: [
                     //{'filename': 'file1.png', 'md5': 'xxx', 'url': 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', 'progress': 50, 'done': true, 'canceled': false, 'mime_type': null},
@@ -1087,6 +1092,7 @@
                     this.loader_enable = true;
                     this.transactions = [];
                     this.days_in_way = null;
+                    this.approaching_days = null;
                     var url = "/ledgers/" + ledger_id + "/transactions/list_with_meta"
                     var self = this;
                     $.get(
@@ -1095,6 +1101,7 @@
                             console.log(resp);
                             self.transactions = resp.results;
                             self.days_in_way = resp.days_in_way;
+                            self.approaching_days = resp.approaching_days;
                             self.loader_enable = false;
                         }
                     );

@@ -43,22 +43,13 @@ MENU = [
 ]
 
 
-TMTM_PATH = [
-    'U9A6U7LZQe4dCh84t3fpTK',  # DKR
-    'VU7c9jvBqLee9NkChXU1Kn',  # Port Aktau
-    'Ch4eVSWf7KXRubk5to6WFC',  # Port Baku
-    '4vEF4eHwQ1GB5s766rAYAe',  # ADI Smart
-    '6jzbnVE5S6j15afcpC9yhF',  # GR Logistics
-]
-
-
 def build_all_ledgers(limit: int = 200, offset: int = 0) -> list:
     cached = cache.get(settings.LEDGERS_CACHE_KEY)
     if cached:
         return cached
     my_entity = settings.AGENT['entity']
     try:
-        my_index = TMTM_PATH.index(my_entity)
+        my_index = settings.TMTM_PATH.index(my_entity)
         if settings.PATH_INDEX is not None:
             my_index = settings.PATH_INDEX
     except ValueError:
@@ -76,7 +67,7 @@ def build_all_ledgers(limit: int = 200, offset: int = 0) -> list:
                 'last_txn': TransactionSerializer(last_txn).data
             }
             if my_index > 0:
-                prev_entity = TMTM_PATH[my_index - 1]
+                prev_entity = settings.TMTM_PATH[my_index - 1]
                 signer_verkey = last_txn.txn.get('msg~sig', {}).get('signer', None)
                 signer_did = [did for did, meta in settings.PARTICIPANTS_META.items() if meta['verkey'] == signer_verkey]
                 signer_did = signer_did[0] if signer_did else None
@@ -94,7 +85,7 @@ def build_inbox_ledgers() -> list:
     if settings.AGENT['entity']:
         my_entity = settings.AGENT['entity']
         try:
-            my_index = TMTM_PATH.index(my_entity)
+            my_index = settings.TMTM_PATH.index(my_entity)
             if settings.PATH_INDEX is not None:
                 my_index = settings.PATH_INDEX
         except ValueError:
@@ -104,7 +95,7 @@ def build_inbox_ledgers() -> list:
             if cached:
                 return cached
             collection = []
-            prev_entity = TMTM_PATH[my_index-1]
+            prev_entity = settings.TMTM_PATH[my_index-1]
             for ledger in Ledger.objects.filter(entity=my_entity).all():
                 txn_last = ledger.transaction_set.last()
                 if txn_last:

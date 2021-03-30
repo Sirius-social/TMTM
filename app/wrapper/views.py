@@ -207,13 +207,30 @@ class TransactionViewSet(
         serializer = self.get_serializer(queryset, many=True)
         txn_first = ledger.transaction_set.first()
         txn_last = ledger.transaction_set.last()
+        my_entity = settings.AGENT['entity']
+        approaching_days = None
         try:
             if txn_first and txn_last:
                 date_start = get_txn_date(txn_first)
                 date_stop = get_txn_date(txn_last)
+
+                try:
+                    my_index = settings.TMTM_PATH.index(my_entity)
+                    if settings.PATH_INDEX is not None:
+                        my_index = settings.PATH_INDEX
+                except ValueError:
+                    my_index = -1
+                signer_verkey = txn_last.txn.get('msg~sig', {}).get('signer', None)
+                signer_did = [did for did, meta in settings.PARTICIPANTS_META.items() if meta['verkey'] == signer_verkey]
+                signer_did = signer_did[0] if signer_did else None
+                prev_entity = settings.TMTM_PATH[my_index - 1]
+                approaching = signer_did == prev_entity
+
                 if date_start and date_stop:
                     delta = datetime.today() - date_start
                     days_in_way = delta.days
+                    if approaching and settings.TMTM_PATH_TIME[my_entity]:
+                        approaching_days = settings.TMTM_PATH_TIME[my_entity] - days_in_way
                     ser = TransactionSerializer(txn_last)
                     if ser.data['status'] == 'finished':
                         days_in_way = -1
@@ -223,9 +240,11 @@ class TransactionViewSet(
                 days_in_way = None
         except:
             days_in_way = None
+
         data = {
             'results': serializer.data,
             'days_in_way': days_in_way,
+            'approaching_days': approaching_days
         }
         return Response(data)
 

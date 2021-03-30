@@ -261,3 +261,20 @@ if PATH_INDEX.isdigit():
 else:
     PATH_INDEX = None
 ENABLE_PARALLEL_TXNS = (os.getenv('ENABLE_PARALLEL_TXNS', 'off') == 'on') or (AGENT['is_sea'] is True)
+
+
+TMTM_PATH = [
+    'U9A6U7LZQe4dCh84t3fpTK',  # DKR
+    'VU7c9jvBqLee9NkChXU1Kn',  # Port Aktau
+    'Ch4eVSWf7KXRubk5to6WFC',  # Port Baku
+    '4vEF4eHwQ1GB5s766rAYAe',  # ADI Smart
+    '6jzbnVE5S6j15afcpC9yhF',  # GR Logistics
+]
+
+TMTM_PATH_TIME = {
+    'U9A6U7LZQe4dCh84t3fpTK': None,  #
+    'VU7c9jvBqLee9NkChXU1Kn': 5,  # DKR => Port Aktau FOR 5 days
+    'Ch4eVSWf7KXRubk5to6WFC': 3,  # Aktau => Port Baku FOR 1 day
+    '4vEF4eHwQ1GB5s766rAYAe': 1,  # Port Baku => ADI Smart FOR 1 day
+    '6jzbnVE5S6j15afcpC9yhF': 2,  # ADI => GR Logistics FOR 2 days
+}
