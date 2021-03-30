@@ -194,10 +194,17 @@ async def commit_transactions(
         else:
             raise RuntimeError('Unexpected ledger_name type: ' + str(type(ledger_name)))
         if success:
-            await orm.store_transactions(
-                ledger=ledger_name,
-                transactions=txns_committed
-            )
+            if isinstance(ledger_name, str):
+                await orm.store_transactions(
+                    ledger=ledger_name,
+                    transactions=txns_committed
+                )
+            elif isinstance(ledger_name, list):
+                for name in ledger_name:
+                    await orm.store_transactions(
+                        ledger=name,
+                        transactions=txns_committed
+                    )
         else:
             if state_machine.problem_report:
                 explain = state_machine.problem_report.explain
