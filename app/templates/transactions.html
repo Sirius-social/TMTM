@@ -176,8 +176,8 @@
                   <div style="width: 100%;">
                       <form id="form-txn" v-if="form_step == 0">
                           <div class="row col-sm-8 my-1" >
-                              <label v-if="form.ledger_name" for="i-ledger-name">Ledger name</label>
-                              <input v-if="form.ledger_name" v-model="form.ledger_name" id="i-ledger-name" name="ledger-name" type="text" class="form-control" placeholder="container ID" :readonly="op_code != 1">
+                              <label v-if="form.ledger_name || op_code === 1" for="i-ledger-name">Ledger name</label>
+                              <input v-if="form.ledger_name || op_code === 1" v-model="form.ledger_name" id="i-ledger-name" name="ledger-name" type="text" class="form-control" placeholder="container ID" :readonly="op_code != 1">
 
                               <label v-if="form.ledger_names" for="i-ledger-names">Ledger names</label>
                               <span
@@ -571,7 +571,9 @@
                                           <!--
                                           <th scope="col">Детально...</th>
                                           -->
+                                          <!--
                                           <th scope="col">Статус</th>
+                                          -->
                                         </tr>
                                       </thead>
                                       <tbody style="font-size: 75%;">
@@ -604,7 +606,9 @@
                                           <!--
                                           <td><button @click.prevent="show_txn_details(txn.txn);" style="cursor: pointer;" class="btn-primary">Details</button></td>
                                           -->
+                                          <!--
                                             <td> <span style="font-weight: bold;" class="text-primary">[[ status_code_2_text(txn.status) ]]</span></td>
+                                          -->
                                         </tr>
                                       </tbody>
                                     </table>
