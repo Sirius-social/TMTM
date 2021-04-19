@@ -472,7 +472,7 @@
                                       <th scope="col">Контейнер</th>
                                       <th scope="col">Статус</th>
                                       <th scope="col">Станция отправления</th>
-                                      <th scope="col">Назначение</th>
+                                      <th scope="col">Станция назначение</th>
                                       {% if enable_parallel_txns %}
                                         <th scope="col">Группа</th>
                                       {% endif %}
@@ -498,18 +498,18 @@
                                       <td @click.prevent="ledger_selected(ledger)">[[ledger.status.caption]]</td>
                                       <td @click.prevent="ledger_selected(ledger)">
                                           <div class="row">
-                                              <span>[[ledger.arrival.match_pre]]</span>
-                                              <span v-if="ledger.arrival.match_pre || ledger.arrival.match_post" class="text-success" style="font-weight: bold;">[[ledger.arrival.caption]]</span>
-                                              <span v-if="!(ledger.arrival.match_pre || ledger.arrival.match_post)">[[ledger.arrival.caption]]</span>
-                                              <span>[[ledger.arrival.match_post]]</span>
-                                          </div>
-                                      </td>
-                                      <td @click.prevent="ledger_selected(ledger)">
-                                          <div class="row">
                                               <span>[[ledger.departure.match_pre]]</span>
                                               <span v-if="ledger.departure.match_pre || ledger.departure.match_post" class="text-success" style="font-weight: bold;">[[ledger.departure.caption]]</span>
                                               <span v-if="!(ledger.departure.match_pre || ledger.departure.match_post)">[[ledger.departure.caption]]</span>
                                               <span>[[ledger.departure.match_post]]</span>
+                                          </div>
+                                      </td>
+                                      <td @click.prevent="ledger_selected(ledger)">
+                                          <div class="row">
+                                              <span>[[ledger.arrival.match_pre]]</span>
+                                              <span v-if="ledger.arrival.match_pre || ledger.arrival.match_post" class="text-success" style="font-weight: bold;">[[ledger.arrival.caption]]</span>
+                                              <span v-if="!(ledger.arrival.match_pre || ledger.arrival.match_post)">[[ledger.arrival.caption]]</span>
+                                              <span>[[ledger.arrival.match_post]]</span>
                                           </div>
                                       </td>
                                       {% if enable_parallel_txns %}
