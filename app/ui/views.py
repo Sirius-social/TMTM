@@ -70,10 +70,15 @@ def build_all_ledgers(limit: int = 200, offset: int = 0) -> list:
             }
             if my_index > 0:
                 prev_entity = settings.TMTM_PATH[my_index - 1]
+                prev_entities = [prev_entity]
+                # Для Порт Баку во вкладке "Приближаются" необходимо отображать не только контейнеры которые вышли с
+                # Порта Актау, но и те которые только вышли с КТЖ Экспресс.
+                if my_index == 2:
+                    prev_entities.append(settings.TMTM_PATH[0])
                 signer_verkey = last_txn.txn.get('msg~sig', {}).get('signer', None)
                 signer_did = [did for did, meta in settings.PARTICIPANTS_META.items() if meta['verkey'] == signer_verkey]
                 signer_did = signer_did[0] if signer_did else None
-                approaching = signer_did == prev_entity
+                approaching = signer_did in prev_entities
             else:
                 approaching = False
             obj['approaching'] = approaching
