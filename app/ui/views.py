@@ -59,12 +59,14 @@ def build_all_ledgers(limit: int = 200, offset: int = 0) -> list:
     seq_id = 1
     for ledger in queryset[offset:limit]:
         last_txn = ledger.transaction_set.last()
+        first_txn = ledger.transaction_set.first()
         if last_txn:
             obj = {
                 'seq_id': seq_id,
                 'id': ledger.id,
                 'name': ledger.name,
-                'last_txn': TransactionSerializer(last_txn).data
+                'last_txn': TransactionSerializer(last_txn).data,
+                'first_txn': TransactionSerializer(first_txn).data
             }
             if my_index > 0:
                 prev_entity = settings.TMTM_PATH[my_index - 1]

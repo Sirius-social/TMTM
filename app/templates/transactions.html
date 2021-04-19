@@ -900,7 +900,9 @@
                             'name': ledgers_data[i].name,
                             'date': {
                                 'match': null,
-                                'caption': ledgers_data[i].last_txn.date
+                                // В списке перевозок (левая часть) отображать данные от первой транзакции в рамках цепочки, кроме статуса. Он должен меняться.
+                                //'caption': ledgers_data[i].last_txn.date
+                                'caption': ledgers_data[i].first_txn.date
                             },
                             'name_filtered': {
                                 'match_pre': null,
@@ -913,12 +915,18 @@
                             },
                             'arrival': {
                                 'match_pre': null,
-                                'caption': ledgers_data[i].last_txn.txn.arrival_station,
+                                // В списке перевозок (левая часть) отображать данные от первой транзакции в рамках цепочки, кроме статуса. Он должен меняться.
+                                //'caption': ledgers_data[i].last_txn.txn.arrival_station,
+                                'caption': ledgers_data[i].first_txn.txn.arrival_station,
+
                                 'match_post': null,
                             },
                             'departure': {
                                 'match_pre': null,
-                                'caption': ledgers_data[i].last_txn.txn.departure_station,
+                                // В списке перевозок (левая часть) отображать данные от первой транзакции в рамках цепочки, кроме статуса. Он должен меняться.
+                                //'caption': ledgers_data[i].last_txn.txn.departure_station,
+                                'caption': ledgers_data[i].first_txn.txn.departure_station,
+
                                 'match_post': null,
                             }
                         }
