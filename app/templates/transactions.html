@@ -1181,13 +1181,17 @@
                                     self.txn_processing.done = true;
                                 }
                                 else if (type_.includes("progress")) {
-                                    //console.log(obj);
+                                    console.log(obj);
                                     if (obj.progress) {
                                         self.txn_processing.progress = obj.progress;
                                     }
                                     if (obj.message) {
                                         self.txn_processing.message = obj.message;
                                     }
+                                    console.log('obj.done && obj.ledger:');
+                                    console.log(obj.done);
+                                    console.log(obj.ledger);
+                                    console.log(obj.done && obj.ledger);
                                     if (obj.done && obj.ledger) {
                                         self.txn_processing.done = true;
                                         if (op_code == 1) {
