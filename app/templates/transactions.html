@@ -1191,9 +1191,10 @@
                                     console.log('obj.done && obj.ledger:');
                                     console.log(obj.done);
                                     console.log(obj.ledger);
-                                    console.log(obj.done && obj.ledger);
                                     if (obj.done && obj.ledger) {
+                                        console.log('begin: set processing to done');
                                         self.txn_processing.done = true;
+                                        console.log('end: processing was marked as done');
                                         if (op_code == 1) {
                                             var ledger_name = obj.ledger.name;
                                             self.ledgers.push(obj.ledger);
