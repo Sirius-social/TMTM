@@ -98,7 +98,6 @@ Step-2: Configure your web application in self-maintained infrastructure
               - AGENT_VERKEY=<get from wallet settings.p2p.their_Verkey>
             volumes:
               - ./uploads:/tmp
-              # Pass here settings files from repo
               - .settings.py:/app/settings/base.py:ro
             ports:
               - "80:8000"
