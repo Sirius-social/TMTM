@@ -101,8 +101,7 @@ Step-2: Configure your web application in self-maintained infrastructure
               # Pass here settings files from repo
               - .settings.py:/app/settings/base.py:ro
             ports:
-              # use Nginx as frontend + SSL
-              - "localhost:80:8000"
+              - "80:8000"
             depends_on:
               - db_apps
 
