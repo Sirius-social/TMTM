@@ -57,7 +57,9 @@ Installation
 ============================
 Step-1: Configure your organization Wallet (for example use `cloud solution <https://agents.socialsirius.com/>`_)
 Step-2: Configure your web application in self-maintained infrastructure
+
     See `docker-compose.yml` example
+
      ```
         version: '2'
         services:
@@ -105,7 +107,11 @@ Step-2: Configure your web application in self-maintained infrastructure
               - db_apps
 
      ```
+
 Step-3: create entity (run shell command python manage.py create_entity) and replace env var AGENT_ENTITY
+
 Step-4: register Nym for every participant (python manage.py init_nyms)
+
 Step-5: init p2p network (python manage.py setup_pairwises)
+
 Step-6: create admin user (python manage.py setup_admin)
