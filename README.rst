@@ -61,7 +61,6 @@ Step-2: Configure your web application in self-maintained infrastructure
 
     See `docker-compose.yml` example
 
-     ```
         version: '2'
         services:
 
@@ -106,7 +105,6 @@ Step-2: Configure your web application in self-maintained infrastructure
             depends_on:
               - db_apps
 
-     ```
 
 Step-3: create entity (run shell command python manage.py create_entity) and replace env var AGENT_ENTITY
 
