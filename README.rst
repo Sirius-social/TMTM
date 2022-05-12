@@ -50,3 +50,62 @@ TMTM High level architecture
 
 .. image:: https://github.com/Sirius-social/TMTM/blob/master/docs/_static/TMTM.png?raw=true
    :alt: Entry
+
+
+
+Installation
+============================
+Step-1: Configure your organization Wallet (for example use `cloud solution <https://agents.socialsirius.com/>`_)
+Step-2: Configure your web application in self-maintained infrastructure
+    See `docker-compose.yml` example
+     ```
+        version: '2'
+        services:
+
+          cache:
+            image: memcached
+
+          redis:
+            image: redis:latest
+
+          db:
+            image: postgres:9.13
+            environment:
+              - POSTGRES_PASSWORD=postgres
+            volumes:
+              - ./db_apps:/var/lib/postgresql/data
+              - ./tmp:/tmp
+
+          app:
+            image: "socialsirius/tmtm:latest"
+            restart: on-failure
+            environment:
+              - DATABASE_USER=postgres
+              - DATABASE_PASSWORD=postgres
+              - DATABASE_NAME=postgres
+              - DATABASE_HOST=db_apps
+              - DJANGO_SETTINGS_MODULE=settings.production
+              - REDIS=redis
+              - ADMIN_USERNAME=<login>
+              - ADMIN_PASSWORD=<password>
+              - AGENT_CREDENTIALS=<get from wallet settings.credentials>
+              - AGENT_SERVER_ADDRESS=<get from wallet settings.server_uri>
+              - AGENT_ENTITY=<you will get this value from by call create-entity command>
+              - AGENT_MY_VERKEY=<get from wallet settings.p2p.my_keys[0]>
+              - AGENT_MY_SECRET_KEY=<get from wallet settings.p2p.my_keys[1]>
+              - AGENT_VERKEY=<get from wallet settings.p2p.their_Verkey>
+            volumes:
+              - ./uploads:/tmp
+              # Pass here settings files from repo
+              - .settings.py:/app/settings/base.py:ro
+            ports:
+              # use Nginx as frontend + SSL
+              - "localhost:80:8000"
+            depends_on:
+              - db_apps
+
+     ```
+Step-3: create entity (run shell command python manage.py create_entity) and replace env var AGENT_ENTITY
+Step-4: register Nym for every participant (python manage.py init_nyms)
+Step-5: init p2p network (python manage.py setup_pairwises)
+Step-6: create admin user (python manage.py setup_admin)
