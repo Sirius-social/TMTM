@@ -56,6 +56,7 @@ TMTM High level architecture
 Installation
 ============================
 Step-1: Configure your organization Wallet (for example use `cloud solution <https://agents.socialsirius.com/>`_)
+
 Step-2: Configure your web application in self-maintained infrastructure
 
     See `docker-compose.yml` example
