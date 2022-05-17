@@ -1,3 +1,6 @@
+import json
+import os
+import os.path
 from urllib.parse import urlsplit, urlunsplit
 
 import requests
@@ -22,9 +25,14 @@ class Command(BaseCommand):
         print('======================')
         print('Meta URL: ' + meta_url)
         print('======================')
-        resp = requests.get(meta_url)
-        assert resp.status_code == 200
-        meta = resp.json()
+        if os.path.isfile(meta_url):
+            with open(meta_url, 'rb') as f:
+                content = f.read()
+            meta = json.loads(content.decode())
+        else:
+            resp = requests.get(meta_url)
+            assert resp.status_code == 200
+            meta = resp.json()
 
         components = list(urlsplit(meta_url))
         components[2] = ''
@@ -34,9 +42,11 @@ class Command(BaseCommand):
             for inner_name in meta.keys():
                 if inner_name == outer_name:
                     continue
+                outer_server_uri = meta[outer_name].get("server_uri", None)
+                inner_server_uri = meta[inner_name].get("server_uri", None)
                 print('### establish pairwise %s:%s' % (outer_name, inner_name))
                 agent1 = Agent(
-                    server_address=url,
+                    server_address=outer_server_uri or url,
                     credentials=meta[outer_name]['credentials'].encode('ascii'),
                     p2p=P2PConnection(
                         my_keys=(
@@ -49,7 +59,7 @@ class Command(BaseCommand):
                 key1 = list(meta[outer_name]['entities'].keys())[0]
                 entity1 = meta[outer_name]['entities'][key1]
                 agent2 = Agent(
-                    server_address=url,
+                    server_address=inner_server_uri or url,
                     credentials=meta[inner_name]['credentials'].encode('ascii'),
                     p2p=P2PConnection(
                         my_keys=(

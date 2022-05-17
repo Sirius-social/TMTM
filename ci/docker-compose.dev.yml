@@ -17,5 +17,6 @@ services:
     volumes:
       - ./app:/app
       - ./ci:/ci
+      - ./samples:/samples
     ports:
       - "8000:8000"

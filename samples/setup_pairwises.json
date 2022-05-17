@@ -1,5 +1,6 @@
 {
   "agent_adi": {
+    "server_uri": "<get from wallet settings.server_uri>",
     "credentials": "<get from wallet settings.credentials>",
     "entities": {
       "public": {
@@ -21,6 +22,7 @@
     }
   },
   "agent_dkr": {
+    "server_uri": "<get from wallet settings.server_uri>",
     "credentials": "<get from wallet settings.credentials",
     "entities": {
       "public": {
@@ -42,6 +44,7 @@
     }
   },
   "agent_gr": {
+    "server_uri": "<get from wallet settings.server_uri>",
     "credentials": "<get from wallet settings.credentials",
     "entities": {
       "public": {
@@ -63,6 +66,7 @@
     }
   },
   "agent_kazmortransflot": {
+    "server_uri": "<get from wallet settings.server_uri>",
     "credentials": "<get from wallet settings.credentials",
     "entities": {
       "public": {
@@ -84,6 +88,7 @@
     }
   },
   "agent_pmis": {
+    "server_uri": "<get from wallet settings.server_uri>",
     "credentials": "<get from wallet settings.credentials",
     "entities": {
       "public": {
@@ -105,6 +110,7 @@
     }
   },
   "agent_solvo_tos": {
+    "server_uri": "<get from wallet settings.server_uri>",
     "credentials": "<get from wallet settings.credentials",
     "entities": {
       "public": {
