@@ -109,6 +109,6 @@ Step-3: create entity (run shell command python manage.py create_entity) and rep
 
 Step-4: register Nym for every participant (python manage.py init_nyms <steward_seed dkms_network_name>)
 
-Step-5: init p2p network (python manage.py setup_pairwises)
+Step-5: init p2p network (python manage.py setup_pairwises <path to file with metadata> see `sample <https://github.com/Sirius-social/TMTM/blob/master/samples/setup_pairwises.json>`_)
 
 Step-6: create admin user (python manage.py setup_admin)
