@@ -1,0 +1,128 @@
+{
+  "agent_adi": {
+    "credentials": "<get from wallet settings.credentials>",
+    "entities": {
+      "public": {
+        "did": "<entity>",
+        "verkey": "<entity verkey>"
+      }
+    },
+    "networks": [
+      "test_network"
+    ],
+    "p2p": {
+      "agent": {
+        "verkey": "<get from wallet settings.p2p.their_Verkey>"
+      },
+      "smart_contract": {
+        "secret_key": "<get from wallet settings.p2p.my_keys[1]>",
+        "verkey": "<get from wallet settings.p2p.my_keys[0]>"
+      }
+    }
+  },
+  "agent_dkr": {
+    "credentials": "<get from wallet settings.credentials",
+    "entities": {
+      "public": {
+        "did": "<entity>",
+        "verkey": "<entity verkey>"
+      }
+    },
+    "networks": [
+      "staging"
+    ],
+    "p2p": {
+      "agent": {
+        "verkey": "<get from wallet settings.p2p.their_Verkey>"
+      },
+      "smart_contract": {
+        "secret_key": "<get from wallet settings.p2p.my_keys[1]>",
+        "verkey": "<get from wallet settings.p2p.my_keys[0]>"
+      }
+    }
+  },
+  "agent_gr": {
+    "credentials": "<get from wallet settings.credentials",
+    "entities": {
+      "public": {
+        "did": "<entity>",
+        "verkey": "<entity verkey>"
+      }
+    },
+    "networks": [
+      "staging"
+    ],
+    "p2p": {
+      "agent": {
+        "verkey": "<get from wallet settings.p2p.their_Verkey>"
+      },
+      "smart_contract": {
+        "secret_key": "<get from wallet settings.p2p.my_keys[1]>",
+        "verkey": "<get from wallet settings.p2p.my_keys[0]>"
+      }
+    }
+  },
+  "agent_kazmortransflot": {
+    "credentials": "<get from wallet settings.credentials",
+    "entities": {
+      "public": {
+        "did": "<entity>",
+        "verkey": "<entity verkey>"
+      }
+    },
+    "networks": [
+      "staging"
+    ],
+    "p2p": {
+      "agent": {
+        "verkey": "<get from wallet settings.p2p.their_Verkey>"
+      },
+      "smart_contract": {
+        "secret_key": "<get from wallet settings.p2p.my_keys[1]>",
+        "verkey": "<get from wallet settings.p2p.my_keys[0]>"
+      }
+    }
+  },
+  "agent_pmis": {
+    "credentials": "<get from wallet settings.credentials",
+    "entities": {
+      "public": {
+        "did": "<entity>",
+        "verkey": "<entity verkey>"
+      }
+    },
+    "networks": [
+      "staging"
+    ],
+    "p2p": {
+      "agent": {
+        "verkey": "<get from wallet settings.p2p.their_Verkey>"
+      },
+      "smart_contract": {
+        "secret_key": "<get from wallet settings.p2p.my_keys[1]>",
+        "verkey": "<get from wallet settings.p2p.my_keys[0]>"
+      }
+    }
+  },
+  "agent_solvo_tos": {
+    "credentials": "<get from wallet settings.credentials",
+    "entities": {
+      "public": {
+        "did": "<entity>",
+        "verkey": "<entity verkey>"
+      }
+    },
+    "networks": [
+      "staging"
+    ],
+    "p2p": {
+      "agent": {
+        "verkey": "<get from wallet settings.p2p.their_Verkey>"
+      },
+      "smart_contract": {
+        "secret_key": "<get from wallet settings.p2p.my_keys[1]>",
+        "verkey": "<get from wallet settings.p2p.my_keys[0]>"
+      }
+    }
+  }
+}
