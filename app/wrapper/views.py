@@ -141,9 +141,12 @@ class TransactionSerializer(serializers.ModelSerializer):
     def get_status(self, obj):
         signer_verkey = obj.txn.get('msg~sig', {}).get('signer', None)
         if signer_verkey:
-            if signer_verkey == settings.PARTICIPANTS_META['U9A6U7LZQe4dCh84t3fpTK']['verkey']:
+            tmtm_path = settings.TMTM_PATH
+            first_did = tmtm_path[0]
+            last_did = tmtm_path[-1]
+            if signer_verkey == settings.PARTICIPANTS_META[first_did]['verkey']:
                 return 'started'
-            elif signer_verkey == settings.PARTICIPANTS_META['6jzbnVE5S6j15afcpC9yhF']['verkey']:
+            elif signer_verkey == settings.PARTICIPANTS_META[last_did]['verkey']:
                 return 'finished'
             else:
                 return 'in_way'
