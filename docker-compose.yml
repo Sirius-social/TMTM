@@ -9,6 +9,49 @@ services:
   redis:
     image: redis:latest
 
+
+  solvo_tos:
+    image: "socialsirius/tmtm:latest"
+    environment:
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+      - DATABASE_NAME=postgres
+      - DATABASE_HOST=db
+      - ADMIN_USERNAME=test
+      - ADMIN_PASSWORD=test
+      - REDIS=redis
+      - PATH_INDEX=2
+      - AGENT_CREDENTIALS=+eEyBDnRP+tIxL3Uw38RJC9LzuA02+ukQZmIRpRR4N4rP7l2qip66KTuXRY8SktQ19q6y9hd5igFKAbPTw5C8w==
+      - AGENT_SERVER_ADDRESS=https://agents.socialsirius.com
+      - AGENT_ENTITY=PNdMhAz7bTJ95PU3qEdPEC
+      - AGENT_MY_VERKEY=EXPCytKrf7VzZ2WaTARvFKBEneiKxV63o4znURNWCV5E
+      - AGENT_MY_SECRET_KEY=2eKeabEDXCHk9semt3CJxK71AsYHcrYnKAL2hhCSaM746TbzmkAos2Eytfdrbj9UdsLtaZGbFzC7LxnptnfL81rk
+      - AGENT_VERKEY=2msEK4zMqUVKxt31AydXG84Pzn7V5vJF6newJqtrG5DT
+    depends_on:
+      - db
+      - redis
+
+  pmis:
+    image: "socialsirius/tmtm:latest"
+    environment:
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+      - DATABASE_NAME=postgres
+      - DATABASE_HOST=db
+      - ADMIN_USERNAME=test
+      - ADMIN_PASSWORD=test
+      - REDIS=redis
+      - PATH_INDEX=3
+      - AGENT_CREDENTIALS=+eEyBDnRP+tIxL3Uw38RJC9LzuA02+ukQZmIRpRR4N4rP7l2qip66KTuXRY8SktQTe25mJidmuIKBSJRUkLZSA==
+      - AGENT_SERVER_ADDRESS=https://agents.socialsirius.com
+      - AGENT_ENTITY=MMT5GUctNbDMst6a63sf8U
+      - AGENT_MY_VERKEY=BX25BqxxLPPu3rCqejM7n5NSfT8SHqgnnzAfvTMPhNn
+      - AGENT_MY_SECRET_KEY=2y2sDMQy1omRQcm4jEfQPQRdqjxotgQ66vY5bwbRaFmjksjmafiM5HBTBeUdbA2rssQbFoFm6yY8waFikP7eyNqU
+      - AGENT_VERKEY=AG241TZpcGjsP7mdtVpJ8aVXzNJM2Y2vAT6MY3e92kFK
+    depends_on:
+      - db
+      - redis
+
   application:
     build: 
       context: .
@@ -22,6 +65,14 @@ services:
       - ADMIN_PASSWORD=test
       - REDIS=redis
       - PATH_INDEX=1
+      - AGENT_CREDENTIALS=+eEyBDnRP+tIxL3Uw38RJC9LzuA02+ukQZmIRpRR4N4rP7l2qip66KTuXRY8SktQHgkr5PopMQTtbvph/WGtgw==
+      - AGENT_SERVER_ADDRESS=https://agents.socialsirius.com
+      - AGENT_ENTITY=UEUBPiqZwSDS68P47UnCUF
+      - AGENT_MY_VERKEY=4vFm82DKq3d2QYQ4JPVfHSniikGtq6hSCJ7RAxSTwv32
+      - AGENT_MY_SECRET_KEY=3DvbeLRrGkuS4Gfbx1syKWsBpAWMHQ1LkaVs5mczz2TPwhMHBpQoQ5aA8VMooA2RjxRqczTMRQgF3b1iyFYMsFc4
+      - AGENT_VERKEY=yN3YiWjSvxnmyfA59NZnNjapf2Cs4dtF9yp8SsXp99R
     depends_on:
       - db
       - redis
+      - solvo_tos
+      - pmis

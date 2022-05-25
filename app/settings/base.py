@@ -183,59 +183,64 @@ if AGENT['credentials'] and AGENT['server_address']:
 
 
 PARTICIPANTS_META = {
-    '4vEF4eHwQ1GB5s766rAYAe': {
+    'SjQbvdunyyxYYismGKsKgg': {
         'label': 'ADI Smart',
         'logo': 'ady_container.png',
         'icon': 'ady_smart.jpg',
-        'url': 'https://ady.socialsirius.com',
-        'verkey': '38r8qU19FRYqqRQVtaWyoNP55wBJUZfBiAKBd7z9y1Qv',
+        'url': 'https://adi.blockchain-innovation.ch',
+        'verkey': 'F2QvfetYxCTRAkLoJp53ys39rAXFDxmZCpUMteadwsGE',
         'organization': 'Azerbaijan Railways'
     },
-    'U9A6U7LZQe4dCh84t3fpTK': {
+    'UEUBPiqZwSDS68P47UnCUF': {
         'label': 'DKR',
         'logo': 'ktz_express.svg',
         'icon': 'dkr.png',
-        'url': 'https://dkr.socialsirius.com',
-        'verkey': 'FnyCacPf4R128ZwZnzzqStSwaUF54FXmhSL2ycy9aYG5',
+        'url': 'https://asu-dkr.blockchain-innovation.ch',
+        'verkey': 'Fqs7kY3pMExvVbkJWWhxsPLqLyKRN5hQtXUmtyH5NVEL',
         'organization': 'KTZ Express'
     },
-    '6jzbnVE5S6j15afcpC9yhF': {
+    '2somaS731MdnA64C9a2n2X': {
         'label': 'GR Logistics & Terminals',
         'logo': 'gr_logistics.png',
         'icon': 'gr.jpg',
-        'url': 'https://gr.socialsirius.com',
-        'verkey': '48VZxo8boPPikNPGEEHfLoCtUN8g1n6veYwndRDpW9BD',
+        'url': 'https://poti.blockchain-innovation.ch',
+        'verkey': '22JaqSLVw1o3u84GQnaJ7S8Nki2nrVwBGSYe1zTejf6t',
         'organization': 'Georgian Railway'
     },
-    'D96GgE1PVtWeSfuAQZ9neY': {
+    'Tsc4Xyd1HVVVorrrC2ucxg': {
         'label': 'KAZMORTRANSFLOT',
         'logo': 'kazmortransflot.jpg',
         'icon': 'kazmortransflot.jpg',
-        'url': 'https://kazmortransflot.socialsirius.com',
-        'verkey': '7ckhcwQCMV9RpYC4RQ3EgXEn4nbjgumGLL9CyWtqf5es',
+        'url': 'https://kazmortransflot.blockchain-innovation.ch',
+        'verkey': 'FeVZXbjNiUxV3hgoSrB7SZSkqDYWEmTDEQVuz7ZFh1Ep',
         'organization': 'KAZMORTRANSFLOT'
     },
-    'Ch4eVSWf7KXRubk5to6WFC': {
+    'MMT5GUctNbDMst6a63sf8U': {
         'label': 'PMIS - PORT OF BAKU',
         'logo': 'port_of_baku.jpg',
         'icon': 'pmis_port_baku.png',
-        'url': 'https://pmis.socialsirius.com',
-        'verkey': '7NZuS52TEAnrD5VTme3JHbyXQHQtbstTUpdgBGxhZkMp',
+        'url': 'https://pmis.blockchain-innovation.ch',
+        'verkey': 'C6PLZPsH2z9VPjQ1GHG6V6yb3S9iYGUrFKqkny3Pyr1z',
         'organization': 'Port of Baku'
     },
-    'VU7c9jvBqLee9NkChXU1Kn': {
+    'PNdMhAz7bTJ95PU3qEdPEC': {
         'label': 'Solvo.tos - PORT AKTAU',
         'logo': 'port_aktau.png',
         'icon': 'solvo.tos.png',
-        'url': 'https://solvotos.socialsirius.com',
-        'verkey': 'GWuxzCXX3ddX9R6bX1if1Me7wz1WiiyKEdzsdB7X5npG',
+        'url': 'https://solvo-tos.blockchain-innovation.ch',
+        'verkey': 'DCFYUBe7S5oijQoTiWtFqfGD2zA579M7tc8aFoQ1QSoj',
         'organization': 'Port Aktau'
     }
+
 }
+
+# PARTICIPANTS = [
+#     'SjQbvdunyyxYYismGKsKgg','UEUBPiqZwSDS68P47UnCUF','Tsc4Xyd1HVVVorrrC2ucxg','MMT5GUctNbDMst6a63sf8U','2somaS731MdnA64C9a2n2X','PNdMhAz7bTJ95PU3qEdPEC'
+# ]
 PARTICIPANTS = [
-    '4vEF4eHwQ1GB5s766rAYAe', 'U9A6U7LZQe4dCh84t3fpTK',
-    '6jzbnVE5S6j15afcpC9yhF', 'Ch4eVSWf7KXRubk5to6WFC', 'VU7c9jvBqLee9NkChXU1Kn'
+    'UEUBPiqZwSDS68P47UnCUF', 'PNdMhAz7bTJ95PU3qEdPEC', 'MMT5GUctNbDMst6a63sf8U'
 ]
+
 
 
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', None)
@@ -264,17 +269,17 @@ ENABLE_PARALLEL_TXNS = (os.getenv('ENABLE_PARALLEL_TXNS', 'off') == 'on') or (AG
 
 
 TMTM_PATH = [
-    'U9A6U7LZQe4dCh84t3fpTK',  # DKR
-    'VU7c9jvBqLee9NkChXU1Kn',  # Port Aktau
-    'Ch4eVSWf7KXRubk5to6WFC',  # Port Baku
-    '4vEF4eHwQ1GB5s766rAYAe',  # ADI Smart
-    '6jzbnVE5S6j15afcpC9yhF',  # GR Logistics
+    'UEUBPiqZwSDS68P47UnCUF',  # DKR
+    'PNdMhAz7bTJ95PU3qEdPEC',  # Port Aktau
+    'MMT5GUctNbDMst6a63sf8U',  # Port Baku
+    'SjQbvdunyyxYYismGKsKgg',  # ADI Smart
+    '2somaS731MdnA64C9a2n2X',  # GR Logistics
 ]
 
 TMTM_PATH_TIME = {
-    'U9A6U7LZQe4dCh84t3fpTK': None,  #
-    'VU7c9jvBqLee9NkChXU1Kn': 5,  # DKR => Port Aktau FOR 5 days
-    'Ch4eVSWf7KXRubk5to6WFC': 3,  # Aktau => Port Baku FOR 1 day
-    '4vEF4eHwQ1GB5s766rAYAe': 1,  # Port Baku => ADI Smart FOR 1 day
-    '6jzbnVE5S6j15afcpC9yhF': 2,  # ADI => GR Logistics FOR 2 days
+    'UEUBPiqZwSDS68P47UnCUF': None,  #
+    'PNdMhAz7bTJ95PU3qEdPEC': 5,  # DKR => Port Aktau FOR 5 days
+    'MMT5GUctNbDMst6a63sf8U': 3,  # Aktau => Port Baku FOR 1 day
+    'SjQbvdunyyxYYismGKsKgg': 1,  # Port Baku => ADI Smart FOR 1 day
+    '2somaS731MdnA64C9a2n2X': 2,  # ADI => GR Logistics FOR 2 days
 }

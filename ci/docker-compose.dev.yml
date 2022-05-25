@@ -5,15 +5,25 @@ services:
     ports:
       - "5432:5432"
 
+  solvo_tos:
+    environment:
+      - DJANGO_SETTINGS_MODULE=settings.develop
+    volumes:
+      - ./app/settings:/app/settings
+    ports:
+      - "8001:8000"
+
+  pmis:
+    environment:
+      - DJANGO_SETTINGS_MODULE=settings.develop
+    volumes:
+      - ./app/settings:/app/settings
+    ports:
+      - "8002:8000"
+
   application:
     environment:
       - DJANGO_SETTINGS_MODULE=settings.develop
-      - AGENT_CREDENTIALS
-      - AGENT_SERVER_ADDRESS
-      - AGENT_ENTITY
-      - AGENT_MY_VERKEY
-      - AGENT_MY_SECRET_KEY
-      - AGENT_VERKEY
     volumes:
       - ./app:/app
       - ./ci:/ci
