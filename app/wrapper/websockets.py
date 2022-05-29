@@ -32,6 +32,7 @@ from scripts.management.commands import orm
 from scripts.management.commands.run_smart_contracts import parse_and_store_gu
 from ui.models import QRCode, PairwiseRecord, CredentialQR, AuthRef
 from wrapper.models import UserEntityBind
+from wrapper.utils import get_agent_microledgers
 from .models import Token
 
 
@@ -103,7 +104,7 @@ async def create_new_ledger(
             crypto=agent.wallet.crypto,
             me=Pairwise.Me(my_did, my_verkey),
             pairwise_list=agent.pairwise_list,
-            microledgers=agent.microledgers,
+            microledgers=get_agent_microledgers(agent),
             transports=agent,
             logger=logger,
             time_to_live=ttl
@@ -158,7 +159,7 @@ async def commit_transactions(
             crypto=agent.wallet.crypto,
             me=Pairwise.Me(my_did, my_verkey),
             pairwise_list=agent.pairwise_list,
-            microledgers=agent.microledgers,
+            microledgers=get_agent_microledgers(agent),
             transports=agent,
             logger=logger,
             time_to_live=ttl,

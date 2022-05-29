@@ -19,6 +19,7 @@ from scripts.management.commands.decorators import sentry_capture_exceptions
 from scripts.management.commands.logger import StreamLogger
 
 from wrapper.models import GURecord
+from wrapper.utils import get_agent_microledgers
 
 
 def parse_and_store_gu(txn: dict, category: str):
@@ -233,7 +234,7 @@ class Command(BaseCommand):
                 crypto=agent.wallet.crypto,
                 me=p2p.me,
                 pairwise_list=agent.pairwise_list,
-                microledgers=agent.microledgers,
+                microledgers=get_agent_microledgers(agent),
                 transports=agent,
                 logger=logger
             )
@@ -285,7 +286,7 @@ class Command(BaseCommand):
                 crypto=agent.wallet.crypto,
                 me=p2p.me,
                 pairwise_list=agent.pairwise_list,
-                microledgers=agent.microledgers,
+                microledgers=get_agent_microledgers(agent),
                 transports=agent,
                 logger=logger
             )
@@ -332,7 +333,7 @@ class Command(BaseCommand):
                 crypto=agent.wallet.crypto,
                 me=p2p.me,
                 pairwise_list=agent.pairwise_list,
-                microledgers=agent.microledgers,
+                microledgers=get_agent_microledgers(agent),
                 transports=agent,
                 logger=logger,
                 locks=agent.locks
