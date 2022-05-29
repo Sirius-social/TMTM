@@ -12,6 +12,7 @@ from sirius_sdk.agent.microledgers import Transaction
 from sirius_sdk.agent.aries_rfc.utils import sign
 
 from wrapper.models import Ledger
+from wrapper.utils import get_agent_microledgers
 from .logger import StreamLogger
 from .decorators import sentry_capture_exceptions
 from scripts.management.commands import orm
@@ -105,7 +106,7 @@ class Command(BaseCommand):
                 crypto=agent.wallet.crypto,
                 me=Pairwise.Me(did=my_did, verkey=my_verkey),
                 pairwise_list=agent.pairwise_list,
-                microledgers=agent.microledgers,
+                microledgers=get_agent_microledgers(agent),
                 transports=agent,
                 logger=logger,
                 time_to_live=time_to_live
@@ -178,7 +179,7 @@ class Command(BaseCommand):
                 crypto=agent.wallet.crypto,
                 me=Pairwise.Me(did=my_did, verkey=my_verkey),
                 pairwise_list=agent.pairwise_list,
-                microledgers=agent.microledgers,
+                microledgers=get_agent_microledgers(agent),
                 transports=agent,
                 logger=logger,
                 time_to_live=time_to_live
