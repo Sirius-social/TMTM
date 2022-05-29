@@ -278,3 +278,6 @@ TMTM_PATH_TIME = {
     '4vEF4eHwQ1GB5s766rAYAe': 1,  # Port Baku => ADI Smart FOR 1 day
     '6jzbnVE5S6j15afcpC9yhF': 2,  # ADI => GR Logistics FOR 2 days
 }
+
+
+SINGLE_MICROLEDGER_PER_ENTITY = os.getenv('SINGLE_MICROLEDGER_PER_ENTITY') in ['on', '1', 'yes']
